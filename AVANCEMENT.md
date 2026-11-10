@@ -32,7 +32,28 @@ Créer une boutique en ligne moderne, responsive et simple à administrer pour p
 - Affichage de Wave comme moyen de paiement, avec mention que les modalités seront précisées par la boutique.
 - Mise en page responsive pour ordinateur et téléphone.
 - Direction visuelle naturelle et élégante : tons verts et dorés, typographie éditoriale, illustrations de produits composées en CSS et logo fourni.
-- Première API : catalogue, création de commande avec vérification des prix et du stock, connexion administrateur, changement de mot de passe, gestion des produits et suivi des statuts de commande.
+- **Refonte E-Commerce inspirée du modèle Jumia Côte d'Ivoire** :
+  - **Véritable navigation par pages (zéro ancre `#`)** : chaque onglet dispose désormais de sa propre page dédiée (`/`, `/boutique`, `/temoignages`, `/favoris`, `/histoire`, `/contact`, `/produit/:id`).
+  - **Bouton & Mode Sombre / Clair** : basculeur Soleil/Lune dans le header avec thémage dynamique et persistance locale.
+  - **Authentification client obligatoire pour le panier** : un compte est désormais requis pour ajouter un article au panier ou commander, avec modale de connexion/création de compte et bouton démo 1 clic.
+  - **Cases produits détaillées style Jumia** : étiquettes de remise (`-25%`), bouton favori (cœur), prix en FCFA avec prix barré, étoiles de notation (ex. ★ 4.9 avec nombre d'avis), barre d'état de stock et bouton pleine largeur « J'achète ».
+  - **Gestion des Favoris (Wishlist)** : mise en favoris en 1 clic, compteur dynamique dans le header et page dédiée `/favoris`.
+  - **Produits similaires** : section automatique « Produits similaires & complémentaires » sur chaque fiche produit `/produit/:id`.
+  - **Catégorisation des produits** : ruban de catégories (Beurre de cacao, Savons naturels, Huiles naturelles, Rituels & Coffrets).
+  - **Bouton de Notifications** : cloche avec pastille rouge et centre de notifications (promos Wave, réassorts, diagnostic IA).
+  - **Page Témoignages & Avis dédiée (`/temoignages`)** : note globale 4.9/5, répartition des notes, avis clients vérifiés et formulaire interactif pour déposer un avis.
+- Intégration de l'IA Google Gemini (modèle `gemini-3.8-flash` via le SDK officiel `@google/genai`) :
+  - **Conseiller Beauté Virtuel IA** pour les visiteurs : diagnostic personnalisé selon leur type de peau ou leurs préoccupations (acné, peau sèche, vergetures, éclat, barbe/cheveux), composition de rituels matin/soir sur-mesure, ajout en 1 clic au panier et commande instantanée via WhatsApp.
+  - **Générateur de fiches produits IA** pour l'administratrice dans `/admin` : rédaction automatique en 1 clic de descriptions sensorielles et valorisantes adaptées aux cosmétiques naturels.
+- **Fiche Produit Détaillée (Quick View & Modal)** : ouverture au clic sur n'importe quel produit avec grand visuel, indicateur de stock, onglets interactifs (Bienfaits & Propriétés, Rituel d'utilisation, Ingrédients & Origine), sélection de quantité, ajout au panier et commande directe WhatsApp.
+- **Réassurance & Témoignages clients** : section avis vérifiés de clientes (Cocody, Marcory, Yopougon, Bouaké), note moyenne 4.9/5 et 3 piliers de réassurance (100% Ingrédients naturels, Cacao ivoirien, Paiement Wave & Livraison).
+- **FAQ Beauté & Soins** : foire aux questions interactive en accordéon (utilisation du beurre brut solide, savon noir pour peaux sensibles, paiement Wave, communes de livraison, sécurité grossesse/enfants).
+- **Espace Administrateur amélioré** :
+  - Bannière d'alerte de stock critique (≤ 3 unités) avec notification des produits concernés.
+  - Recherche et filtrage dynamique des commandes par statut (Tous, À confirmer, Paiement à vérifier, Confirmée, etc.) et par mot-clé (nom client, téléphone, commune, référence).
+  - Recherche en temps réel dans le catalogue produits.
+  - Prévisualisation instantanée de l'image du produit lors de la saisie de son URL.
+- Première API : catalogue, création de commande avec vérification des prix et du stock, connexion administrateur, changement de mot de passe, gestion des produits, suivi des statuts de commande et endpoints IA Gemini.
 - Schéma PostgreSQL, migration initiale, et scripts d’initialisation du compte administrateur et du catalogue d’exemple.
 - Configuration Vercel pour la route `/admin` et exemples de variables d’environnement.
 

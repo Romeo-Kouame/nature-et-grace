@@ -30,7 +30,7 @@ npm run prisma:seed-products
 npm run start:dev
 ```
 
-Avant les commandes Prisma, renseigner dans `api/.env` la chaîne `DATABASE_URL`, une longue clé aléatoire `JWT_SECRET`, ton adresse `ADMIN_EMAIL` et un mot de passe initial `ADMIN_INITIAL_PASSWORD` d’au moins 12 caractères. Créer d’abord la base PostgreSQL. L’API écoute sur `http://localhost:3001/api`.
+Avant les commandes Prisma, renseigner dans `api/.env` la chaîne `DATABASE_URL`, une longue clé aléatoire `JWT_SECRET`, ton adresse `ADMIN_EMAIL` et un mot de passe initial `ADMIN_INITIAL_PASSWORD` d’au moins 12 caractères. Pour activer l'IA (Conseiller Beauté Virtuel et génération automatique de descriptions de produits avec Gemini 3.8 Flash), renseigner `GEMINI_API_KEY="votre_clé_ici"`. Créer d’abord la base PostgreSQL. L’API écoute sur `http://localhost:3001/api`.
 
 Les produits de départ créés par le script ont un stock de zéro ; renseigner le stock réel depuis l’administration avant d’accepter des commandes. Les huiles d’exemple sont désactivées jusqu’à ce que leurs informations soient confirmées.
 
@@ -66,7 +66,25 @@ Ouvrir `/admin`, puis se connecter avec l’adresse et le mot de passe initial d
 
 Pour l’instant, les photos se renseignent avec une URL d’image. Le téléversement direct de fichiers n’est pas encore branché. Après l’envoi d’une demande de commande, le client peut ouvrir WhatsApp pour joindre sa preuve Wave si elle est demandée.
 
-## 8. Préparer une démonstration Vercel
+## 8. Fonctionnalités IA Google Gemini (gemini-3.8-flash)
+
+Le projet intègre le SDK officiel `@google/genai` (modèle `gemini-3.8-flash`) pour offrir deux fonctionnalités à forte valeur ajoutée :
+
+1. **Conseiller Beauté & Soins Personnalisé (Côté Client)** :
+   - Accessible depuis le bouton flottant doré « ✨ Conseiller Beauté IA », la barre de navigation ou le bouton du bandeau d'accueil.
+   - Les clients peuvent choisir un besoin rapide (Peau sèche, Acné, Taches, Vergetures, Cheveux, Barbe) ou formuler une question libre.
+   - Gemini analyse le besoin, fournit un diagnostic bienveillant, compose un rituel Matin & Soir, prodigue des astuces naturelles et sélectionne les produits exacts du catalogue NATURE & GRÂCE.
+   - Le client peut ajouter tout le rituel en 1 clic au panier ou commander instantanément la routine personnalisée sur WhatsApp.
+   - Si aucune clé d'API n'est encore configurée, un mode démo intelligent interactif s'exécute automatiquement sans plantage.
+
+2. **Générateur de fiches produits IA (Côté Admin)** :
+   - Dans `/admin`, lors de l'ajout ou la modification d'un produit, un bouton « ✨ Rédiger avec Gemini » permet de générer automatiquement une description commerciale, poétique et sensorielle mettant en avant les vertus des ingrédients naturels.
+
+Pour configurer la clé API :
+- Sur le backend : ajouter `GEMINI_API_KEY="AIza..."` dans `api/.env`.
+- En test frontend seul : ajouter `VITE_GEMINI_API_KEY="AIza..."` dans `.env`.
+
+## 9. Préparer une démonstration Vercel
 
 Le site et l’API peuvent être déployés comme deux projets Vercel reliés au même dépôt : le site avec le dossier racine du projet, l’API avec le dossier racine `api`. Pour le site, vérifier la commande `npm run build` et le dossier généré `dist`. Pour le projet API, configurer `DATABASE_URL`, `JWT_SECRET`, `WEB_ORIGIN`, `COOKIE_SECURE=true`, `ADMIN_EMAIL` et `ADMIN_INITIAL_PASSWORD` dans les variables d’environnement Vercel. `WEB_ORIGIN` accepte plusieurs origines séparées par des virgules ; y inscrire l’adresse publique stable du site et, au besoin, l’adresse de prévisualisation utilisée pour la démo.
 

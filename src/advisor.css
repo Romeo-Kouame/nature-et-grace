@@ -1,0 +1,538 @@
+/* Conseiller Beauté IA — NATURE & GRÂCE */
+
+.floating-advisor {
+  position: fixed;
+  bottom: 22px;
+  right: 76px;
+  height: 43px;
+  background: linear-gradient(135deg, #1e3b2b 0%, #2f563e 100%);
+  color: #f7f3e8;
+  border: 1px solid #c4a769;
+  border-radius: 999px;
+  padding: 0 18px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 20px rgba(28, 56, 40, 0.28);
+  z-index: 5;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.floating-advisor:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #173022 0%, #264a34 100%);
+  box-shadow: 0 8px 24px rgba(28, 56, 40, 0.38);
+  border-color: #dfc27e;
+}
+
+.floating-advisor-sparkle {
+  color: #dfc27e;
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.advisor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 34, 25, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.advisor-modal {
+  background: #fcfbf8;
+  width: 100%;
+  max-width: 680px;
+  max-height: 92vh;
+  border-radius: 18px;
+  border: 1px solid #e7e2d4;
+  box-shadow: 0 24px 60px rgba(18, 32, 23, 0.32);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleUp 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.advisor-header {
+  padding: 22px 24px 18px;
+  background: linear-gradient(180deg, #f6f3eb 0%, #fcfbf8 100%);
+  border-bottom: 1px solid #ebe6d9;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.advisor-header-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  color: #9f864e;
+  text-transform: uppercase;
+}
+
+.advisor-header h2 {
+  font: 500 24px/1.2 'Playfair Display', serif;
+  color: #1e392a;
+  margin: 6px 0 3px;
+}
+
+.advisor-header p {
+  font-size: 11px;
+  color: #727a71;
+  margin: 0;
+}
+
+.advisor-close-btn {
+  background: none;
+  border: none;
+  color: #636d62;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s;
+}
+
+.advisor-close-btn:hover {
+  background: #ece8dc;
+  color: #1e392a;
+}
+
+.advisor-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.advisor-chips-section span {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: #798074;
+  margin-bottom: 10px;
+}
+
+.advisor-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.advisor-chip {
+  background: #f2efe5;
+  border: 1px solid #ded8c7;
+  color: #334839;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.advisor-chip:hover,
+.advisor-chip.selected {
+  background: #254633;
+  color: #f7f3e8;
+  border-color: #254633;
+}
+
+.advisor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.advisor-input-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.advisor-input {
+  flex: 1;
+  border: 1px solid #dcd6c5;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  color: #23372b;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.advisor-input:focus {
+  border-color: #a48950;
+  box-shadow: 0 0 0 3px rgba(180, 147, 82, 0.15);
+}
+
+.advisor-submit {
+  background: #254633;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0 18px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.advisor-submit:hover:not(:disabled) {
+  background: #193424;
+}
+
+.advisor-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.advisor-loading {
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #556254;
+  text-align: center;
+}
+
+.advisor-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #dfd9c8;
+  border-top-color: #b49352;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.advisor-result {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: fadeIn 0.3s ease;
+}
+
+.advisor-diagnosis-card {
+  background: #f4f0e4;
+  border-left: 3px solid #b49352;
+  padding: 14px 18px;
+  border-radius: 4px 10px 10px 4px;
+}
+
+.advisor-diagnosis-card b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #8c713b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.advisor-diagnosis-card p {
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #2b4132;
+  margin: 0;
+}
+
+.advisor-routines-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.advisor-routine-box {
+  background: #ffffff;
+  border: 1px solid #e7e2d4;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.advisor-routine-box h4 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #1e392a;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.advisor-routine-box ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #546053;
+}
+
+.advisor-routine-box li {
+  margin-bottom: 6px;
+}
+
+.advisor-tips-box {
+  background: #faf8f2;
+  border: 1px dashed #cfc8b5;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.advisor-tips-box b {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: #7d6b41;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.advisor-tips-box ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 10.5px;
+  color: #5c685b;
+  line-height: 1.55;
+}
+
+.advisor-products-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #ebe6d9;
+  padding-top: 16px;
+}
+
+.advisor-products-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.advisor-products-heading h3 {
+  font: 500 16px 'Playfair Display', serif;
+  color: #1e392a;
+  margin: 0;
+}
+
+.advisor-products-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.advisor-product-card {
+  background: #ffffff;
+  border: 1px solid #e7e2d4;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.advisor-product-card-info b {
+  display: block;
+  font-size: 11px;
+  color: #253d2d;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.advisor-product-card-info small {
+  display: block;
+  font-size: 9px;
+  color: #889083;
+  margin-top: 2px;
+}
+
+.advisor-product-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.advisor-product-card-bottom strong {
+  font-size: 10px;
+  color: #a48751;
+}
+
+.advisor-add-single-btn {
+  background: #f1ede1;
+  border: 1px solid #d9d2be;
+  color: #2d4c38;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.advisor-add-single-btn:hover {
+  background: #254633;
+  color: white;
+  border-color: #254633;
+}
+
+.advisor-actions-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 8px;
+}
+
+.advisor-bundle-btn {
+  background: #254633;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 4px 14px rgba(37, 70, 51, 0.25);
+}
+
+.advisor-bundle-btn:hover {
+  background: #193424;
+}
+
+.advisor-wa-btn {
+  background: #27744b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.advisor-wa-btn:hover {
+  background: #1f5d3c;
+}
+
+.advisor-demo-badge {
+  font-size: 9px;
+  color: #8c723b;
+  background: #f7f1e1;
+  border: 1px solid #dfd1b0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  align-self: center;
+  margin-top: 6px;
+}
+
+/* Admin Gemini description generator styles */
+.admin-gemini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #1f3f2d 0%, #2e5940 100%);
+  color: #f7f3e8;
+  border: 1px solid #c4a769;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.admin-gemini-btn:hover:not(:disabled) {
+  background: #162f22;
+  border-color: #e5cb8e;
+}
+
+.admin-gemini-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 620px) {
+  .floating-advisor {
+    bottom: 15px;
+    right: 64px;
+    height: 39px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+  .floating-advisor span {
+    display: none;
+  }
+  .advisor-routines-grid {
+    grid-template-columns: 1fr;
+  }
+  .advisor-modal {
+    max-height: 96vh;
+    border-radius: 14px;
+  }
+  .advisor-header {
+    padding: 16px 18px;
+  }
+  .advisor-body {
+    padding: 16px 18px;
+  }
+}
