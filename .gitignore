@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.vercel/
+coverage/
+api/node_modules/
+api/dist/
+api/prisma/dev.db
+
+*.tsbuildinfo

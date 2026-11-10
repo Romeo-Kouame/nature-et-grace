@@ -1,0 +1,105 @@
+Création du site Internet de NATURE & GRÂCE
+
+Slogan : « Prenez soin de vous naturellement »
+
+1. Présentation du projet
+
+NATURE & GRÂCE est une marque spécialisée dans la commercialisation de produits naturels destinés aux soins et à l'entretien de la peau.
+
+L'objectif est de créer une boutique en ligne professionnelle, moderne et facile à utiliser, permettant aux clients de découvrir les produits, de consulter leurs prix et de passer leurs commandes directement sur le site ou par WhatsApp.
+
+2. Identité visuelle
+
+- Nom : NATURE & GRÂCE
+- Couleurs principales : vert et or.
+- Style : naturel, élégant, simple et professionnel.
+- Slogan : « Prenez soin de vous naturellement ».
+- Le logo de la marque devra être visible sur toutes les pages.
+
+3. Catalogue des produits
+
+Le site devra présenter les catégories suivantes :
+
+A. Beurre de cacao
+
+- Beurre de cacao brut – 100 g : 1 500 FCFA.
+- Chantilly de beurre de cacao – 100 g : 2 000 FCFA.
+
+B. Savons naturels
+
+- Savon noir à base de cabosse de cacao – 100 g : 2 000 FCFA.
+
+C. Huiles naturelles
+
+- Présentation des différentes huiles naturelles commercialisées par la marque.
+- Photo de chaque huile.
+- Nom du produit.
+- Description et utilisation.
+- Contenance.
+- Prix de vente.
+
+Les huiles pourront être ajoutées, modifiées ou supprimées facilement selon les disponibilités.
+
+4. Fonctionnalités du site
+
+Le site devra comporter :
+
+1. Page d'accueil : présentation de NATURE & GRÂCE, slogan et produits mis en avant.
+2. Page Boutique : présentation de tous les produits par catégorie.
+3. Fiche produit : photo, nom, description, contenance et prix.
+4. Panier : possibilité de sélectionner plusieurs produits et leurs quantités.
+5. Commande : formulaire avec nom, numéro de téléphone, commune et adresse de livraison.
+6. Contact : accès direct à WhatsApp et aux coordonnées de la boutique.
+7. À propos : présentation de la marque et de ses valeurs.
+
+5. Mode de commande
+
+Le client doit pouvoir :
+
+- Choisir un ou plusieurs produits.
+- Indiquer les quantités souhaitées.
+- Ajouter ses coordonnées.
+- Valider sa commande sur le site.
+- Ou envoyer directement sa commande par WhatsApp.
+
+WhatsApp de la boutique : +225 07 17 68 47 51.
+
+6. Mode de paiement
+
+Le seul moyen de paiement à intégrer est WAVE.
+
+Le site devra permettre au client de connaître les modalités de paiement et de transmettre une preuve de paiement si nécessaire.
+
+7. Livraison
+
+- Les commandes doivent pouvoir être effectuées depuis différentes communes.
+- Les frais et délais de livraison doivent être communiqués au client avant la validation définitive.
+- Les informations de livraison doivent être faciles à modifier.
+
+8. Gestion de la boutique
+
+- Ajouter de nouveaux produits.
+- Modifier les prix.
+- Ajouter des photos.
+- Modifier les descriptions.
+- Mettre à jour les stocks.
+- Consulter les commandes.
+- Confirmer les paiements et les livraisons.
+
+9. Aspects techniques
+
+Le site devra être :
+
+- Adapté aux téléphones, tablettes et ordinateurs.
+- Rapide et facile à utiliser.
+- Sécurisé.
+- Facile à administrer sans connaissances informatiques avancées.
+
+Le nom de domaine sera choisi ultérieurement.
+
+10. Résultat attendu
+
+Obtenir une boutique en ligne professionnelle qui présente l'ensemble des produits NATURE & GRÂCE, facilite les commandes, permet le paiement par WAVE et offre un accès direct à WhatsApp.
+
+NATURE & GRÂCE
+« Prenez soin de vous naturellement »
