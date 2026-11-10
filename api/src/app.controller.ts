@@ -10,6 +10,20 @@ import * as bcrypt from 'bcryptjs'
 import { OrderStatus } from '@prisma/client'
 import { AdminGuard } from './auth'
 import { PrismaService } from './prisma.service'
+import { GeminiService } from './gemini.service'
+
+class BeautyAdviceDto {
+  @IsString() @MinLength(2) message!: string
+  @IsOptional() @IsString() skinType?: string
+  @IsOptional() @IsArray() history?: { role: 'user' | 'model'; text: string }[]
+}
+
+class GenerateDescriptionDto {
+  @IsString() @MinLength(2) name!: string
+  @IsOptional() @IsString() category?: string
+  @IsOptional() @IsString() size?: string
+  @IsOptional() @IsString() keyIngredients?: string
+}
 
 class LoginDto {
   @IsEmail() email!: string
@@ -54,7 +68,21 @@ class StoreSettingsDto {
 
 @Controller()
 export class AppController {
-  constructor(private readonly db: PrismaService, private readonly jwt: JwtService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly jwt: JwtService,
+    private readonly gemini: GeminiService,
+  ) {}
+
+  @Post('ai/advisor')
+  getBeautyAdvice(@Body() dto: BeautyAdviceDto) {
+    return this.gemini.getBeautyAdvice(dto)
+  }
+
+  @Post('ai/generate-description')
+  generateDescription(@Body() dto: GenerateDescriptionDto) {
+    return this.gemini.generateProductDescription(dto)
+  }
 
   @Get('products')
   products() {

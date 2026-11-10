@@ -34,3 +34,19 @@ export type ApiStoreSettings = {
   deliveryInfo: string
   waveInstructions: string
 }
+
+export type BeautyAdvice = {
+  diagnosis: string
+  recommendedProductIds: string[]
+  routineMorning: string[]
+  routineEvening: string[]
+  naturalTips: string[]
+  whatsappSummary: string
+  isDemo?: boolean
+}
+
+export type ProductDescriptionResult = {
+  description: string
+  suggestedTags?: string[]
+  isDemo?: boolean
+}
