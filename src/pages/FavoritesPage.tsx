@@ -1,63 +1,43 @@
 import React from 'react'
-import { Heart, ShoppingBag } from 'lucide-react'
+import { ArrowRight, Heart } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import ProductCardJumia from '../components/ProductCardJumia'
+import ProductCard from '../components/ProductCard'
+import { usePageMeta } from '../hooks/usePageMeta'
 
 export const FavoritesPage: React.FC = () => {
   const { products, favorites, navigate } = useApp()
-
   const favoriteProducts = products.filter((p) => favorites.includes(p.id))
+  usePageMeta('Mes favoris')
 
   return (
-    <div style={{ padding: '30px 4% 70px', maxWidth: '1100px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--brand-gold)', letterSpacing: '0.14em', fontWeight: 600 }}>
-          VOTRE LISTE D’ENVIES
-        </span>
-        <h1 style={{ font: "500 clamp(26px, 3.5vw, 36px) 'Playfair Display', serif", margin: '4px 0 6px', color: 'var(--text-primary)' }}>
-          Mes Soins Favoris ({favoriteProducts.length})
+    <div className="ng-container ng-subpage">
+      <header className="ng-page-head ng-page-head--left">
+        <h1>
+          Mes favoris <span>{favoriteProducts.length}</span>
         </h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-          Retrouvez tous vos coups de cœur NATURE & GRÂCE pour les ajouter facilement à votre panier.
-        </p>
-      </div>
+        <p>Vos coups de cœur, prêts à rejoindre votre panier.</p>
+      </header>
 
       {favoriteProducts.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '70px 20px',
-            background: 'var(--bg-surface)',
-            borderRadius: '16px',
-            border: '1px solid var(--border-subtle)',
-          }}
-        >
-          <div style={{ color: '#d1d5db', display: 'inline-block', marginBottom: '16px' }}>
-            <Heart size={48} strokeWidth={1.5} />
-          </div>
-          <h3 style={{ font: "500 22px 'Playfair Display', serif", margin: '0 0 8px', color: 'var(--text-primary)' }}>
-            Votre liste de favoris est vide
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '380px', margin: '0 auto 20px' }}>
-            Cliquez sur le petit cœur présent sur les fiches produits pour sauvegarder vos soins préférés ici.
-          </p>
-          <button
-            type="button"
-            className="button primary"
-            style={{ background: 'var(--brand-green)' }}
-            onClick={() => navigate('/boutique')}
-          >
-            Découvrir le catalogue
+        <div className="ng-empty ng-empty--icon">
+          <span className="ng-empty-ico">
+            <Heart size={28} />
+          </span>
+          <h3>Aucun favori pour l’instant</h3>
+          <p>Touchez le cœur sur un produit pour le retrouver ici.</p>
+          <button type="button" className="ng-btn ng-btn--primary" onClick={() => navigate('/boutique')}>
+            Découvrir la boutique <ArrowRight size={16} />
           </button>
         </div>
       ) : (
-        <div className="jumia-products-grid">
-          {favoriteProducts.map((p) => (
-            <ProductCardJumia product={p} key={p.id} />
+        <div className="ng-grid">
+          {favoriteProducts.map((p, i) => (
+            <ProductCard product={p} key={p.id} index={i} />
           ))}
         </div>
       )}
     </div>
   )
 }
+
 export default FavoritesPage

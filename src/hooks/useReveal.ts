@@ -15,13 +15,14 @@ export function useReveal() {
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          // Visible, ou déjà dépassé (défilement rapide, lien vers le bas de page)
+          if (entry.isIntersecting || entry.boundingClientRect.top < 0) {
             entry.target.classList.add('is-visible')
             io.unobserve(entry.target)
           }
         })
       },
-      { rootMargin: '0px 0px -40px 0px', threshold: 0.08 },
+      { rootMargin: '0px 0px -40px 0px', threshold: [0, 0.08] },
     )
 
     const watch = (root: ParentNode) => {

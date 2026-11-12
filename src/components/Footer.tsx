@@ -1,34 +1,47 @@
 import React from 'react'
 import { ArrowUpRight, Leaf, MapPin, MessageCircle, Phone, ShieldCheck, Truck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { CATEGORIES } from '../data/products'
-import { ProductCategory } from '../types'
+import { ALL_CATEGORIES } from '../types'
 
-const WA_NUMBER = '2250717684751'
-const WA_DISPLAY = '+225 07 17 68 47 51'
-
-const PROMISES = [
-  { icon: Truck, title: 'Livraison en 24 h', text: 'Partout à Abidjan' },
-  { icon: ShieldCheck, title: 'Paiement Wave', text: 'Sécurisé, sans frais' },
-  { icon: Leaf, title: '100 % naturel', text: 'Sans paraben ni additif' },
-  { icon: MessageCircle, title: 'Conseils WhatsApp', text: 'Réponse rapide' },
+const LEGAL_LINKS = [
+  { path: '/mentions-legales', label: 'Mentions légales' },
+  { path: '/cgv', label: 'Conditions de vente' },
+  { path: '/confidentialite', label: 'Confidentialité' },
 ]
 
 export const Footer: React.FC = () => {
-  const { navigate, setSelectedCategory, setSearchTerm } = useApp()
+  const { navigate, setSelectedCategory, setSearchTerm, categories, settings, waLink, waDisplay } = useApp()
 
-  const openCategory = (cat: ProductCategory) => {
+  const openCategory = (cat: string) => {
     setSearchTerm('')
     setSelectedCategory(cat)
     navigate('/boutique')
   }
 
+  const link = (path: string, label: string) => (
+    <a
+      href={path}
+      onClick={(e) => {
+        e.preventDefault()
+        navigate(path)
+      }}
+    >
+      {label}
+    </a>
+  )
+
+  const promises = [
+    { icon: Truck, title: 'Livraison', text: settings.deliveryCommunes },
+    { icon: ShieldCheck, title: 'Paiement Wave', text: 'Après confirmation de la boutique' },
+    { icon: Leaf, title: 'Soins naturels', text: 'Cacao et végétaux de Côte d’Ivoire' },
+    { icon: MessageCircle, title: 'Conseils WhatsApp', text: waDisplay },
+  ]
+
   return (
     <footer className="ng-footer">
-      {/* Engagements */}
       <div className="ng-container">
         <ul className="ng-promises">
-          {PROMISES.map(({ icon: Icon, title, text }) => (
+          {promises.map(({ icon: Icon, title, text }) => (
             <li key={title}>
               <span>
                 <Icon size={20} />
@@ -50,14 +63,11 @@ export const Footer: React.FC = () => {
                 <img src="/logo.jpeg" alt="" />
                 <span>
                   <b>Nature &amp; Grâce</b>
-                  <small>Cosmétique naturelle ivoirienne</small>
+                  <small>Prenez soin de vous naturellement</small>
                 </span>
               </button>
-              <p>
-                Des soins purs au beurre de cacao de Côte d’Ivoire, préparés de façon artisanale pour la peau et les
-                cheveux.
-              </p>
-              <a className="ng-footer-cta" href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noreferrer">
+              <p>Des soins au beurre de cacao de Côte d’Ivoire, préparés de façon artisanale pour la peau et les cheveux.</p>
+              <a className="ng-footer-cta" href={waLink()} target="_blank" rel="noreferrer">
                 <MessageCircle size={18} /> Commander sur WhatsApp
               </a>
             </div>
@@ -65,7 +75,7 @@ export const Footer: React.FC = () => {
             <nav aria-label="Boutique">
               <h4>Boutique</h4>
               <ul>
-                {CATEGORIES.filter((c) => c !== 'Toutes les catégories').map((cat) => (
+                {categories.map((cat) => (
                   <li key={cat}>
                     <button type="button" onClick={() => openCategory(cat)}>
                       {cat}
@@ -73,7 +83,7 @@ export const Footer: React.FC = () => {
                   </li>
                 ))}
                 <li>
-                  <button type="button" onClick={() => openCategory('Toutes les catégories')}>
+                  <button type="button" onClick={() => openCategory(ALL_CATEGORIES)}>
                     Tous les produits
                   </button>
                 </li>
@@ -83,26 +93,10 @@ export const Footer: React.FC = () => {
             <nav aria-label="Informations">
               <h4>La maison</h4>
               <ul>
-                <li>
-                  <button type="button" onClick={() => navigate('/histoire')}>
-                    Notre histoire
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => navigate('/temoignages')}>
-                    Avis clients
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => navigate('/contact')}>
-                    Livraison &amp; contact
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => navigate('/favoris')}>
-                    Mes favoris
-                  </button>
-                </li>
+                <li>{link('/histoire', 'Notre histoire')}</li>
+                <li>{link('/temoignages', 'Avis clients')}</li>
+                <li>{link('/contact', 'Livraison & contact')}</li>
+                <li>{link('/favoris', 'Mes favoris')}</li>
               </ul>
             </nav>
 
@@ -111,17 +105,17 @@ export const Footer: React.FC = () => {
               <ul>
                 <li>
                   <Phone size={16} />
-                  <a href={`tel:+${WA_NUMBER}`}>{WA_DISPLAY}</a>
+                  <a href={`tel:+${settings.whatsappNumber}`}>{waDisplay}</a>
                 </li>
                 <li>
                   <MessageCircle size={16} />
-                  <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noreferrer">
-                    WhatsApp, réponse rapide
+                  <a href={waLink()} target="_blank" rel="noreferrer">
+                    Écrire sur WhatsApp
                   </a>
                 </li>
                 <li>
                   <MapPin size={16} />
-                  <span>Abidjan, Côte d’Ivoire · expédition vers l’intérieur</span>
+                  <span>Côte d’Ivoire · {settings.deliveryCommunes}</span>
                 </li>
               </ul>
               <div className="ng-pay">
@@ -135,7 +129,11 @@ export const Footer: React.FC = () => {
 
           <div className="ng-footer-bottom">
             <span>© {new Date().getFullYear()} Nature &amp; Grâce. Tous droits réservés.</span>
-            <span className="ng-footer-made">Fait avec soin en Côte d’Ivoire</span>
+            <nav className="ng-footer-legal" aria-label="Informations légales">
+              {LEGAL_LINKS.map((l) => (
+                <React.Fragment key={l.path}>{link(l.path, l.label)}</React.Fragment>
+              ))}
+            </nav>
             <a href="/admin" className="ng-footer-admin">
               Espace boutique <ArrowUpRight size={13} />
             </a>

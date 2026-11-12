@@ -9,7 +9,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:seed-admin": "tsx prisma/seed-admin.ts",
-    "prisma:seed-products": "tsx prisma/seed-products.ts"
+    "prisma:seed-products": "tsx prisma/seed-products.ts",
+    "prisma:seed-demo": "tsx prisma/seed-demo.ts",
+    "prisma:remove-demo": "tsx prisma/remove-demo.ts"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",

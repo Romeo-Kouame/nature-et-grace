@@ -1,184 +1,153 @@
 import React, { useState } from 'react'
-import { ChevronDown, Clock, HelpCircle, MapPin, MessageCircle, Phone, Send, ShieldCheck, Truck } from 'lucide-react'
+import { ChevronDown, MapPin, MessageCircle, Send, ShieldCheck, Truck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { formatXof } from '../format'
+import { usePageMeta } from '../hooks/usePageMeta'
 
 export const ContactPage: React.FC = () => {
-  const { showToast } = useApp()
+  const { showToast, settings, waLink, waDisplay } = useApp()
+  usePageMeta('Contact & livraison', 'Contactez NATURE & GRÂCE sur WhatsApp : commandes, conseils, zones et frais de livraison, paiement Wave.')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
-  const [contactName, setContactName] = useState('')
-  const [contactPhone, setContactPhone] = useState('')
-  const [contactMessage, setContactMessage] = useState('')
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [message, setMessage] = useState('')
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    const text = `Bonjour NATURE & GRÂCE,\n\nJe vous contacte depuis votre site Internet.\nNom : ${contactName}\nTéléphone : ${contactPhone}\nMessage : ${contactMessage}`
-    window.open(`https://wa.me/2250717684751?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
-    setContactMessage('')
-    showToast('Message transmis à notre service WhatsApp !')
-  }
+  const zones = settings.deliveryZones
 
   const faqs = [
     {
-      q: 'Comment utiliser le Beurre de cacao brut s’il est solide ?',
-      a: 'Le beurre de cacao brut pur est naturellement compact à température ambiante, gage de son authenticité sans additifs chimiques. Il suffit de prélever une petite noisette et de la frotter 5 à 10 secondes au creux de vos mains tièdes : il fond instantanément en une huile bienfaisante et onctueuse, prête à masser.',
+      q: 'Comment se passe une commande ?',
+      a: 'Ajoutez vos soins au panier, puis validez sur le site avec vos coordonnées ou envoyez votre panier sur WhatsApp. La boutique vous confirme le total, la livraison et le délai avant tout paiement.',
+    },
+    { q: 'Comment fonctionne le paiement par Wave ?', a: settings.waveInstructions },
+    {
+      q: 'Où livrez-vous et à quel prix ?',
+      a: `${settings.deliveryCommunes}. ${settings.deliveryInfo}`,
     },
     {
-      q: 'Le Savon noir de cabosse de cacao convient-il aux peaux sensibles ou acnéiques ?',
-      a: 'Absolument ! Contrairement aux savons chimiques industriels décapants, notre savon noir est formulé à partir de cendres de cabosses de cacao brûlées traditionnellement et d’huiles végétales. Il purifie les pores en profondeur et régule le sébum tout en respectant l’hydratation cutanée.',
+      q: 'Comment utiliser le beurre de cacao brut s’il est solide ?',
+      a: 'Le beurre de cacao brut est naturellement compact à température ambiante. Prélevez une petite noisette et frottez-la quelques secondes entre vos mains : elle fond et devient facile à masser.',
     },
     {
-      q: 'Comment fonctionne le paiement par Wave ?',
-      a: 'Le paiement est simple et 100% sécurisé via Wave. Après l’envoi de votre commande sur le site ou par WhatsApp, la boutique vous confirme le total avec vos frais de livraison locaux. Vous effectuez votre transfert Wave sur le numéro officiel de la boutique, puis votre colis est préparé et expédié sans délai.',
-    },
-    {
-      q: 'Dans quelles communes et villes livrez-vous ?',
-      a: 'Nous assurons la livraison rapide dans toutes les communes du Grand Abidjan (Cocody, Marcory, Yopougon, Plateau, Treichville, Riviera, Koumassi, Abobo, etc.) ainsi que l’expédition vers les villes de l’intérieur (Bouaké, Daloa, Yamoussoukro, San Pedro, Korhogo, etc.) via les gares de transport sécurisées.',
-    },
-    {
-      q: 'Les produits NATURE & GRÂCE conviennent-ils aux femmes enceintes et aux enfants ?',
-      a: 'Oui, nos soins sont formulés à 100% d’ingrédients purs, sans aucun paraben, sans perturbateur endocrinien ni parfum de synthèse. Le Beurre de cacao brut et la Chantilly de cacao sont particulièrement recommandés pour masser le ventre des futures mamans et protéger la peau délicate des enfants.',
+      q: 'Les soins conviennent-ils aux peaux sensibles, aux femmes enceintes et aux enfants ?',
+      a: 'Faites toujours un essai sur une petite zone de peau avant la première utilisation. Pendant la grossesse, pour un bébé ou en cas de peau très réactive, demandez l’avis d’un professionnel de santé. Nous répondons volontiers à vos questions sur la composition par WhatsApp.',
     },
   ]
 
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault()
+    const text = `Bonjour NATURE & GRÂCE,\n\nJe vous contacte depuis votre site.\nNom : ${name}\nTéléphone : ${phone}\nMessage : ${message}`
+    window.open(waLink(text), '_blank', 'noopener,noreferrer')
+    setMessage('')
+    showToast('WhatsApp s’ouvre avec votre message')
+  }
+
   return (
-    <div style={{ padding: '30px 4% 70px', maxWidth: '1040px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--brand-gold)', letterSpacing: '0.16em', fontWeight: 600 }}>
-          SERVICE CLIENT & LIVRAISON
-        </span>
-        <h1 style={{ font: "500 clamp(30px, 4vw, 44px)/1.15 'Playfair Display', serif", margin: '8px 0 12px', color: 'var(--text-primary)' }}>
-          Contactez-nous & <em>Foire aux questions</em>
-        </h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '580px', margin: '0 auto' }}>
-          Une question sur un produit, votre commande ou les modalités de livraison ? Notre équipe est à votre écoute tous les jours.
-        </p>
-      </div>
+    <div className="ng-container ng-subpage">
+      <header className="ng-page-head">
+        <span className="ng-eyebrow">CONTACT & LIVRAISON</span>
+        <h1>Une question ? On vous répond.</h1>
+        <p>Sur un produit, votre commande ou la livraison : écrivez-nous, nous vous répondons sur WhatsApp.</p>
+      </header>
 
-      {/* Cartes Contact Rapide */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '14px', padding: '24px', textAlign: 'center' }}>
-          <div style={{ width: '44px', height: '44px', background: '#25d36622', color: '#16a34a', borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+      <section className="ng-info-cards">
+        <a className="ng-info-card ng-info-card--wa" href={waLink()} target="_blank" rel="noreferrer">
+          <span>
             <MessageCircle size={22} />
-          </div>
-          <b style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>WhatsApp Direct</b>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 14px' }}>Réponse rapide 7j/7 pour conseils & commandes</p>
-          <a
-            href="https://wa.me/2250717684751"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="button primary"
-            style={{ background: '#25d366', borderColor: '#25d366', fontSize: '11px', padding: '10px 16px' }}
-          >
-            +225 07 17 68 47 51
-          </a>
-        </div>
-
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '14px', padding: '24px', textAlign: 'center' }}>
-          <div style={{ width: '44px', height: '44px', background: '#54b8eb22', color: '#0284c7', borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+          </span>
+          <b>WhatsApp</b>
+          <p>Conseils et commandes</p>
+          <strong>{waDisplay}</strong>
+        </a>
+        <div className="ng-info-card">
+          <span>
             <ShieldCheck size={22} />
-          </div>
-          <b style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>Paiement Wave</b>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 14px' }}>Paiement mobile instantané sans frais additionnels</p>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--brand-gold)' }}>Modalités confirmées à la commande</span>
+          </span>
+          <b>Paiement Wave</b>
+          <p>{settings.waveInstructions}</p>
+          {settings.waveNumber && <strong>Wave : {settings.waveNumber}</strong>}
         </div>
-
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '14px', padding: '24px', textAlign: 'center' }}>
-          <div style={{ width: '44px', height: '44px', background: '#f59e0b22', color: '#d97706', borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+        <div className="ng-info-card">
+          <span>
             <Truck size={22} />
-          </div>
-          <b style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>Zones de Livraison</b>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 14px' }}>Abidjan, Bouaké, Daloa, Yamoussoukro...</p>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Frais communiqués avant validation finale</span>
+          </span>
+          <b>Livraison</b>
+          <p>{settings.deliveryCommunes}</p>
+          <strong>Frais annoncés avant paiement</strong>
         </div>
+      </section>
+
+      {zones.length > 0 && (
+        <section className="ng-zones">
+          <h2 className="ng-h2">Frais et délais de livraison</h2>
+          <p className="ng-form-hint">{settings.deliveryInfo}</p>
+          <div className="ng-zone-table" role="table" aria-label="Zones de livraison">
+            <div role="row" className="ng-zone-head">
+              <span role="columnheader">Zone</span>
+              <span role="columnheader">Frais</span>
+              <span role="columnheader">Délai</span>
+            </div>
+            {zones.map((z) => (
+              <div role="row" key={z.name}>
+                <span role="cell">{z.name}</span>
+                <span role="cell">{z.feeXof === null ? 'À confirmer' : z.feeXof === 0 ? 'Offerte' : formatXof(z.feeXof)}</span>
+                <span role="cell">{z.delay || '—'}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="ng-contact-grid">
+        <section>
+          <h2 className="ng-h2">Questions fréquentes</h2>
+          <div className="ng-faq">
+            {faqs.map((faq, idx) => {
+              const open = openFaq === idx
+              return (
+                <div className={`ng-faq-item ${open ? 'open' : ''}`} key={faq.q}>
+                  <button type="button" onClick={() => setOpenFaq(open ? null : idx)} aria-expanded={open}>
+                    <span>{faq.q}</span>
+                    <ChevronDown size={18} />
+                  </button>
+                  <div className="ng-faq-answer">
+                    <div>
+                      <p>{faq.a}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="ng-form-card">
+          <h2 className="ng-h2">Écrire à la boutique</h2>
+          <p className="ng-form-hint">Votre message s’ouvrira dans WhatsApp, prêt à être envoyé.</p>
+          <form onSubmit={handleSend} className="ng-form">
+            <label>
+              Nom complet
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex. Aminata Koné" autoComplete="name" required />
+            </label>
+            <label>
+              Téléphone
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07 00 00 00 00" autoComplete="tel" required />
+            </label>
+            <label>
+              Message
+              <textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Votre question, une demande de livraison…" required />
+            </label>
+            <button type="submit" className="ng-btn ng-btn--primary">
+              <Send size={16} /> Envoyer sur WhatsApp
+            </button>
+          </form>
+          <p className="ng-form-foot">
+            <MapPin size={15} /> Côte d’Ivoire · {settings.deliveryCommunes}
+          </p>
+        </section>
       </div>
-
-      {/* FAQ interactive en accordéon */}
-      <section style={{ marginBottom: '50px' }}>
-        <h2 style={{ font: "500 26px 'Playfair Display', serif", textAlign: 'center', margin: '0 0 24px', color: 'var(--text-primary)' }}>
-          Questions fréquentes sur nos soins
-        </h2>
-
-        <div className="faq-list">
-          {faqs.map((faq, idx) => (
-            <div className={`faq-item ${openFaq === idx ? 'open' : ''}`} key={idx}>
-              <button
-                type="button"
-                className="faq-question"
-                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                aria-expanded={openFaq === idx}
-              >
-                <span>{faq.q}</span>
-                <ChevronDown size={17} />
-              </button>
-              {openFaq === idx && <div className="faq-answer">{faq.a}</div>}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Formulaire de Contact */}
-      <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '30px' }}>
-        <h3 style={{ font: "500 22px 'Playfair Display', serif", margin: '0 0 8px', color: 'var(--text-primary)' }}>
-          Envoyer un message à la boutique
-        </h3>
-        <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 20px' }}>
-          Votre message sera automatiquement formaté pour être envoyé sur notre WhatsApp officiel.
-        </p>
-
-        <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
-            <div className="auth-field">
-              <label>Votre nom complet</label>
-              <input
-                type="text"
-                placeholder="Ex. Kouamé Romeo"
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="auth-field">
-              <label>Votre numéro de téléphone</label>
-              <input
-                type="tel"
-                placeholder="+225 07..."
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="auth-field">
-            <label>Votre message</label>
-            <textarea
-              rows={4}
-              placeholder="Posez votre question, formulez votre demande de livraison ou de partenariat..."
-              value={contactMessage}
-              onChange={(e) => setContactMessage(e.target.value)}
-              style={{
-                padding: '12px 14px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-strong)',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '12px',
-                fontFamily: 'inherit',
-              }}
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="button primary"
-            style={{ background: 'var(--brand-green)', alignSelf: 'flex-start', fontSize: '12px' }}
-          >
-            <Send size={15} /> Envoyer sur WhatsApp
-          </button>
-        </form>
-      </section>
     </div>
   )
 }
+
 export default ContactPage

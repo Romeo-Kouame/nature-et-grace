@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai'
 import { api, BeautyAdvice, ProductDescriptionResult } from './api'
 
 export type ClientCatalogProduct = {
@@ -11,110 +10,39 @@ export type ClientCatalogProduct = {
 }
 
 /**
- * Demande un diagnostic et une routine personnalisée au Conseiller Beauté Gemini
+ * Demande un diagnostic et une routine personnalisée au Conseiller Beauté.
+ * La clé Gemini reste sur le serveur : le navigateur n'appelle jamais Google directement.
+ * Si l'API ne répond pas, un conseil de démonstration est composé à partir du catalogue affiché.
  */
 export async function requestBeautyAdvice(dto: {
   message: string
   skinType?: string
-  catalogProducts?: ClientCatalogProduct[]
+  catalogProducts: ClientCatalogProduct[]
 }): Promise<BeautyAdvice> {
-  // 1. Essai prioritaire via l'API backend sécurisée
+  const available = new Set(dto.catalogProducts.map((p) => p.id))
   try {
-    return await api<BeautyAdvice>('/ai/advisor', {
+    const advice = await api<BeautyAdvice>('/ai/advisor', {
       method: 'POST',
-      body: JSON.stringify(dto),
+      body: JSON.stringify({ message: dto.message.slice(0, 600), skinType: dto.skinType }),
     })
-  } catch (backendErr) {
-    // 2. Si le backend n'est pas démarré, tentative directe côté client si VITE_GEMINI_API_KEY est fournie
-    const clientKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim()
-    if (clientKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: clientKey })
-        const catalogText = (dto.catalogProducts || [])
-          .map((p) => `- ID: "${p.id}" | ${p.name} (${p.category}, ${p.size}) : ${p.description}`)
-          .join('\n')
-
-        const systemInstruction = `Tu es le Conseiller Beauté & Soins Personnalisé officiel de la marque ivoirienne NATURE & GRÂCE (Slogan: "Prenez soin de vous naturellement").
-Recommande une routine naturelle en utilisant UNIQUEMENT les identifiants de produits fournis dans "recommendedProductIds".
-Produits disponibles :
-${catalogText}`
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: `Type / Préoccupation : ${dto.skinType || 'Non précisé'}\nMessage : "${dto.message}"`,
-          config: {
-            systemInstruction,
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: 'object',
-              properties: {
-                diagnosis: { type: 'string' },
-                recommendedProductIds: { type: 'array', items: { type: 'string' } },
-                routineMorning: { type: 'array', items: { type: 'string' } },
-                routineEvening: { type: 'array', items: { type: 'string' } },
-                naturalTips: { type: 'array', items: { type: 'string' } },
-                whatsappSummary: { type: 'string' },
-              },
-              required: ['diagnosis', 'recommendedProductIds', 'routineMorning', 'routineEvening', 'naturalTips', 'whatsappSummary'],
-            },
-          },
-        })
-
-        if (response.text) {
-          const parsed = JSON.parse(response.text) as BeautyAdvice
-          return { ...parsed, isDemo: false }
-        }
-      } catch (genaiErr) {
-        console.warn('Échec appel client Gemini:', genaiErr)
-      }
-    }
-
-    // 3. Fallback immédiat et intelligent pour navigation fluide même hors-ligne
-    return getOfflineBeautyAdvice(dto.message, dto.skinType, dto.catalogProducts)
+    return { ...advice, recommendedProductIds: advice.recommendedProductIds.filter((id) => available.has(id)) }
+  } catch {
+    const advice = getOfflineBeautyAdvice(dto.message, dto.skinType, dto.catalogProducts)
+    return { ...advice, recommendedProductIds: advice.recommendedProductIds.filter((id) => available.has(id)) }
   }
 }
 
-/**
- * Génération de description marketing par IA pour l'administration
- */
+/** Rédaction d'une description produit par l'IA (administration uniquement). */
 export async function requestProductDescription(dto: {
   name: string
   category?: string
   size?: string
   keyIngredients?: string
 }): Promise<ProductDescriptionResult> {
-  try {
-    return await api<ProductDescriptionResult>('/ai/generate-description', {
-      method: 'POST',
-      body: JSON.stringify(dto),
-    })
-  } catch {
-    const clientKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim()
-    if (clientKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: clientKey })
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: `Rédige une description poétique, concise (2-3 phrases) et vendeuse pour :
-Nom: ${dto.name}
-Catégorie: ${dto.category || 'Soin naturel'}
-Contenance: ${dto.size || '100 g'}
-Ingrédients: ${dto.keyIngredients || 'Naturels'}
-Style: NATURE & GRÂCE (naturel, élégant, bienveillant, inspiré de Côte d'Ivoire).`,
-        })
-        if (response.text) {
-          return { description: response.text.trim(), isDemo: false }
-        }
-      } catch (err) {
-        console.warn('Gemini client error:', err)
-      }
-    }
-
-    return {
-      description: `${dto.name} est une création naturelle de NATURE & GRÂCE, pensée pour nourrir intensément et sublimer la peau au quotidien. Texture délicate et actifs bienfaisants pour un rituel réconfortant.`,
-      isDemo: true,
-    }
-  }
+  return api<ProductDescriptionResult>('/ai/generate-description', {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  })
 }
 
 /**

@@ -1,96 +1,78 @@
-import React, { FormEvent, useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Leaf, Mail, MoreHorizontal, ShieldCheck, Sparkles, Star, Truck, Zap } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, Gift, Leaf, MessageCircle, MoreHorizontal, ShieldCheck, ShoppingBag, Sparkles, Truck, Wallet } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import ProductCardJumia, { formatPrice } from '../components/ProductCardJumia'
-import { CATEGORY_AVATARS, INITIAL_REVIEWS } from '../data/products'
-import { ProductCategory } from '../types'
+import ProductCard, { BADGE_ORDER, ProductCardSkeleton } from '../components/ProductCard'
+import { CATEGORY_INFO, PHOTOS } from '../data/products'
+import { formatXof } from '../format'
+import { flyToCart } from '../flyToCart'
+import { ALL_CATEGORIES } from '../types'
+import { usePageMeta } from '../hooks/usePageMeta'
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1573461160327-b450ce3d8e7f?auto=format&fit=crop&w=900&q=80'
-const PROMO_CACAO_IMAGE = 'https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=700&q=80'
-const PROMO_SOAP_IMAGE = 'https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=700&q=80'
+/** Du fruit au soin : le parcours raconté sur l'accueil (photos prises en Côte d'Ivoire et au Ghana) */
+const JOURNEY = [
+  { image: PHOTOS.cabosse, title: 'La cabosse', text: 'Le cacao mûrit sur les cacaoyers de Côte d’Ivoire, premier producteur au monde.' },
+  { image: PHOTOS.cabosseOuverte, title: 'Les fèves', text: 'Les fèves sont extraites de la cabosse puis séchées au soleil.' },
+  { image: PHOTOS.beurreCacao, title: 'Le beurre', text: 'Pressées, elles donnent un beurre brut, riche et nourrissant.' },
+  { image: PHOTOS.kariteFouette, title: 'Votre soin', text: 'Fouetté, mélangé ou en savon : un soin simple pour la peau et les cheveux.' },
+]
 
-const SHORT_LABELS: Record<string, string> = {
-  'Beurre de cacao': 'Cacao',
-  'Savons naturels': 'Savons',
-  'Huiles naturelles': 'Huiles',
-  'Rituels & Coffrets': 'Coffrets',
-}
-
-/** Fin de la vente flash : dimanche soir 23:59:59 (renouvelée chaque semaine). */
-function nextSundayEnd() {
-  const d = new Date()
-  d.setDate(d.getDate() + ((7 - d.getDay()) % 7))
-  d.setHours(23, 59, 59, 0)
-  if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 7)
-  return d.getTime()
-}
-
-function useCountdown() {
-  const [target, setTarget] = useState(nextSundayEnd)
-  const [now, setNow] = useState(Date.now())
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(id)
-  }, [])
-  useEffect(() => {
-    if (now >= target) setTarget(nextSundayEnd())
-  }, [now, target])
-  const diff = Math.max(0, target - now)
-  return {
-    days: Math.floor(diff / 864e5),
-    hours: Math.floor(diff / 36e5) % 24,
-    minutes: Math.floor(diff / 6e4) % 60,
-    seconds: Math.floor(diff / 1e3) % 60,
-  }
-}
-
-const pad = (n: number) => String(n).padStart(2, '0')
-
-export const HomePage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdvisor }) => {
-  const { products, navigate, setSelectedCategory, setSearchTerm, showToast } = useApp()
-  const countdown = useCountdown()
+export const HomePage: React.FC = () => {
+  const { products, categories, navigate, setSelectedCategory, setSearchTerm, reviews, settings, waLink, setAdvisorOpen, catalogLive, catalogLoading, addToCart } = useApp()
   const [reviewIndex, setReviewIndex] = useState(0)
-  const [email, setEmail] = useState('')
+  usePageMeta()
 
-  const flashProducts = useMemo(() => products.filter((p) => p.isFlashSale), [products])
-  const bestSellers = useMemo(() => [...products].sort((a, b) => b.reviewCount - a.reviewCount), [products])
-  const dealProduct = useMemo(() => {
-    const pct = (d?: string | null) => Number(String(d ?? '').replace(/[^0-9]/g, '')) || 0
-    return [...flashProducts].sort((a, b) => pct(b.discount) - pct(a.discount))[0] ?? products[0]
-  }, [flashProducts, products])
+  const available = useMemo(
+    () => products.filter((p) => p.price !== null && (!catalogLive || p.stock > 0)),
+    [products, catalogLive],
+  )
+  const sorted = useMemo(() => [...(available.length ? available : products)].sort((a, b) => BADGE_ORDER(a) - BADGE_ORDER(b)), [available, products])
+  const featured = sorted.slice(0, 4)
+  const hasBestsellers = featured.some((p) => p.badge === 'bestseller')
+  // Coffret mis en avant : le coffret disponible le mieux classé (meilleure vente d'abord)
+  const giftBox = sorted.find((p) => p.category === 'Rituels & Coffrets' && p.imageUrl && p.price !== null)
+  const homeReviews = reviews.slice(0, 6)
 
   useEffect(() => {
-    const id = window.setInterval(() => setReviewIndex((i) => (i + 1) % INITIAL_REVIEWS.length), 6000)
+    if (homeReviews.length < 2) return
+    const id = window.setInterval(() => setReviewIndex((i) => (i + 1) % homeReviews.length), 6000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [homeReviews.length])
 
-  const openCategory = (cat: ProductCategory | 'all') => {
+  const openCategory = (cat: string) => {
     setSearchTerm('')
-    setSelectedCategory(cat === 'all' ? 'Toutes les catégories' : cat)
+    setSelectedCategory(cat)
     navigate('/boutique')
   }
 
-  const subscribe = (e: FormEvent) => {
-    e.preventDefault()
-    showToast('Merci ! Vous recevrez nos offres en avant-première.')
-    setEmail('')
-  }
+  const review = homeReviews[reviewIndex % Math.max(1, homeReviews.length)]
 
-  const review = INITIAL_REVIEWS[reviewIndex]
+  const steps = [
+    { icon: ShoppingBag, title: 'Choisissez vos soins', text: 'Ajoutez les produits et les quantités souhaitées à votre panier.' },
+    {
+      icon: MessageCircle,
+      title: 'Commandez',
+      text: 'Validez sur le site avec vos coordonnées, ou envoyez votre panier sur WhatsApp en un clic.',
+    },
+    {
+      icon: Wallet,
+      title: 'Payez par Wave et recevez',
+      text: 'La boutique vous confirme le total avec la livraison, puis vous payez par Wave.',
+    },
+  ]
 
   return (
     <div className="ng-container ng-home">
-      {/* 1. RAYONS EN PASTILLES */}
+      {/* RAYONS EN PASTILLES */}
       <nav className="ng-cats" aria-label="Rayons">
-        {CATEGORY_AVATARS.map((cat) => (
-          <button key={cat.name} type="button" className="ng-cat" onClick={() => openCategory(cat.name)}>
+        {categories.map((cat) => (
+          <button key={cat} type="button" className="ng-cat" onClick={() => openCategory(cat)}>
             <span className="ng-cat-img">
-              <img src={cat.image} alt="" loading="lazy" />
+              {CATEGORY_INFO[cat] ? <img src={CATEGORY_INFO[cat].image} alt="" loading="lazy" /> : <Leaf size={22} />}
             </span>
-            {SHORT_LABELS[cat.name] ?? cat.name}
+            {CATEGORY_INFO[cat]?.short ?? cat}
           </button>
         ))}
-        <button type="button" className="ng-cat" onClick={() => openCategory('all')}>
+        <button type="button" className="ng-cat" onClick={() => openCategory(ALL_CATEGORIES)}>
           <span className="ng-cat-img">
             <MoreHorizontal size={24} />
           </span>
@@ -98,26 +80,26 @@ export const HomePage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdviso
         </button>
       </nav>
 
-      {/* 2. HERO */}
+      {/* HERO */}
       <section className="ng-hero">
         <div className="ng-hero-copy">
           <span className="ng-eyebrow">
-            <Leaf size={13} /> 100% NATUREL · CÔTE D’IVOIRE
+            <Leaf size={13} /> SOINS NATURELS · CÔTE D’IVOIRE
           </span>
           <h1>
-            La beauté naturelle,
+            Prenez soin de vous
             <br />
-            <span>au cœur du cacao.</span>
+            <span>naturellement.</span>
           </h1>
           <p>
-            Beurre de cacao brut, savons noirs artisanaux et huiles vierges pressées à froid. Des soins purs, livrés chez
-            vous à Abidjan.
+            Beurre de cacao brut, chantilly de cacao, savon noir de cabosse et huiles végétales : des soins simples et
+            naturels pour la peau et les cheveux.
           </p>
           <div className="ng-hero-actions">
             <button type="button" className="ng-btn ng-btn--primary" onClick={() => navigate('/boutique')}>
               Découvrir la boutique <ArrowRight size={17} />
             </button>
-            <button type="button" className="ng-btn ng-btn--ghost" onClick={onOpenAdvisor}>
+            <button type="button" className="ng-btn ng-btn--ghost" onClick={() => setAdvisorOpen(true)}>
               <Sparkles size={16} color="var(--ng-gold-600)" /> Mon rituel IA
             </button>
           </div>
@@ -125,20 +107,20 @@ export const HomePage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdviso
 
         <div className="ng-hero-art" aria-hidden="true">
           <div className="ng-hero-arch">
-            <img src={HERO_IMAGE} alt="" />
+            <img src={PHOTOS.hero} alt="" />
           </div>
           <div className="ng-hero-badge">
-            <small>JUSQU’À</small>
-            <b>-25%</b>
-            <small>CETTE SEMAINE</small>
+            <small>SOINS AU</small>
+            <b>Cacao</b>
+            <small>IVOIRIEN</small>
           </div>
           <div className="ng-hero-chip">
             <span className="ng-chip-ico">
-              <Star size={17} fill="currentColor" strokeWidth={0} />
+              <Wallet size={17} />
             </span>
             <span>
-              <b>4,9 / 5</b>
-              +400 clientes ravies
+              <b>Paiement Wave</b>
+              Commande site ou WhatsApp
             </span>
           </div>
         </div>
@@ -147,86 +129,71 @@ export const HomePage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdviso
           <div className="ng-trust">
             <Truck size={20} />
             <span>
-              <b>Livraison 24 h</b>Offerte dès 10 000 FCFA
+              <b>Livraison</b>
+              {settings.deliveryCommunes}
             </span>
           </div>
           <div className="ng-trust">
             <ShieldCheck size={20} />
             <span>
-              <b>Paiement Wave</b>Sécurisé, sans frais
+              <b>Paiement Wave</b>Frais annoncés avant de payer
             </span>
           </div>
           <div className="ng-trust">
             <Leaf size={20} />
             <span>
-              <b>100% naturel</b>Sans paraben ni additif
+              <b>Soins naturels</b>Cacao et végétaux ivoiriens
             </span>
           </div>
         </div>
       </section>
 
-      {/* 3. VENTE FLASH */}
-      {dealProduct && (
-        <section className="ng-flash" id="vente-flash" data-reveal>
-          <div className="ng-flash-img" onClick={() => navigate(`/produit/${dealProduct.id}`)}>
-            {dealProduct.imageUrl && <img src={dealProduct.imageUrl} alt={dealProduct.name} />}
-          </div>
-          <div className="ng-flash-copy">
-            <h3>
-              <Zap size={19} fill="currentColor" /> Vente flash
-            </h3>
-            <p>{dealProduct.name}</p>
-            <div className="ng-flash-price">
-              <b>{formatPrice(dealProduct.price)}</b>
-              {dealProduct.oldPrice ? <s>{formatPrice(dealProduct.oldPrice)}</s> : null}
-            </div>
-            <button type="button" className="ng-btn ng-btn--gold ng-btn--sm" onClick={() => navigate(`/produit/${dealProduct.id}`)}>
-              J’en profite <ArrowRight size={15} />
-            </button>
-          </div>
-          <div className="ng-countdown" role="timer" aria-label="Fin de la vente flash">
-            {(
-              [
-                ['JOURS', countdown.days],
-                ['HRS', countdown.hours],
-                ['MIN', countdown.minutes],
-                ['SEC', countdown.seconds],
-              ] as const
-            ).map(([label, value]) => (
-              <div key={label}>
-                <b key={value}>{pad(value)}</b>
-                <small>{label}</small>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* COMMENT COMMANDER */}
+      <section className="ng-how" data-reveal>
+        <div className="ng-section-head">
+          <h2>Commander, c’est simple</h2>
+        </div>
+        <ol className="ng-how-steps">
+          {steps.map(({ icon: Icon, title, text }, i) => (
+            <li key={title}>
+              <span className="ng-how-ico">
+                <Icon size={20} />
+                <i>{i + 1}</i>
+              </span>
+              <b>{title}</b>
+              <p>{text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-      {/* 4. RAYONS POPULAIRES */}
+      {/* NOS RAYONS */}
       <section>
         <div className="ng-section-head">
           <h2>Nos rayons</h2>
-          <button type="button" className="ng-link" onClick={() => openCategory('all')}>
+          <button type="button" className="ng-link" onClick={() => openCategory(ALL_CATEGORIES)}>
             Tout voir <ArrowRight size={15} />
           </button>
         </div>
         <div className="ng-cat-cards">
-          {CATEGORY_AVATARS.map((cat, i) => {
-            const count = products.filter((p) => p.category === cat.name).length
+          {categories.map((cat, i) => {
+            const count = products.filter((p) => p.category === cat).length
+            const info = CATEGORY_INFO[cat]
             return (
               <button
-                key={cat.name}
+                key={cat}
                 type="button"
                 className="ng-cat-card"
-                onClick={() => openCategory(cat.name)}
+                onClick={() => openCategory(cat)}
                 data-reveal
                 style={{ '--i': i } as React.CSSProperties}
               >
-                <img src={cat.image} alt="" loading="lazy" />
+                {info ? <img src={info.image} alt="" loading="lazy" /> : <span className="ng-cat-card-ico"><Leaf size={26} /></span>}
                 <span>
-                  <b>{cat.name}</b>
+                  <b>{cat}</b>
                   <small>
-                    {count} produit{count > 1 ? 's' : ''} · {cat.tag}
+                    {count} produit{count > 1 ? 's' : ''}
+                    {info ? ` · ${info.tag}` : ''}
                   </small>
                 </span>
               </button>
@@ -235,43 +202,108 @@ export const HomePage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdviso
         </div>
       </section>
 
-      {/* 5. PRODUITS PHARES */}
-      <section>
-        <div className="ng-section-head">
-          <div>
-            <h2>Produits phares</h2>
-            <p>Les prix doux de la semaine, en quantité limitée.</p>
+      {/* PRODUITS À DÉCOUVRIR */}
+      {catalogLoading ? (
+        <section>
+          <div className="ng-section-head">
+            <h2>Nos meilleures ventes</h2>
           </div>
-          <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
-            Tout voir <ArrowRight size={15} />
-          </button>
+          <div className="ng-rows" aria-busy="true">
+            {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} variant="row" />)}
+          </div>
+        </section>
+      ) : featured.length > 0 && (
+        <section>
+          <div className="ng-section-head">
+            <div>
+              <h2>{hasBestsellers ? 'Nos meilleures ventes' : 'À découvrir'}</h2>
+              <p>Les soins préférés de nos clientes.</p>
+            </div>
+            <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
+              Tout voir <ArrowRight size={15} />
+            </button>
+          </div>
+          <div className="ng-rows">
+            {featured.map((product, i) => (
+              <ProductCard product={product} key={product.id} variant="row" index={i} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* DU CACAO À VOTRE PEAU */}
+      <section className="ng-journey ng-band ng-band--cream">
+        <div className="ng-section-head ng-section-head--center">
+          <span className="ng-eyebrow"><Leaf size={13} /> DE LA TERRE IVOIRIENNE À VOTRE PEAU</span>
+          <h2>Du cacao à votre soin</h2>
+          <p>Des ingrédients simples, une transformation artisanale, rien de superflu.</p>
         </div>
-        <div className="ng-rows">
-          {flashProducts.slice(0, 4).map((product, i) => (
-            <ProductCardJumia product={product} key={product.id} variant="row" index={i} />
+        <ol className="ng-journey-steps">
+          {JOURNEY.map((step, i) => (
+            <li key={step.title} data-reveal style={{ '--i': i } as React.CSSProperties}>
+              <span className="ng-journey-img">
+                <img src={step.image} alt="" loading="lazy" />
+                <i>{i + 1}</i>
+              </span>
+              <b>{step.title}</b>
+              <p>{step.text}</p>
+            </li>
           ))}
-        </div>
+        </ol>
+        <button type="button" className="ng-btn ng-btn--ghost ng-journey-cta" onClick={() => navigate('/histoire')}>
+          Lire notre histoire <ArrowRight size={16} />
+        </button>
       </section>
 
-      {/* 6. BANNIÈRES THÉMATIQUES */}
+      {/* COFFRET MIS EN AVANT */}
+      {giftBox && (
+        <section className="ng-gift" data-reveal>
+          <div className="ng-gift-media" onClick={() => navigate(`/produit/${giftBox.id}`)}>
+            <img src={giftBox.imageUrl ?? ''} alt={giftBox.name} loading="lazy" />
+          </div>
+          <div className="ng-gift-copy">
+            <span className="ng-eyebrow ng-eyebrow--gold"><Gift size={13} /> IDÉE CADEAU</span>
+            <h2>{giftBox.name}</h2>
+            <p>{giftBox.description}</p>
+            <div className="ng-gift-price">
+              <b>{formatXof(giftBox.price)}</b>
+              <small>{giftBox.size}</small>
+            </div>
+            <div className="ng-hero-actions">
+              <button
+                type="button"
+                className="ng-btn ng-btn--primary"
+                onClick={(e) => { if (addToCart(giftBox.id, 1)) flyToCart(e.currentTarget.closest('.ng-gift')) }}
+              >
+                <ShoppingBag size={17} /> Ajouter au panier
+              </button>
+              <button type="button" className="ng-btn ng-btn--ghost" onClick={() => openCategory('Rituels & Coffrets')}>
+                Tous les coffrets <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* BANNIÈRES THÉMATIQUES */}
       <section className="ng-promos">
         <div className="ng-promo-card ng-promo-card--gold" data-reveal>
-          <img src={PROMO_CACAO_IMAGE} alt="" loading="lazy" />
-          <h3>Rituel Cacao</h3>
+          <img src={PHOTOS.cacaoPanier} alt="" loading="lazy" />
+          <h3>Rituel cacao</h3>
           <p>
-            <b>Jusqu’à -25%</b>
-            Beurre brut & chantilly pour corps et cheveux.
+            <b>Beurre brut & chantilly</b>
+            Pour nourrir le corps, les zones sèches et les cheveux.
           </p>
           <button type="button" className="ng-btn ng-btn--dark ng-btn--sm" onClick={() => openCategory('Beurre de cacao')}>
             Découvrir <ArrowRight size={15} />
           </button>
         </div>
         <div className="ng-promo-card ng-promo-card--green" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
-          <img src={PROMO_SOAP_IMAGE} alt="" loading="lazy" />
-          <h3>Peau nette & purifiée</h3>
+          <img src={PHOTOS.savonNoir} alt="" loading="lazy" />
+          <h3>Peau nette</h3>
           <p>
-            <b>Savons artisanaux</b>
-            Aux cendres de cabosse, pour visage et corps.
+            <b>Savon noir de cabosse</b>
+            Un savon traditionnel pour le visage et le corps.
           </p>
           <button type="button" className="ng-btn ng-btn--primary ng-btn--sm" onClick={() => openCategory('Savons naturels')}>
             Découvrir <ArrowRight size={15} />
@@ -279,68 +311,73 @@ export const HomePage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdviso
         </div>
       </section>
 
-      {/* 7. MEILLEURES VENTES */}
-      <section>
-        <div className="ng-section-head">
-          <h2>Meilleures ventes</h2>
-          <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
-            Tout voir <ArrowRight size={15} />
-          </button>
-        </div>
-        <div className="ng-scroller">
-          {bestSellers.map((product, i) => (
-            <ProductCardJumia product={product} key={product.id} index={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* 8. AVIS CLIENTE */}
-      {review && (
-        <section className="ng-review" data-reveal>
-          <div className="ng-review-who">
-            <div className="ng-avatar">{review.name.charAt(0)}</div>
-            <div>
-              <b>{review.name}</b>
-              <small>{review.verified ? 'Cliente vérifiée' : review.location}</small>
-            </div>
+      {/* TOUS LES SOINS */}
+      {products.length > 4 && (
+        <section>
+          <div className="ng-section-head">
+            <h2>Tous nos soins</h2>
+            <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
+              Voir la boutique <ArrowRight size={15} />
+            </button>
           </div>
-          <blockquote key={review.id}>« {review.comment} »</blockquote>
-          <div className="ng-dots">
-            {INITIAL_REVIEWS.map((r, i) => (
-              <button
-                key={r.id}
-                type="button"
-                className={i === reviewIndex ? 'active' : ''}
-                onClick={() => setReviewIndex(i)}
-                aria-label={`Avis ${i + 1}`}
-              />
+          <div className="ng-scroller">
+            {sorted.map((product, i) => (
+              <ProductCard product={product} key={product.id} index={i} />
             ))}
           </div>
         </section>
       )}
 
-      {/* 9. NEWSLETTER */}
+      {/* AVIS RÉELS (publiés par la boutique) */}
+      {review && (
+        <section className="ng-review" data-reveal>
+          <div className="ng-review-who">
+            <div className="ng-avatar">{review.authorName.charAt(0).toUpperCase()}</div>
+            <div>
+              <b>{review.authorName}</b>
+              <small>
+                {review.city}
+                {review.productName ? ` · ${review.productName}` : ''}
+              </small>
+            </div>
+          </div>
+          <blockquote key={review.id}>« {review.comment} »</blockquote>
+          {homeReviews.length > 1 && (
+            <div className="ng-dots">
+              {homeReviews.map((r, i) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={i === reviewIndex ? 'active' : ''}
+                  onClick={() => setReviewIndex(i)}
+                  aria-label={`Avis ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+          <button type="button" className="ng-link" onClick={() => navigate('/temoignages')}>
+            Tous les avis <ArrowRight size={15} />
+          </button>
+        </section>
+      )}
+
+      {/* NOUVEAUTÉS SUR WHATSAPP */}
       <section className="ng-newsletter" data-reveal>
         <span className="ng-newsletter-ico">
-          <Mail size={22} />
+          <MessageCircle size={22} />
         </span>
         <div>
-          <h3>Offres exclusives & conseils beauté</h3>
-          <p>Recevez nos ventes flash en avant-première.</p>
+          <h3>Nouveautés et retours en stock</h3>
+          <p>Demandez à être prévenue sur WhatsApp : nouvelles huiles, coffrets, réassorts.</p>
         </div>
-        <form onSubmit={subscribe}>
-          <input
-            type="email"
-            required
-            placeholder="Votre adresse e-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-label="Adresse e-mail"
-          />
-          <button type="submit" className="ng-btn ng-btn--primary">
-            S’inscrire
-          </button>
-        </form>
+        <a
+          className="ng-btn ng-btn--primary"
+          href={waLink('Bonjour NATURE & GRÂCE, je souhaite être prévenue de vos nouveautés et retours en stock.')}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Me prévenir sur WhatsApp
+        </a>
       </section>
     </div>
   )

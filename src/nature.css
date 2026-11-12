@@ -3,7 +3,7 @@
    Émeraude forêt · Or satiné · Blanc pur
    Chargé en dernier : il prime sur jumia.css / enhancements.css.
    ===================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Marque */
@@ -76,6 +76,13 @@ html.dark {
   --ng-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
   --ng-shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+img, svg { max-width: 100%; }
+html { -webkit-text-size-adjust: 100%; }
 
 html,
 body {
@@ -161,8 +168,6 @@ body {
 html.dark .ng-btn--primary { color: #06140e; }
 .ng-btn--ghost { background: var(--ng-surface); color: var(--ng-ink); border-color: var(--ng-line); }
 .ng-btn--ghost:hover { border-color: var(--ng-emerald); color: var(--ng-emerald); }
-.ng-btn--gold { background: var(--ng-gold); color: #1d1608; }
-.ng-btn--gold:hover { background: #d4ae63; transform: translateY(-1px); }
 .ng-btn--dark { background: #13201a; color: #fff; }
 .ng-btn--sm { height: 38px; padding: 0 16px; font-size: 13px; border-radius: 10px; }
 
@@ -318,22 +323,6 @@ html.dark .ng-promo { background: #0f2a1f; }
 .ng-search button:hover { background: var(--ng-emerald-600); }
 
 .ng-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-.ng-account-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--ng-ink);
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.ng-account-btn:hover { background: var(--ng-subtle); }
 
 .ng-nav {
   display: flex;
@@ -381,57 +370,6 @@ html.dark .ng-promo { background: #0f2a1f; }
   font-weight: 600;
 }
 
-.ng-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 300px;
-  padding: 8px;
-  background: var(--ng-surface);
-  border: 1px solid var(--ng-line);
-  border-radius: var(--ng-r-md);
-  box-shadow: var(--ng-shadow-lg);
-  animation: ng-fade-up 0.25s var(--ng-ease);
-  z-index: 50;
-}
-.ng-dropdown-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ng-ink);
-}
-.ng-dropdown-head button { background: none; border: 0; color: var(--ng-emerald); font-size: 12px; font-weight: 600; cursor: pointer; }
-.ng-notif {
-  padding: 10px;
-  border-radius: 10px;
-  display: grid;
-  gap: 3px;
-  font-size: 12.5px;
-}
-.ng-notif:hover { background: var(--ng-subtle); }
-.ng-notif b { color: var(--ng-ink); font-weight: 600; }
-.ng-notif span { color: var(--ng-text); line-height: 1.45; }
-.ng-notif small { color: var(--ng-muted); font-size: 11px; }
-.ng-menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  font-size: 13.5px;
-  color: var(--ng-ink);
-  cursor: pointer;
-  text-align: left;
-}
-.ng-menu-item:hover { background: var(--ng-subtle); }
-.ng-menu-item.danger { color: var(--ng-red); }
-
 /* Tiroir mobile */
 .ng-drawer-overlay {
   position: fixed;
@@ -478,19 +416,6 @@ html.dark .ng-promo { background: #0f2a1f; }
    BARRE D'ONGLETS MOBILE
    ===================================================================== */
 .ng-tabbar { display: none; }
-.ng-sheet-overlay { position: fixed; inset: 0; z-index: 70; background: rgba(8, 20, 14, 0.45); animation: ng-fade 0.25s; }
-.ng-sheet {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--ng-surface);
-  border-radius: 24px 24px 0 0;
-  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
-  animation: ng-sheet-up 0.35s var(--ng-ease);
-}
-.ng-sheet-grab { width: 40px; height: 4px; border-radius: 4px; background: var(--ng-line); margin: 0 auto 16px; }
-.ng-sheet-user { display: flex; align-items: center; gap: 12px; padding: 0 4px 14px; border-bottom: 1px solid var(--ng-line); margin-bottom: 8px; }
 .ng-avatar {
   width: 44px;
   height: 44px;
@@ -504,8 +429,6 @@ html.dark .ng-promo { background: #0f2a1f; }
   overflow: hidden;
 }
 .ng-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.ng-sheet-user b { display: block; color: var(--ng-ink); font-size: 15px; }
-.ng-sheet-user small { color: var(--ng-muted); font-size: 12.5px; }
 
 /* =====================================================================
    SECTIONS
@@ -691,59 +614,6 @@ html.dark .ng-promo { background: #0f2a1f; }
 .ng-trust b { display: block; font-size: 13px; color: var(--ng-ink); font-weight: 600; }
 
 /* Vente flash */
-.ng-flash {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--ng-r-lg);
-  background: linear-gradient(115deg, #0b3d2c 0%, #0e4a35 45%, #186046 100%);
-  color: #fff;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 28px;
-  padding: 22px 28px;
-}
-.ng-flash::after {
-  content: '';
-  position: absolute;
-  right: -80px;
-  top: -80px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(232, 201, 131, 0.25), transparent 70%);
-  pointer-events: none;
-}
-.ng-flash-img {
-  width: 128px;
-  height: 128px;
-  border-radius: 18px;
-  background: #fff;
-  overflow: hidden;
-  padding: 8px;
-  cursor: pointer;
-}
-.ng-flash-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; transition: transform 0.5s var(--ng-ease); }
-.ng-flash-img:hover img { transform: scale(1.06); }
-.ng-flash-copy h3 { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 700; }
-.ng-flash-copy h3 svg { color: #e8c983; }
-.ng-flash-copy > p { margin: 4px 0 10px; font-size: 13.5px; color: #cfe2d8; }
-.ng-flash-price { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-.ng-flash-price b { font-size: 24px; font-weight: 800; }
-.ng-flash-price s { font-size: 13.5px; color: #9fbfb0; }
-.ng-countdown { display: flex; gap: 10px; position: relative; z-index: 1; }
-.ng-countdown div {
-  width: 70px;
-  height: 72px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  display: grid;
-  place-content: center;
-  text-align: center;
-}
-.ng-countdown b { display: block; font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; animation: ng-tick 0.35s var(--ng-ease); }
-.ng-countdown small { font-size: 10px; letter-spacing: 0.1em; color: #bcd4c8; font-weight: 600; }
 
 /* Rayons populaires */
 .ng-cat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -768,7 +638,6 @@ html.dark .ng-promo { background: #0f2a1f; }
    CARTE PRODUIT
    ===================================================================== */
 .ng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
-.jumia-products-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important; gap: 18px !important; }
 .ng-rows { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .ng-scroller {
   display: grid;
@@ -806,29 +675,6 @@ html.dark .ng-promo { background: #0f2a1f; }
 }
 .ng-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s var(--ng-ease); }
 .ng-card:hover .ng-card-media img { transform: scale(1.06); }
-.ng-card-fallback {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(140deg, var(--ng-emerald-50), var(--ng-gold-50));
-  color: var(--ng-emerald);
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-}
-.ng-discount {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: var(--ng-red);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-}
 .ng-fav {
   position: absolute;
   top: 8px;
@@ -1030,10 +876,12 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
 .ng-footer-cta:hover { background: #22b061; transform: translateY(-2px); }
 .ng-footer h4 { margin: 4px 0 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #e3c27d; }
 .ng-footer-main ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.ng-footer nav button {
+.ng-footer nav button,
+.ng-footer nav ul a {
   background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
   color: #cfe0d7; font-size: 14px; transition: color 0.2s, transform 0.25s var(--ng-ease);
 }
+.ng-footer nav ul a:hover,
 .ng-footer nav button:hover { color: #fff; transform: translateX(3px); }
 .ng-footer-contact li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; color: #cfe0d7; }
 .ng-footer-contact li svg { color: #e3c27d; flex-shrink: 0; margin-top: 2px; }
@@ -1051,42 +899,14 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   padding: 20px 0 88px; border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 12.5px; color: #8fb0a1;
 }
-.ng-footer-made { margin-left: auto; }
 .ng-footer-admin { display: inline-flex; align-items: center; gap: 3px; color: #8fb0a1; opacity: 0.7; }
 .ng-footer-admin:hover { opacity: 1; color: #fff; }
 
 /* =====================================================================
    PANIER, TOAST, BOUTONS FLOTTANTS (restylage des éléments existants)
    ===================================================================== */
-.overlay { background: rgba(8, 20, 14, 0.45) !important; backdrop-filter: blur(3px); animation: ng-fade 0.25s; }
-.cart-drawer {
-  background: var(--ng-surface) !important;
-  border-radius: 24px 0 0 24px;
-  animation: ng-drawer-right 0.4s var(--ng-ease) !important;
-  font-family: var(--ng-font);
-}
 @keyframes ng-drawer-right { from { transform: translateX(100%); } to { transform: none; } }
-.drawer-heading { border-color: var(--ng-line) !important; }
-.drawer-heading span { color: var(--ng-gold-600) !important; font-weight: 700; letter-spacing: 0.08em !important; font-size: 11px !important; }
-.drawer-heading h2,
-.cart-item-copy > b,
-.empty-cart p { font-family: var(--ng-font) !important; color: var(--ng-ink) !important; letter-spacing: -0.02em; }
-.drawer-heading h2 { font-size: 24px !important; font-weight: 800 !important; }
-.cart-item { border-color: var(--ng-line) !important; }
-.cart-item-copy > b { font-size: 14px !important; font-weight: 600 !important; }
-.cart-item-copy small { font-size: 12px !important; color: var(--ng-muted) !important; }
-.cart-item > strong { font-size: 13px !important; color: var(--ng-ink) !important; }
-.cart-thumb { border-radius: 12px; overflow: hidden; background: var(--ng-subtle) !important; }
-.cart-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .quantity button { border-radius: 8px; border-color: var(--ng-line) !important; color: var(--ng-ink) !important; }
-.cart-summary { border-color: var(--ng-line) !important; }
-.cart-summary > p { font-size: 14px !important; color: var(--ng-text) !important; }
-.cart-summary > p b { color: var(--ng-ink) !important; font-size: 16px; }
-.cart-summary > small { font-size: 12px !important; color: var(--ng-muted) !important; }
-.cart-drawer .button { border-radius: 12px; height: 48px; font-size: 14px !important; font-weight: 600; letter-spacing: 0 !important; }
-.cart-drawer .button.primary { background: var(--ng-emerald) !important; border-color: var(--ng-emerald) !important; }
-.wave-note p { font-size: 13px !important; color: var(--ng-text) !important; }
-.wave-note small { font-size: 11.5px !important; color: var(--ng-muted) !important; }
 
 .toast {
   border-radius: 99px !important;
@@ -1100,8 +920,6 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   z-index: 90 !important;
 }
 @keyframes ng-toast { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
-.floating-wa { background: #1f9d55 !important; width: 50px !important; height: 50px !important; font-size: 12px !important; transition: transform 0.25s var(--ng-ease); }
-.floating-wa:hover { transform: translateY(-3px); }
 
 /* =====================================================================
    RESPONSIVE
@@ -1110,8 +928,6 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   .ng-cat-cards { grid-template-columns: repeat(2, 1fr); }
   .ng-footer-grid { grid-template-columns: 1fr 1fr; }
   .ng-promises { grid-template-columns: 1fr 1fr; }
-  .ng-flash { grid-template-columns: auto 1fr; }
-  .ng-countdown { grid-column: 1 / -1; }
 }
 
 @media (max-width: 860px) {
@@ -1124,8 +940,7 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   .ng-header-main > .ng-search { display: none; }
   .ng-search-mobile { display: flex !important; margin-bottom: 12px; max-width: none; }
   .ng-actions { margin-left: auto; }
-  .ng-actions .ng-hide-sm,
-  .ng-account-btn span { display: none; }
+  .ng-actions .ng-hide-sm { display: none; }
   .ng-nav { display: none; }
 
   .ng-tabbar {
@@ -1175,9 +990,6 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   .app-shell { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
   /* Pas de boutons flottants sur mobile : ils masquaient le panier des cartes.
      WhatsApp est dans l'en-tête, le conseiller IA dans l'accueil et le menu. */
-  .floating-wa,
-  .floating-advisor { display: none !important; }
-  .ng-show-sm { display: grid !important; }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom)) !important; white-space: nowrap; }
 
   .ng-home { gap: 32px; padding-top: 12px; }
@@ -1196,21 +1008,12 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   .ng-hero-actions .ng-btn { flex: 1; }
   .ng-hero-trust { grid-template-columns: 1fr; gap: 10px; }
 
-  .ng-flash { grid-template-columns: 96px 1fr; gap: 16px; padding: 18px; }
-  .ng-flash-img { width: 96px; height: 96px; padding: 6px; border-radius: 14px; }
-  .ng-flash-copy h3 { font-size: 17px; }
-  .ng-flash-price b { font-size: 20px; }
-  .ng-countdown { gap: 8px; }
-  .ng-countdown div { flex: 1; width: auto; height: 62px; }
-  .ng-countdown b { font-size: 22px; }
-
   .ng-cat-cards { display: flex; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--ng-gutter)); padding: 2px var(--ng-gutter) 8px; }
   .ng-cat-cards::-webkit-scrollbar { display: none; }
   .ng-cat-card { flex: 0 0 200px; }
 
   .ng-rows { grid-template-columns: 1fr; }
-  .ng-grid,
-  .jumia-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+  .ng-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
   .ng-scroller { grid-auto-columns: 46%; margin: 0 calc(-1 * var(--ng-gutter)); padding-left: var(--ng-gutter); padding-right: var(--ng-gutter); scroll-padding: 0 var(--ng-gutter); }
   .ng-card { padding: 8px; }
   .ng-card-title { font-size: 13px; }
@@ -1238,9 +1041,7 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   .ng-footer-contact { grid-column: 1 / -1; }
   .ng-footer-cta { width: 100%; justify-content: center; }
   .ng-footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .ng-footer-made { margin-left: 0; }
   .ng-footer-bottom { padding-bottom: 24px; }
-  .cart-drawer { border-radius: 0; }
 }
 
 .ng-search-mobile { display: none !important; }
@@ -1273,8 +1074,4 @@ html.dark .ng-chip.active { color: #06140e; }
   .ng-toolbar { position: static; flex-direction: column; align-items: stretch; margin: 0 calc(-1 * var(--ng-gutter)) 12px; padding: 8px var(--ng-gutter); }
   .ng-sort { align-self: flex-start; }
 }
-
-.ng-show-sm { display: none !important; }
-@media (max-width: 860px) { .ng-show-sm { display: grid !important; } }
 .ng-wa-btn { color: #1f9d55 !important; }
-.order-message.is-error { color: var(--ng-red); background: color-mix(in srgb, var(--ng-red) 8%, transparent); padding: 10px 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; }

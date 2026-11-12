@@ -1,80 +1,115 @@
 import React from 'react'
-import { ArrowRight, CheckCircle2, HeartHandshake, Leaf, Sparkles } from 'lucide-react'
+import { ArrowRight, HeartHandshake, Leaf, ShieldCheck, Sparkles } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { PHOTOS } from '../data/products'
 
-export const StoryPage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdvisor }) => {
-  const { navigate } = useApp()
+/** Photos d'ambiance prises en Côte d'Ivoire et au Ghana (à remplacer par celles de la marque). */
+const STORY_IMAGE = PHOTOS.plantation
+const CRAFT_IMAGE = PHOTOS.kariteFemmes
+const MARKET_IMAGE = PHOTOS.cacaoPanier
+
+const VALUES = [
+  {
+    icon: Leaf,
+    title: 'Le cacao ivoirien',
+    text: 'Premier producteur mondial de cacao, la Côte d’Ivoire offre un beurre riche et nourrissant, utilisé depuis toujours pour prendre soin de la peau.',
+  },
+  {
+    icon: HeartHandshake,
+    title: 'Un savoir-faire artisanal',
+    text: 'Nos soins sont préparés de façon artisanale, comme le savon noir réalisé selon la recette traditionnelle aux cendres de cabosse.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Des formules simples',
+    text: 'Peu d’ingrédients, faciles à comprendre : des soins pensés pour le quotidien de toute la famille.',
+  },
+]
+
+export const StoryPage: React.FC = () => {
+  const { navigate, setAdvisorOpen } = useApp()
+  usePageMeta('Notre histoire', 'NATURE & GRÂCE, des soins naturels au cacao de Côte d’Ivoire : notre histoire et nos valeurs.')
 
   return (
-    <div style={{ padding: '30px 4% 70px', maxWidth: '980px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--brand-gold)', letterSpacing: '0.16em', fontWeight: 600 }}>
-          NOTRE HISTOIRE & NOS VALEURS
-        </span>
-        <h1 style={{ font: "500 clamp(30px, 4vw, 44px)/1.15 'Playfair Display', serif", margin: '8px 0 12px', color: 'var(--text-primary)' }}>
-          Prendre soin de soi, <em>naturellement.</em>
-        </h1>
-        <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', maxWidth: '580px', margin: '0 auto', lineHeight: 1.7 }}>
-          NATURE & GRÂCE est née d’une conviction profonde : la terre de Côte d’Ivoire regorge d’actifs précieux d’une efficacité inégalée pour la peau et les cheveux.
-        </p>
-      </div>
-
-      <div
-        style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '16px',
-          padding: '36px',
-          boxShadow: 'var(--shadow-sm)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-          lineHeight: 1.8,
-          fontSize: '12.5px',
-          color: 'var(--text-secondary)',
-          marginBottom: '35px',
-        }}
-      >
-        <p style={{ margin: 0 }}>
-          Dans un monde où les cosmétiques industriels regorgent d’ingrédients de synthèse, d’agents décapants et de perturbateurs endocriniens, nous avons choisi de revenir à la source : le cacao pur, les cabosses traditionnelles et les huiles de première pression.
-        </p>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', margin: '10px 0' }}>
-          <div style={{ background: 'var(--bg-subtle)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <h4 style={{ margin: '0 0 8px', color: 'var(--brand-gold)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Leaf size={16} /> Le Cacao Ivoirien
-            </h4>
-            <p style={{ margin: 0, fontSize: '11.5px', lineHeight: 1.6 }}>
-              Premier producteur mondial de cacao, la Côte d’Ivoire abrite des fèves d’une richesse exceptionnelle en antioxydants, vitamine E et acides gras protecteurs.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg-subtle)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <h4 style={{ margin: '0 0 8px', color: 'var(--brand-gold)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <HeartHandshake size={16} /> Savoir-Faire Artisanal
-            </h4>
-            <p style={{ margin: 0, fontSize: '11.5px', lineHeight: 1.6 }}>
-              Chaque pot de Chantilly de cacao est fouetté avec délicatesse, et chaque savon noir est préparé selon les recettes traditionnelles aux cendres de cabosse.
-            </p>
+    <div className="ng-container ng-subpage">
+      <section className="ng-story-hero">
+        <div>
+          <span className="ng-eyebrow">
+            <Leaf size={13} /> NOTRE HISTOIRE
+          </span>
+          <h1>
+            Prendre soin de soi, <span>naturellement.</span>
+          </h1>
+          <p>
+            Nature &amp; Grâce est née d’une conviction : la terre de Côte d’Ivoire regorge d’actifs précieux pour la
+            peau et les cheveux. Nous avons choisi de revenir à la source : le cacao pur, les cabosses et les huiles de
+            première pression.
+          </p>
+          <div className="ng-hero-actions">
+            <button type="button" className="ng-btn ng-btn--primary" onClick={() => navigate('/boutique')}>
+              Découvrir nos soins <ArrowRight size={17} />
+            </button>
+            <button type="button" className="ng-btn ng-btn--ghost" onClick={() => setAdvisorOpen(true)}>
+              <Sparkles size={16} color="var(--ng-gold-600)" /> Mon rituel IA
+            </button>
           </div>
         </div>
+        <div className="ng-story-img">
+          <img src={STORY_IMAGE} alt="Récolte des cabosses dans une plantation de cacao en Côte d’Ivoire" />
+        </div>
+      </section>
 
-        <p style={{ margin: 0 }}>
-          Nos soins sont conçus pour toute la famille, respectueux des peaux les plus sensibles, des femmes enceintes et des enfants. Notre promesse est simple : vous apporter douceur, éclat et bien-être, sans compromis.
-        </p>
+      <section className="ng-values">
+        {VALUES.map(({ icon: Icon, title, text }, i) => (
+          <article key={title} className="ng-value" data-reveal style={{ '--i': i } as React.CSSProperties}>
+            <span>
+              <Icon size={22} />
+            </span>
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
+      </section>
 
-        <div style={{ textAlign: 'center', marginTop: '10px' }}>
-          <button
-            type="button"
-            className="button primary"
-            style={{ background: 'var(--brand-green)' }}
-            onClick={() => navigate('/boutique')}
-          >
-            Découvrir nos créations <ArrowRight size={15} />
+      <section className="ng-story-split" data-reveal>
+        <div className="ng-story-img ng-story-img--wide">
+          <img src={CRAFT_IMAGE} alt="Femmes transportant les noix de karité" loading="lazy" />
+        </div>
+        <div>
+          <h2>Des soins pensés pour toute la famille</h2>
+          <p>
+            Plutôt que des formules longues et compliquées, nous proposons des soins courts et lisibles, issus du cacao
+            et des végétaux de Côte d’Ivoire, pour le corps, le visage et les cheveux.
+          </p>
+          <p>
+            Le karité vient des coopératives de femmes qui le récoltent et le préparent à la main, selon un savoir-faire
+            transmis de mère en fille.
+          </p>
+          <p>Notre promesse tient dans notre slogan : prenez soin de vous, naturellement.</p>
+          <button type="button" className="ng-link" onClick={() => navigate('/temoignages')}>
+            Lire les avis clients <ArrowRight size={15} />
           </button>
         </div>
-      </div>
+      </section>
+
+      <section className="ng-story-split ng-story-split--reverse" data-reveal>
+        <div>
+          <h2>Le meilleur du cacao ivoirien</h2>
+          <p>
+            Nous travaillons le cacao de Soubré, de Daloa et des grandes régions productrices. De la cabosse au pot, chaque
+            étape est pensée pour garder un beurre brut, sans additif inutile.
+          </p>
+          <button type="button" className="ng-btn ng-btn--primary" onClick={() => navigate('/boutique')}>
+            Voir les soins au cacao <ArrowRight size={16} />
+          </button>
+        </div>
+        <div className="ng-story-img ng-story-img--wide">
+          <img src={MARKET_IMAGE} alt="Paniers de cabosses de cacao de Côte d’Ivoire" loading="lazy" />
+        </div>
+      </section>
     </div>
   )
 }
+
 export default StoryPage

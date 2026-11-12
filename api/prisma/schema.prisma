@@ -31,7 +31,36 @@ model StoreSettings {
   deliveryCommunes  String   @default("Abidjan, Bouaké, Daloa et autres communes sur demande")
   deliveryInfo      String   @default("Frais et délais communiqués avant la validation définitive.")
   waveInstructions  String   @default("Les modalités de paiement Wave sont confirmées par la boutique.")
+  /// Numéro ou lien de paiement Wave de la boutique (vide tant qu'il n'est pas communiqué)
+  waveNumber        String   @default("")
+  /// Zones de livraison : [{ "name": "Cocody", "feeXof": 1000, "delay": "24 h" }] — feeXof null = à confirmer
+  deliveryZones     Json     @default("[]")
+  /// Identité légale affichée dans les mentions légales (raison sociale, RCCM, adresse…)
+  legalInfo         String   @default("")
   updatedAt         DateTime @updatedAt
+}
+
+/// Photos produits et preuves de paiement, stockées en base pour ne dépendre d'aucun hébergeur de fichiers.
+model Image {
+  id        String   @id @default(cuid())
+  mime      String
+  data      Bytes
+  /// true = preuve de paiement, visible uniquement depuis l'administration
+  private   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  authorName  String
+  city        String
+  productSlug String?
+  productName String?
+  rating      Int
+  comment     String
+  /// Un avis déposé sur le site attend la validation de la boutique
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
 
 model Product {
@@ -43,6 +72,10 @@ model Product {
   size        String
   priceXof    Int?
   imageUrl    String?
+  /// Photos supplémentaires (galerie de la fiche produit, 2e photo au survol)
+  gallery     String[]    @default([])
+  /// Pastille affichée sur la carte : "bestseller" (Meilleure vente) ou "new" (Nouveau)
+  badge       String?
   stock       Int         @default(0)
   active      Boolean     @default(true)
   createdAt   DateTime    @default(now())
@@ -50,15 +83,37 @@ model Product {
   orderItems  OrderItem[]
 }
 
+/// Compte client : obligatoire pour accéder au panier et commander
+model Customer {
+  id            String   @id @default(cuid())
+  name          String
+  /// Numéro ivoirien normalisé : 225 + 10 chiffres
+  phone         String   @unique
+  email         String?  @unique
+  passwordHash  String
+  commune       String?
+  address       String?
+  deliveryZone  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orders        Order[]
+}
+
 model Order {
   id             String      @id @default(cuid())
+  customerId     String?
+  customer       Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName   String
   phone          String
   commune        String
   address        String
   deliveryNote   String?
   status         OrderStatus @default(pending)
+  /// Total des produits (hors livraison)
   totalXof       Int
+  deliveryZone   String?
+  /// Frais de livraison connus au moment de la commande ; null = à confirmer par la boutique
+  deliveryFeeXof Int?
   paymentProofUrl String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt

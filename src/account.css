@@ -1,0 +1,119 @@
+/* =====================================================================
+   EN-TÊTE : compte, aide, panier (boutons avec libellé, menus déroulants)
+   ===================================================================== */
+.ng-actions { gap: 4px; }
+.ng-hbtn { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: var(--ng-ink); font-size: 14.5px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+.ng-hbtn:hover, .ng-hbtn.open { background: var(--ng-subtle); }
+.ng-hbtn-chevron { transition: transform 0.25s var(--ng-ease); color: var(--ng-muted); }
+.ng-hbtn.open .ng-hbtn-chevron { transform: rotate(180deg); }
+.ng-hbtn > span { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.ng-cart-hbtn { padding: 0 14px 0 10px; }
+.ng-cart-hbtn > span.ng-cart-ico { overflow: visible; }
+.ng-cart-ico { position: relative; display: grid; place-items: center; }
+.ng-cart-ico .ng-count { position: absolute; top: -8px; right: -11px; }
+
+.ng-dd { position: relative; }
+.ng-dd-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 80; width: 280px; padding: 8px; border-radius: var(--ng-r-md); background: var(--ng-surface); border: 1px solid var(--ng-line); box-shadow: var(--ng-shadow-lg); animation: ng-dd-in 0.22s var(--ng-ease); }
+@keyframes ng-dd-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.ng-dd-cta { padding: 8px 8px 4px; }
+.ng-dd-cta .ng-btn { height: 46px; }
+.ng-dd-cta p { margin: 10px 0 2px; text-align: center; font-size: 13px; color: var(--ng-muted); }
+.ng-dd-cta p button { border: 0; background: none; padding: 0; color: var(--ng-emerald); font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 13px; }
+.ng-dd-user { display: flex; align-items: center; gap: 12px; padding: 10px; }
+.ng-dd-user > div { min-width: 0; }
+.ng-dd-user b { display: block; color: var(--ng-ink); font-size: 15px; }
+.ng-dd-user small { display: block; color: var(--ng-muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ng-dd-sep { height: 1px; margin: 6px 4px; background: var(--ng-line); }
+.ng-dd-item { width: 100%; display: flex; align-items: center; gap: 14px; height: 46px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--ng-ink); font-size: 15px; font-weight: 500; cursor: pointer; text-align: left; }
+.ng-dd-item:hover { background: var(--ng-subtle); }
+.ng-dd-item svg { color: var(--ng-text); flex-shrink: 0; }
+.ng-dd-item em { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; display: grid; place-items: center; border-radius: 99px; background: var(--ng-subtle); font-style: normal; font-size: 12px; font-weight: 700; color: var(--ng-muted); }
+.ng-dd-item--danger, .ng-dd-item--danger svg { color: var(--ng-red); }
+.ng-dd-item--wa, .ng-dd-item--wa svg { color: #1f9d55; }
+.ng-show-sm-only { display: none !important; }
+
+/* Menu mobile : bloc compte */
+.ng-drawer-cta { margin: 4px 0 10px; padding: 14px; border-radius: var(--ng-r-md); background: var(--ng-subtle); }
+.ng-drawer-user { margin: 4px 0 8px; border-radius: var(--ng-r-md); background: var(--ng-subtle); }
+.ng-drawer-link--danger, .ng-drawer-link--danger svg { color: var(--ng-red) !important; }
+
+@media (max-width: 1100px) {
+  .ng-hide-md { display: none !important; }
+}
+@media (max-width: 860px) {
+  .ng-show-sm-only { display: grid !important; }
+  .ng-cart-hbtn { padding: 0 10px; height: 42px; }
+}
+
+/* =====================================================================
+   CONNEXION / INSCRIPTION
+   ===================================================================== */
+.ng-auth-page { display: flex; justify-content: center; }
+.ng-auth-card { margin: 0 auto; width: min(480px, 100%); padding: 30px 28px; border-radius: var(--ng-r-lg); background: var(--ng-surface); border: 1px solid var(--ng-line); box-shadow: var(--ng-shadow-md); }
+.ng-auth-head { text-align: center; margin-bottom: 18px; }
+.ng-auth-ico { width: 54px; height: 54px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 16px; background: var(--ng-emerald-50); color: var(--ng-emerald); }
+.ng-auth-head h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: var(--ng-ink); }
+.ng-auth-head p { margin: 6px 0 0; color: var(--ng-muted); font-size: 14.5px; }
+.ng-auth-reason { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: var(--ng-gold-50); color: var(--ng-gold-600); font-size: 14px; font-weight: 600; line-height: 1.45; }
+.ng-auth-reason svg { flex-shrink: 0; margin-top: 1px; }
+.ng-auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 20px; border-radius: 14px; background: var(--ng-subtle); }
+.ng-auth-tabs button { height: 42px; border: 0; border-radius: 11px; background: none; color: var(--ng-muted); font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.ng-auth-tabs button.active { background: var(--ng-surface); color: var(--ng-ink); box-shadow: var(--ng-shadow-sm); }
+.ng-auth-switch { margin: 0; text-align: center; font-size: 14px; color: var(--ng-muted); }
+.ng-auth-switch button { border: 0; background: none; padding: 0; color: var(--ng-emerald); font-weight: 700; cursor: pointer; font-size: 14px; }
+.ng-label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ng-label-row a { font-size: 12.5px; font-weight: 600; color: var(--ng-emerald); }
+.ng-password { position: relative; display: block; }
+.ng-password input { width: 100%; padding-right: 46px !important; }
+.ng-password button { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 9px; background: none; color: var(--ng-muted); cursor: pointer; }
+.ng-check a { color: var(--ng-emerald); font-weight: 600; text-decoration: underline; }
+.ng-form input:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* =====================================================================
+   MON ESPACE : compte et commandes
+   ===================================================================== */
+.ng-account-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; align-items: start; }
+.ng-account-nav { position: sticky; top: 180px; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: var(--ng-r-md); background: var(--ng-surface); border: 1px solid var(--ng-line); }
+.ng-account-nav button { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--ng-text); font-size: 14.5px; font-weight: 600; text-align: left; cursor: pointer; }
+.ng-account-nav button:hover { background: var(--ng-subtle); }
+.ng-account-nav button.active { background: var(--ng-emerald-50); color: var(--ng-emerald); }
+.ng-account-nav button.danger { color: var(--ng-red); }
+.ng-account-main { display: flex; flex-direction: column; gap: 18px; }
+.ng-account-main .ng-h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.ng-account-sub { margin: 8px 0 0; font-size: 15px; color: var(--ng-ink); }
+.ng-account-main .ng-form-card .ng-btn { align-self: flex-start; }
+
+.ng-order { padding: 18px; border-radius: var(--ng-r-md); background: var(--ng-surface); border: 1px solid var(--ng-line); }
+.ng-order > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.ng-order > header b { display: block; color: var(--ng-ink); font-size: 16px; letter-spacing: 0.02em; }
+.ng-order > header small { color: var(--ng-muted); font-size: 13px; }
+.ng-order-status { padding: 5px 12px; border-radius: 99px; font-size: 12.5px; font-weight: 700; background: var(--ng-subtle); color: var(--ng-text); }
+.ng-order-status.status-pending, .ng-order-status.status-payment_review { background: var(--ng-gold-50); color: var(--ng-gold-600); }
+.ng-order-status.status-confirmed, .ng-order-status.status-preparing, .ng-order-status.status-shipped, .ng-order-status.status-delivered { background: var(--ng-emerald-50); color: var(--ng-emerald); }
+.ng-order-status.status-cancelled { background: color-mix(in srgb, var(--ng-red) 12%, transparent); color: var(--ng-red); }
+.ng-order-steps { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 18px 0 6px; padding: 0; }
+.ng-order-steps li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.ng-order-steps li::before { content: ""; position: absolute; top: 12px; right: 50%; width: 100%; height: 2px; background: var(--ng-line); z-index: 0; }
+.ng-order-steps li:first-child::before { display: none; }
+.ng-order-steps li.done::before { background: var(--ng-emerald); }
+.ng-order-steps li > span { position: relative; z-index: 1; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--ng-subtle); border: 2px solid var(--ng-line); color: var(--ng-muted); font-size: 12px; font-weight: 700; }
+.ng-order-steps li.done > span { background: var(--ng-emerald); border-color: var(--ng-emerald); color: #fff; }
+html.dark .ng-order-steps li.done > span { color: #06140e; }
+.ng-order-steps small { font-size: 12px; color: var(--ng-muted); }
+.ng-order-steps li.done small { color: var(--ng-ink); font-weight: 600; }
+.ng-order-items { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--ng-line); display: flex; flex-direction: column; gap: 6px; }
+.ng-order-items li { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--ng-text); }
+.ng-order-items li small { color: var(--ng-muted); }
+.ng-order-items li.muted { color: var(--ng-muted); }
+.ng-order-items li.total { padding-top: 8px; border-top: 1px dashed var(--ng-line); color: var(--ng-ink); font-weight: 700; font-size: 15px; }
+.ng-order > footer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.ng-order > footer .ng-proof-ok { padding: 8px 12px; font-size: 13px; }
+.ng-order .ng-form-hint { margin: 10px 0 0; }
+
+@media (max-width: 860px) {
+  .ng-account-layout { grid-template-columns: minmax(0, 1fr); }
+  .ng-account-nav { position: static; flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+  .ng-account-nav button { flex-shrink: 0; height: 40px; font-size: 13.5px; }
+  .ng-auth-card { padding: 24px 18px; border: 0; box-shadow: none; background: transparent; }
+  .ng-order-steps small { font-size: 10.5px; }
+}

@@ -1,204 +1,110 @@
-import { Product, ProductCategory, Review } from '../types'
+import { ApiStoreSettings } from '../api'
+import { Product, ProductShape } from '../types'
 
-export const CATEGORIES: ProductCategory[] = [
-  'Toutes les catégories',
-  'Beurre de cacao',
-  'Savons naturels',
-  'Huiles naturelles',
-  'Rituels & Coffrets',
-]
+/** Ordre d'affichage des rayons connus ; une catégorie créée dans l'admin s'ajoute à la suite. */
+export const KNOWN_CATEGORIES = ['Beurre de cacao', 'Beurre de karité', 'Savons naturels', 'Huiles naturelles', 'Soins & gommages', 'Rituels & Coffrets']
 
-export const CATEGORY_AVATARS: { name: ProductCategory; image: string; tag: string }[] = [
-  {
-    name: 'Beurre de cacao',
-    image: 'https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=240&q=80',
-    tag: 'Brut & Chantilly',
-  },
-  {
-    name: 'Savons naturels',
-    image: 'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?auto=format&fit=crop&w=240&q=80',
-    tag: 'Cabosse de cacao',
-  },
-  {
-    name: 'Huiles naturelles',
-    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=240&q=80',
-    tag: 'Coco, Neem, Karité',
-  },
-  {
-    name: 'Rituels & Coffrets',
-    image: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=240&q=80',
-    tag: 'Packs complets',
-  },
-]
+/**
+ * Photos d'ambiance et de rayons : photos libres de droits prises en Afrique de l'Ouest
+ * (dossier public/photos, crédits dans src/data/photoCredits.ts). À remplacer par celles de la marque.
+ */
+export const PHOTOS = {
+  hero: '/photos/a-hero.webp',
+  cabosse: '/photos/a-cabosse.webp',
+  cabosseOuverte: '/photos/a-cabosse-ouverte.webp',
+  plantation: '/photos/a-plantation.webp',
+  cacaoPanier: '/photos/a-cacao-panier.webp',
+  kariteFemmes: '/photos/a-karite-femmes.webp',
+  kariteMarche: '/photos/a-karite-marche.webp',
+  noixKarite: '/photos/a-noix-karite.webp',
+  beurreCacao: '/photos/p-beurre-cacao-brut.webp',
+  kariteFouette: '/photos/p-karite-fouette-2.webp',
+  savonNoir: '/photos/p-savon-karite.webp',
+}
 
+export const CATEGORY_INFO: Record<string, { short: string; tag: string; image: string }> = {
+  'Beurre de cacao': { short: 'Cacao', tag: 'Brut & chantilly', image: '/photos/p-beurre-cacao-brut-2.webp' },
+  'Beurre de karité': { short: 'Karité', tag: 'Brut & fouetté', image: '/photos/p-karite-dore.webp' },
+  'Savons naturels': { short: 'Savons', tag: 'Savon noir', image: '/photos/p-savon-cabosse.webp' },
+  'Huiles naturelles': { short: 'Huiles', tag: 'Huiles végétales', image: '/photos/p-huile-baobab.webp' },
+  'Soins & gommages': { short: 'Soins', tag: 'Masques & gommages', image: '/photos/p-gommage-feves.webp' },
+  'Rituels & Coffrets': { short: 'Coffrets', tag: 'Idées cadeaux', image: '/photos/p-coffret-cacao.webp' },
+}
+
+/** Forme et teinte de l'illustration, déduites de la catégorie et du nom. */
+export function productLook(p: { category: string; name: string; id?: string }): { shape: ProductShape; tone: string } {
+  const text = `${p.category} ${p.name} ${p.id ?? ''}`.toLowerCase()
+  if (text.includes('savon')) return { shape: 'bar', tone: 'soap' }
+  if (text.includes('coffret') || text.includes('rituel')) return { shape: 'box', tone: 'gift' }
+  if (text.includes('huile')) {
+    if (text.includes('neem')) return { shape: 'bottle', tone: 'neem' }
+    if (text.includes('karit')) return { shape: 'bottle', tone: 'shea' }
+    return { shape: 'bottle', tone: 'coconut' }
+  }
+  if (text.includes('chantilly')) return { shape: 'jar', tone: 'whip' }
+  if (text.includes('karit')) return { shape: 'jar', tone: 'shea' }
+  return { shape: 'jar', tone: 'cocoa' }
+}
+
+/**
+ * Catalogue de secours, affiché seulement si l'API ne répond pas.
+ * Il reprend exactement le cahier des charges : les prix des huiles restent « à confirmer ».
+ * Le stock n'est pas connu hors ligne : la commande passe alors par WhatsApp.
+ */
 export const INITIAL_PRODUCTS: Product[] = [
   {
     id: 'beurre-de-cacao-brut',
-    name: 'Beurre de cacao brut pur de Côte d’Ivoire',
+    imageUrl: '/photos/p-beurre-cacao-brut.webp',
+    name: 'Beurre de cacao brut',
     category: 'Beurre de cacao',
     size: '100 g',
     price: 1500,
-    oldPrice: 2000,
-    discount: '-25%',
-    rating: 4.9,
-    reviewCount: 86,
-    stock: 14,
-    description: 'Un trésor brut et non raffiné, naturellement riche en vitamine E et polyphénols. Répare les peaux sèches, apaise et prévient activement les vergetures.',
+    stock: 1,
+    description: 'Un beurre brut et non raffiné, riche et nourrissant, pour les peaux sèches, les zones rugueuses et les lèvres.',
     tone: 'cocoa',
-    badge: 'Top Vente',
-    isFlashSale: true,
-    imageUrl: 'https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=600&q=80',
-    features: ['100% Brut & Non raffiné', 'Cacao d’origine ivoirienne', 'Action anti-vergetures'],
   },
   {
     id: 'chantilly-beurre-cacao',
-    name: 'Chantilly de cacao fondante & aérienne',
+    imageUrl: '/photos/p-chantilly-cacao.webp',
+    name: 'Chantilly de beurre de cacao',
     category: 'Beurre de cacao',
     size: '100 g',
     price: 2000,
-    oldPrice: 2500,
-    discount: '-20%',
-    rating: 5.0,
-    reviewCount: 112,
-    stock: 8,
-    description: 'Texture fouettée fondante au doux parfum gourmand naturel. Pénètre rapidement sans coller pour hydrater corps et cheveux crépus, frisés ou secs.',
+    stock: 1,
+    description: 'Le beurre de cacao fouetté en une texture légère et fondante, pour le corps et les cheveux.',
     tone: 'whip',
-    badge: 'Coup de Cœur',
-    isFlashSale: true,
-    imageUrl: 'https://images.unsplash.com/photo-1608068811588-3a67006b7489?auto=format&fit=crop&w=600&q=80',
-    features: ['Texture fouettée légère', 'Corps & Cheveux', 'Fini non gras'],
   },
   {
     id: 'savon-noir-cabosse-cacao',
-    name: 'Savon noir artisanal aux cendres de cabosse',
+    imageUrl: '/photos/p-savon-cabosse.webp',
+    name: 'Savon noir de cabosse de cacao',
     category: 'Savons naturels',
     size: '100 g',
     price: 2000,
-    oldPrice: 2500,
-    discount: '-20%',
-    rating: 4.8,
-    reviewCount: 94,
-    stock: 19,
-    description: 'Savon traditionnel purifiant doux. Élimine les impuretés, estompe les taches d’acné et régule le sébum pour un teint net et éclatant.',
+    stock: 1,
+    description: 'Un savon traditionnel aux cendres de cabosse de cacao, pour une peau propre et délicatement fraîche.',
     tone: 'soap',
-    badge: 'Anti-imperfections',
-    isFlashSale: false,
-    imageUrl: 'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?auto=format&fit=crop&w=600&q=80',
-    features: ['Cendres de cabosse pures', 'Purifiant & Éclaircissant doux', 'Pour visage & corps'],
   },
   {
     id: 'huile-de-coco',
-    name: 'Huile de coco vierge pressée à froid',
+    imageUrl: '/photos/p-huile-coco.webp',
+    name: 'Huile de coco',
     category: 'Huiles naturelles',
-    size: '100 ml',
-    price: 2500,
-    oldPrice: 3000,
-    discount: '-17%',
-    rating: 4.9,
-    reviewCount: 68,
-    stock: 11,
-    description: 'Huile satinée multi-usage d’une pureté absolue. Nourrit en profondeur, fortifie la fibre capillaire et apporte brillance aux cheveux et à la peau.',
+    size: 'À confirmer',
+    price: null,
+    stock: 1,
+    description: 'Huile végétale polyvalente pour la peau et les cheveux. Contenance et prix communiqués par la boutique.',
     tone: 'coconut',
-    badge: 'Soin Capillaire',
-    isFlashSale: true,
-    imageUrl: 'https://images.unsplash.com/photo-1576426863848-c21f53c60b19?auto=format&fit=crop&w=600&q=80',
-    features: ['1ère pression à froid', 'Bain d’huile & brillance', '100% Vierge'],
-  },
-  {
-    id: 'huile-de-neem',
-    name: 'Huile de neem végétale assainissante',
-    category: 'Huiles naturelles',
-    size: '100 ml',
-    price: 3000,
-    oldPrice: 3500,
-    discount: '-14%',
-    rating: 4.7,
-    reviewCount: 39,
-    stock: 6,
-    description: 'Huile réputée pour ses propriétés antibactériennes majeures. Cible les boutons tenaces, purifie le cuir chevelu et apaise les démangeaisons.',
-    tone: 'neem',
-    badge: 'Soin Purifiant',
-    isFlashSale: false,
-    imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=600&q=80',
-    features: ['Action ciblée boutons', 'Anti-pelliculaire naturel', 'Soin intensif'],
-  },
-  {
-    id: 'huile-de-karite',
-    name: 'Huile de karité régénérante & protectrice',
-    category: 'Huiles naturelles',
-    size: '100 ml',
-    price: 2500,
-    oldPrice: 3000,
-    discount: '-17%',
-    rating: 4.8,
-    reviewCount: 54,
-    stock: 15,
-    description: 'La quintessence du karité sous forme fluide et soyeuse. Répare les zones asséchées et protège le film protecteur naturel contre les tiraillements.',
-    tone: 'shea',
-    badge: 'Nutrition Intense',
-    isFlashSale: false,
-    imageUrl: 'https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=600&q=80',
-    features: ['Oléine de karité pure', 'Facile à masser', 'Peaux délicates'],
-  },
-  {
-    id: 'coffret-rituel-eclat',
-    name: 'Coffret Rituel Éclat & Douceur (Trio Essentiels)',
-    category: 'Rituels & Coffrets',
-    size: 'Coffret 3 soins',
-    price: 5000,
-    oldPrice: 6500,
-    discount: '-23%',
-    rating: 5.0,
-    reviewCount: 45,
-    stock: 5,
-    description: 'Le rituel complet NATURE & GRÂCE : 1 Savon noir de cabosse (100g) + 1 Chantilly de cacao (100g) + 1 Beurre de cacao brut (100g). Économisez 1 500 FCFA.',
-    tone: 'cocoa',
-    badge: 'Pack Économique',
-    isFlashSale: true,
-    imageUrl: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=600&q=80',
-    features: ['Routine Matin & Soir', 'Économie de 1 500 FCFA', 'Idéal pour offrir'],
   },
 ]
 
-export const INITIAL_REVIEWS: Review[] = [
-  {
-    id: 'rev-1',
-    name: 'Aïcha Koné',
-    location: 'Cocody Angré, Abidjan',
-    rating: 5,
-    date: '02 Novembre 2026',
-    productName: 'Chantilly de cacao & Savon noir',
-    comment: 'La Chantilly de cacao est une merveille absolue ! Elle ne colle pas du tout, s’étale avec une grande facilité et mes jambes restent hydratées toute la journée. En prime, le savon noir a nettement atténué mes taches d’acné en 3 semaines.',
-    verified: true,
-  },
-  {
-    id: 'rev-2',
-    name: 'Marie-Estelle D.',
-    location: 'Marcory Zone 4, Abidjan',
-    rating: 5,
-    date: '28 Octobre 2026',
-    productName: 'Beurre de cacao brut',
-    comment: 'J’ai utilisé le beurre de cacao brut pur tout au long de ma grossesse sur le ventre et les hanches. Aucune vergeture ! C’est sans comparaison le beurre de cacao le plus pur et authentique que j’ai testé en Côte d’Ivoire.',
-    verified: true,
-  },
-  {
-    id: 'rev-3',
-    name: 'Franck Yapo',
-    location: 'Yopougon Maroc, Abidjan',
-    rating: 5,
-    date: '15 Octobre 2026',
-    productName: 'Savon noir & Huile de coco',
-    comment: 'Je cherchais un savon sain pour le rasage et la douche. Le savon noir de cabosse mousse super bien, nettoie en profondeur et donne une vraie sensation de propreté fraîche sans assécher la peau. Livraison rapide à Yopougon !',
-    verified: true,
-  },
-  {
-    id: 'rev-4',
-    name: 'Fatou Bamba',
-    location: 'Bouaké',
-    rating: 5,
-    date: '08 Octobre 2026',
-    productName: 'Coffret Rituel Éclat & Douceur',
-    comment: 'Commande passée en ligne et payée par Wave. Le colis est arrivé à Bouaké en moins de 48h via la gare. L’odeur du cacao est irrésistible et les produits sont d’une qualité remarquable.',
-    verified: true,
-  },
-]
+/** Valeurs par défaut tant que les réglages de la boutique ne sont pas chargés. */
+export const DEFAULT_SETTINGS: ApiStoreSettings = {
+  whatsappNumber: '2250717684751',
+  deliveryCommunes: 'Abidjan, Bouaké, Daloa et autres communes sur demande',
+  deliveryInfo: 'Frais et délais communiqués avant la validation définitive.',
+  waveInstructions: 'Les modalités de paiement Wave sont confirmées par la boutique.',
+  waveNumber: '',
+  deliveryZones: [],
+  legalInfo: '',
+}

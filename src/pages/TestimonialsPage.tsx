@@ -1,329 +1,217 @@
-import React, { useState } from 'react'
-import { CheckCircle2, HeartHandshake, Leaf, MessageSquarePlus, Send, Sparkles, Star, Truck } from 'lucide-react'
-import { INITIAL_REVIEWS } from '../data/products'
-import { Review } from '../types'
+import React, { useMemo, useState } from 'react'
+import { MessageSquarePlus, Send, Star, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { Stars } from '../components/ProductCard'
+import { api } from '../api'
+import { usePageMeta } from '../hooks/usePageMeta'
 
-export const TestimonialsPage: React.FC<{ onOpenAdvisor: () => void }> = ({ onOpenAdvisor }) => {
-  const { showToast, products } = useApp()
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS)
-  const [filterRating, setFilterRating] = useState<number | 'all'>('all')
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
-  // Formulaire d'avis
+export const TestimonialsPage: React.FC = () => {
+  const { products, reviews, reviewsLoaded, showToast, waLink } = useApp()
+  usePageMeta('Avis clients', 'Les avis des clientes et clients de NATURE & GRÂCE sur nos soins au cacao, savons et huiles.')
+  const [filter, setFilter] = useState<number | 'all'>('all')
   const [showForm, setShowForm] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
   const [authorName, setAuthorName] = useState('')
-  const [location, setLocation] = useState('Cocody, Abidjan')
+  const [city, setCity] = useState('')
   const [rating, setRating] = useState(5)
-  const [productName, setProductName] = useState('Chantilly de cacao & Savon noir')
+  const [productSlug, setProductSlug] = useState('')
   const [comment, setComment] = useState('')
 
-  const handleAddReview = (e: React.FormEvent) => {
+  const stats = useMemo(() => {
+    const count = reviews.length
+    const average = count ? reviews.reduce((s, r) => s + r.rating, 0) / count : 0
+    const distribution = [5, 4, 3, 2, 1].map((star) => {
+      const n = reviews.filter((r) => r.rating === star).length
+      return { star, n, pct: count ? Math.round((n / count) * 100) : 0 }
+    })
+    return { count, average, distribution }
+  }, [reviews])
+
+  const filtered = filter === 'all' ? reviews : reviews.filter((r) => r.rating === filter)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!authorName.trim() || !comment.trim()) return
-
-    const newRev: Review = {
-      id: 'rev-' + Date.now(),
-      name: authorName.trim(),
-      location: location.trim(),
-      rating,
-      date: 'Aujourd’hui',
-      productName,
-      comment: comment.trim(),
-      verified: true,
+    setSending(true)
+    setError('')
+    try {
+      const res = await api<{ message: string }>('/reviews', {
+        method: 'POST',
+        body: JSON.stringify({ authorName, city, rating, comment, productSlug: productSlug || undefined }),
+      })
+      showToast(res.message)
+      setShowForm(false)
+      setComment('')
+    } catch (err) {
+      const offline = err instanceof TypeError
+      setError(offline ? 'Le site ne parvient pas à joindre la boutique. Vous pouvez envoyer votre avis sur WhatsApp.' : (err as Error).message)
+    } finally {
+      setSending(false)
     }
-
-    setReviews([newRev, ...reviews])
-    setShowForm(false)
-    setAuthorName('')
-    setComment('')
-    showToast('Merci infiniment pour votre retour d’expérience !')
   }
 
-  const filteredReviews = filterRating === 'all' ? reviews : reviews.filter((r) => r.rating === filterRating)
+  const productName = products.find((p) => p.id === productSlug)?.name
+  const whatsappReview = `Bonjour NATURE & GRÂCE,\n\nVoici mon avis :\nPrénom : ${authorName}\nVille : ${city}\nProduit : ${productName ?? 'Non précisé'}\nNote : ${rating}/5\n\n${comment}`
 
   return (
-    <div style={{ padding: '30px 4% 70px', maxWidth: '1080px', margin: '0 auto' }}>
-      {/* Entête Témoignages */}
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--brand-gold)', letterSpacing: '0.16em', fontWeight: 600 }}>
-          AVIS & RETOURS CLIENTS VÉRIFIÉS
-        </span>
-        <h1 style={{ font: "500 clamp(30px, 3.8vw, 44px)/1.15 'Playfair Display', serif", margin: '8px 0 12px', color: 'var(--text-primary)' }}>
-          Ce que disent nos <em>clientes & clients.</em>
-        </h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '580px', margin: '0 auto' }}>
-          La transparence et l'amour du naturel sont au cœur de nos valeurs. Découvrez les avis authentiques de celles et ceux qui ont adopté le rituel NATURE & GRÂCE.
-        </p>
-      </div>
+    <div className="ng-container ng-subpage">
+      <header className="ng-page-head">
+        <span className="ng-eyebrow">AVIS CLIENTS</span>
+        <h1>Vos retours sur nos soins.</h1>
+        <p>Chaque avis est lu par la boutique avant d’être publié.</p>
+      </header>
 
-      {/* Carte Résumé des Notes */}
-      <div
-        style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '16px',
-          padding: '28px 34px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1.6fr auto',
-          gap: '30px',
-          alignItems: 'center',
-          boxShadow: 'var(--shadow-sm)',
-          marginBottom: '35px',
-        }}
-      >
-        <div style={{ textAlign: 'center', borderRight: '1px solid var(--border-subtle)', paddingRight: '20px' }}>
-          <b style={{ font: "700 48px 'Playfair Display', serif", color: 'var(--brand-gold)', display: 'block', lineHeight: 1 }}>
-            4.9
-          </b>
-          <div style={{ color: 'var(--brand-gold)', fontSize: '18px', margin: '6px 0 4px', letterSpacing: '2px' }}>
-            ★★★★★
+      {stats.count > 0 ? (
+        <section className="ng-rating-summary">
+          <div className="ng-rating-big">
+            <b>{stats.average.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</b>
+            <Stars rating={stats.average} size={18} />
+            <small>
+              {stats.count} avis publié{stats.count > 1 ? 's' : ''}
+            </small>
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Basé sur 350+ avis vérifiés</span>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px' }}>
-            <span>5 étoiles</span>
-            <div style={{ flex: 1, height: '6px', background: 'var(--border-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-              <div style={{ width: '92%', height: '100%', background: 'var(--brand-gold)' }} />
-            </div>
-            <b>92%</b>
+          <div className="ng-rating-bars">
+            {stats.distribution.map(({ star, pct }) => (
+              <div key={star}>
+                <span>
+                  {star} <Star size={12} fill="currentColor" strokeWidth={0} />
+                </span>
+                <i>
+                  <em style={{ width: `${pct}%` }} />
+                </i>
+                <b>{pct}%</b>
+              </div>
+            ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px' }}>
-            <span>4 étoiles</span>
-            <div style={{ flex: 1, height: '6px', background: 'var(--border-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-              <div style={{ width: '8%', height: '100%', background: 'var(--brand-gold)' }} />
-            </div>
-            <b>8%</b>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px' }}>
-            <span>3 étoiles</span>
-            <div style={{ flex: 1, height: '6px', background: 'var(--border-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-              <div style={{ width: '0%', height: '100%', background: 'var(--brand-gold)' }} />
-            </div>
-            <b>0%</b>
-          </div>
-        </div>
-
-        <div>
-          <button
-            type="button"
-            className="button primary"
-            style={{ background: 'var(--brand-green)', borderColor: 'var(--brand-green)', fontSize: '11px', whiteSpace: 'nowrap' }}
-            onClick={() => setShowForm(!showForm)}
-          >
-            <MessageSquarePlus size={15} /> Laisser un avis
+          <button type="button" className="ng-btn ng-btn--primary" onClick={() => setShowForm(true)}>
+            <MessageSquarePlus size={17} /> Donner mon avis
+          </button>
+        </section>
+      ) : (
+        <div className="ng-empty ng-empty--icon">
+          <span className="ng-empty-ico">
+            <Star size={28} />
+          </span>
+          <h3>{reviewsLoaded ? 'Aucun avis publié pour le moment' : 'Chargement des avis…'}</h3>
+          <p>Vous avez essayé nos soins ? Votre retour aidera les prochaines clientes à choisir.</p>
+          <button type="button" className="ng-btn ng-btn--primary" onClick={() => setShowForm(true)}>
+            <MessageSquarePlus size={17} /> Donner le premier avis
           </button>
         </div>
-      </div>
-
-      {/* Formulaire pour laisser son avis */}
-      {showForm && (
-        <form
-          onSubmit={handleAddReview}
-          style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--brand-gold)',
-            borderRadius: '14px',
-            padding: '24px 28px',
-            marginBottom: '35px',
-            animation: 'fadeIn 0.25s ease',
-          }}
-        >
-          <h3 style={{ font: "500 20px 'Playfair Display', serif", margin: '0 0 16px', color: 'var(--text-primary)' }}>
-            Partagez votre expérience avec nos soins
-          </h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '14px' }}>
-            <div className="auth-field">
-              <label>Votre nom</label>
-              <input
-                type="text"
-                placeholder="Ex. Aminata Diallo"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="auth-field">
-              <label>Commune ou Ville</label>
-              <input
-                type="text"
-                placeholder="Ex. Cocody, Yopougon, Bouaké..."
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="auth-field">
-              <label>Soin concerné</label>
-              <select
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-strong)',
-                  background: 'var(--bg-surface)',
-                  color: 'var(--text-primary)',
-                  fontSize: '12px',
-                }}
-              >
-                {products.map((p) => (
-                  <option value={p.name} key={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="auth-field">
-              <label>Votre note</label>
-              <select
-                value={rating}
-                onChange={(e) => setRating(Number(e.target.value))}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-strong)',
-                  background: 'var(--bg-surface)',
-                  color: 'var(--text-primary)',
-                  fontSize: '12px',
-                }}
-              >
-                <option value={5}>★★★★★ (5/5 Exceptionnel)</option>
-                <option value={4}>★★★★☆ (4/5 Très satisfait)</option>
-                <option value={3}>★★★☆☆ (3/5 Moyen)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="auth-field" style={{ marginBottom: '16px' }}>
-            <label>Votre commentaire d’expérience</label>
-            <textarea
-              rows={3}
-              placeholder="Décrivez comment vous avez utilisé le produit et les résultats constatés sur votre peau ou vos cheveux..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              style={{
-                padding: '12px 14px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-strong)',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '12px',
-                fontFamily: 'inherit',
-              }}
-              required
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button type="submit" className="button primary" style={{ background: 'var(--brand-green)', fontSize: '11.5px' }}>
-              <Send size={14} /> Publier mon avis
-            </button>
-            <button
-              type="button"
-              className="button secondary-empty"
-              style={{ fontSize: '11.5px' }}
-              onClick={() => setShowForm(false)}
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
       )}
 
-      {/* Filtres par étoile */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-        <button
-          type="button"
-          className={`jumia-cat-pill ${filterRating === 'all' ? 'selected' : ''}`}
-          onClick={() => setFilterRating('all')}
-        >
-          Tous les avis ({reviews.length})
-        </button>
-        <button
-          type="button"
-          className={`jumia-cat-pill ${filterRating === 5 ? 'selected' : ''}`}
-          onClick={() => setFilterRating(5)}
-        >
-          5 étoiles ({reviews.filter((r) => r.rating === 5).length})
-        </button>
-        <button
-          type="button"
-          className={`jumia-cat-pill ${filterRating === 4 ? 'selected' : ''}`}
-          onClick={() => setFilterRating(4)}
-        >
-          4 étoiles ({reviews.filter((r) => r.rating === 4).length})
-        </button>
-      </div>
+      {stats.count > 1 && (
+        <div className="ng-chips" style={{ marginBottom: 18 }}>
+          {(['all', 5, 4, 3, 2, 1] as const).map((f) => {
+            const n = f === 'all' ? reviews.length : reviews.filter((r) => r.rating === f).length
+            if (f !== 'all' && n === 0) return null
+            return (
+              <button key={f} type="button" className={`ng-chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
+                {f === 'all' ? 'Tous' : `${f} étoile${f > 1 ? 's' : ''}`} ({n})
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-      {/* Grille des Avis */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '20px' }}>
-        {filteredReviews.map((rev) => (
-          <article
-            key={rev.id}
-            style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '14px',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '14px',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--brand-gold)', fontSize: '14px', letterSpacing: '2px' }}>
-                  {'★'.repeat(rev.rating)}
-                  {'☆'.repeat(5 - rev.rating)}
-                </span>
-                <small style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{rev.date}</small>
-              </div>
-
-              <span style={{ fontSize: '10px', color: 'var(--brand-gold)', fontWeight: 600, display: 'block', marginBottom: '8px' }}>
-                {rev.productName}
-              </span>
-
-              <p style={{ fontSize: '12px', lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>
-                {rev.comment}
-              </p>
+      <div className="ng-reviews">
+        {filtered.map((rev, i) => (
+          <article key={rev.id} className="ng-review-card" data-reveal style={{ '--i': i % 6 } as React.CSSProperties}>
+            <div className="ng-review-top">
+              <Stars rating={rev.rating} size={14} />
+              <small>{formatDate(rev.createdAt)}</small>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'var(--brand-green)',
-                  color: 'white',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                }}
-              >
-                {rev.name.slice(0, 2).toUpperCase()}
-              </div>
+            {rev.productName && <span className="ng-review-product">{rev.productName}</span>}
+            <p>{rev.comment}</p>
+            <footer>
+              <div className="ng-avatar">{rev.authorName.charAt(0).toUpperCase()}</div>
               <div>
-                <b style={{ fontSize: '11.5px', color: 'var(--text-primary)', display: 'block' }}>{rev.name}</b>
-                <small style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>{rev.location}</small>
+                <b>{rev.authorName}</b>
+                <small>{rev.city}</small>
               </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: '#16a34a', fontSize: '9.5px', fontWeight: 600 }}>
-                <CheckCircle2 size={12} /> Vérifié
-              </div>
-            </div>
+            </footer>
           </article>
         ))}
       </div>
+
+      {showForm && (
+        <div className="ng-modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <form className="ng-modal" onSubmit={handleSubmit} role="dialog" aria-modal="true" aria-label="Donner mon avis">
+            <div className="ng-modal-head">
+              <h3>Donner mon avis</h3>
+              <button type="button" className="ng-icon-btn" onClick={() => setShowForm(false)} aria-label="Fermer">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="ng-form">
+              <div className="ng-star-input" role="radiogroup" aria-label="Votre note">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={rating === n}
+                    aria-label={`${n} étoile${n > 1 ? 's' : ''}`}
+                    className={n <= rating ? 'on' : ''}
+                    onClick={() => setRating(n)}
+                  >
+                    <Star size={28} fill="currentColor" strokeWidth={0} />
+                  </button>
+                ))}
+              </div>
+              <div className="ng-form-row">
+                <label>
+                  Votre prénom
+                  <input value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Ex. Aminata" minLength={2} maxLength={60} required />
+                </label>
+                <label>
+                  Commune ou ville
+                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex. Cocody" minLength={2} maxLength={60} required />
+                </label>
+              </div>
+              <label>
+                Produit
+                <select value={productSlug} onChange={(e) => setProductSlug(e.target.value)}>
+                  <option value="">Avis général sur la boutique</option>
+                  {products.map((p) => (
+                    <option value={p.id} key={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Votre expérience
+                <textarea
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Comment l’avez-vous utilisé ? Qu’en avez-vous pensé ?"
+                  minLength={10}
+                  maxLength={1000}
+                  required
+                />
+              </label>
+              <p className="ng-form-hint">Votre avis est envoyé à la boutique et publié après vérification. Votre prénom et votre ville seront affichés.</p>
+              {error && (
+                <p className="ng-form-error" role="alert">
+                  {error}{' '}
+                  <a href={waLink(whatsappReview)} target="_blank" rel="noreferrer">
+                    Envoyer sur WhatsApp
+                  </a>
+                </p>
+              )}
+              <button type="submit" className="ng-btn ng-btn--primary" disabled={sending}>
+                <Send size={16} /> {sending ? 'Envoi…' : 'Envoyer mon avis'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   )
 }
+
 export default TestimonialsPage

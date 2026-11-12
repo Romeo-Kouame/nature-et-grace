@@ -1,28 +1,19 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { NotificationItem, Product, ProductCategory, User } from '../types'
-import { INITIAL_PRODUCTS } from '../data/products'
-import { api, ApiProduct } from '../api'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { ALL_CATEGORIES, Product, ProductCategory } from '../types'
+import { DEFAULT_SETTINGS, INITIAL_PRODUCTS, KNOWN_CATEGORIES, productLook } from '../data/products'
+import { api, ApiCustomer, ApiProduct, ApiReview, ApiStoreSettings, resolveImageUrl } from '../api'
+
+type Rating = { average: number; count: number }
 
 interface AppContextType {
-  // Navigation / Router sans #
   currentPath: string
   navigate: (path: string) => void
 
-  // Thème Mode Sombre / Clair
   theme: 'light' | 'dark'
   toggleTheme: () => void
 
-  // Authentification Client
-  user: User | null
-  login: (userData: Omit<User, 'id'>) => void
-  logout: () => void
-  authModalOpen: boolean
-  authModalReason: string
-  openAuthModal: (reason?: string) => void
-  closeAuthModal: () => void
-
-  // Panier avec condition de connexion
   cart: Record<string, number>
+  /** Renvoie false si le produit ne peut pas être ajouté (prix à confirmer, rupture). */
   addToCart: (productId: string, quantity?: number) => boolean
   removeFromCart: (productId: string) => void
   changeQuantity: (productId: string, delta: number) => void
@@ -31,316 +22,349 @@ interface AppContextType {
   cartTotal: number
   cartOpen: boolean
   setCartOpen: (open: boolean) => void
+  /** Quantité maximale commandable d'un produit (stock réel si le catalogue est en ligne). */
+  maxQuantity: (product: Product) => number
 
-  // Favoris (Wishlist)
   favorites: string[]
   toggleFavorite: (productId: string) => void
   isFavorite: (productId: string) => boolean
 
-  // Notifications
-  notifications: NotificationItem[]
-  unreadNotificationsCount: number
-  markAllNotificationsRead: () => void
-
-  // Produits & Recherche
   products: Product[]
+  /** true quand le catalogue vient de l'API (sinon : catalogue de secours) */
+  catalogLive: boolean
+  catalogLoading: boolean
+  categories: string[]
   searchTerm: string
   setSearchTerm: (term: string) => void
   selectedCategory: ProductCategory
   setSelectedCategory: (cat: ProductCategory) => void
 
-  /** true quand le catalogue vient de l'API (sinon : données de démonstration) */
-  catalogLive: boolean
+  settings: ApiStoreSettings
+  /** Lien WhatsApp de la boutique, avec un message prérempli facultatif. */
+  waLink: (text?: string) => string
+  waDisplay: string
 
-  // Toast
+  reviews: ApiReview[]
+  reviewsLoaded: boolean
+  ratingFor: (productId: string) => Rating | null
+  refreshReviews: () => void
+
+  /** Client connecté (null si visiteur) */
+  user: ApiCustomer | null
+  /** true une fois la session vérifiée auprès du serveur */
+  authReady: boolean
+  login: (identifier: string, password: string) => Promise<void>
+  register: (data: { name: string; phone: string; email?: string; password: string }) => Promise<void>
+  logout: () => Promise<void>
+  setUser: (user: ApiCustomer) => void
+  /** Ouvre le panier, ou envoie vers la connexion puis rouvre le panier après coup */
+  openCart: () => void
+  /** Envoie vers la page de connexion en retenant où revenir ensuite */
+  goToLogin: (options?: { then?: string; openCart?: boolean; mode?: 'login' | 'register' }) => void
+
+  advisorOpen: boolean
+  setAdvisorOpen: (open: boolean) => void
+
   toastMessage: string
   showToast: (msg: string) => void
 }
 
-/** Fusionne un produit de l'API avec les infos d'affichage locales du même slug. */
-function mergeApiProduct(row: ApiProduct): Product {
-  const local = INITIAL_PRODUCTS.find((p) => p.id === row.slug)
-  const price = row.priceXof
-  const oldPrice = local?.oldPrice && price !== null && local.oldPrice > price ? local.oldPrice : null
+const AppContext = createContext<AppContextType | undefined>(undefined)
+
+/** Lecture/écriture locale protégée : le navigateur peut refuser le stockage (navigation privée). */
+function readLocal<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : fallback
+  } catch {
+    return fallback
+  }
+}
+function writeLocal(key: string, value: unknown) {
+  try {
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    /* stockage indisponible : sans conséquence */
+  }
+}
+
+/** « 2250717684751 » → « +225 07 17 68 47 51 » */
+export function formatPhone(digits: string) {
+  const d = digits.replace(/\D/g, '')
+  if (d.startsWith('225') && d.length === 13) return `+225 ${d.slice(3).replace(/(\d{2})(?=\d)/g, '$1 ')}`
+  return `+${d}`
+}
+
+function fromApi(row: ApiProduct): Product {
   return {
-    rating: 5,
-    reviewCount: 0,
-    tone: 'cocoa',
-    ...local,
     id: row.slug,
     apiId: row.id,
     name: row.name,
     category: row.category,
     size: row.size,
     description: row.description,
-    price,
+    price: row.priceXof,
     stock: row.stock,
-    imageUrl: row.imageUrl || local?.imageUrl || null,
-    oldPrice,
-    discount: oldPrice && price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : null,
-    isFlashSale: Boolean(oldPrice) && (local?.isFlashSale ?? false),
+    imageUrl: resolveImageUrl(row.imageUrl),
+    gallery: (row.gallery ?? []).map((url) => resolveImageUrl(url)).filter((url): url is string => Boolean(url)),
+    badge: row.badge ?? null,
+    tone: productLook({ category: row.category, name: row.name, id: row.slug }).tone,
   }
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined)
-
-const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-1',
-    title: '⚡ Promotion Wave de la semaine',
-    message: 'Profitez de la livraison offerte à Abidjan dès 10 000 FCFA d’achats réglés avec Wave !',
-    time: 'Il y a 10 minutes',
-    read: false,
-    type: 'promo',
-  },
-  {
-    id: 'notif-2',
-    title: '🌿 Nouveauté en stock',
-    message: 'La Chantilly de cacao 100g est de retour en quantité limitée !',
-    time: 'Il y a 2 heures',
-    read: false,
-    type: 'stock',
-  },
-  {
-    id: 'notif-3',
-    title: '✨ Diagnostic Beauté IA disponible',
-    message: 'Découvrez votre routine naturelle personnalisée avec notre Conseiller IA Gemini.',
-    time: 'Hier',
-    read: false,
-    type: 'ai',
-  },
-]
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. Navigation / Router sans #
-  const [currentPath, setCurrentPath] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return window.location.pathname || '/'
-    }
-    return '/'
-  })
-
-  const navigate = (path: string) => {
-    if (path !== currentPath) {
+  // Navigation sans #
+  const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname || '/')
+  const navigate = useCallback((path: string) => {
+    if (path !== window.location.pathname + window.location.search) {
       window.history.pushState(null, '', path)
-      setCurrentPath(path)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setCurrentPath(new URL(path, window.location.origin).pathname)
     }
-  }
-
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname || '/')
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+    const onPop = () => setCurrentPath(window.location.pathname || '/')
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  // 2. Mode Sombre / Clair
+  // Thème
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ng_theme') as 'light' | 'dark' | null
-      if (saved) return saved
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark'
-    }
-    return 'light'
+    const saved = readLocal<'light' | 'dark' | null>('ng_theme', null)
+    if (saved) return saved
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
-
   useEffect(() => {
-    const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-    }
-    localStorage.setItem('ng_theme', theme)
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    writeLocal('ng_theme', theme)
   }, [theme])
+  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'))
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-  }
+  // Toast
+  const [toastMessage, setToastMessage] = useState('')
+  const toastTimer = useRef<number>()
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToastMessage(''), 2600)
+  }, [])
 
-  // 3. Authentification Client
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ng_user')
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch {
-          return null
-        }
-      }
-    }
-    return null
-  })
-
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [authModalReason, setAuthModalReason] = useState('')
-
-  const openAuthModal = (reason = '') => {
-    setAuthModalReason(reason)
-    setAuthModalOpen(true)
-  }
-
-  const closeAuthModal = () => {
-    setAuthModalOpen(false)
-    setAuthModalReason('')
-  }
-
-  const login = (userData: Omit<User, 'id'>) => {
-    const newUser: User = {
-      id: 'usr_' + Date.now(),
-      ...userData,
-    }
-    setUser(newUser)
-    localStorage.setItem('ng_user', JSON.stringify(newUser))
-    closeAuthModal()
-    showToast(`Bienvenue, ${newUser.name} !`)
-  }
-
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('ng_user')
-    showToast('Vous avez été déconnecté.')
-  }
-
-  // 4. Favoris
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ng_favorites')
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch {
-          return []
-        }
-      }
-    }
-    return ['beurre-de-cacao-brut', 'chantilly-beurre-cacao']
-  })
-
-  const toggleFavorite = (productId: string) => {
-    setFavorites((prev) => {
-      const exists = prev.includes(productId)
-      const next = exists ? prev.filter((id) => id !== productId) : [...prev, productId]
-      localStorage.setItem('ng_favorites', JSON.stringify(next))
-      showToast(exists ? 'Retiré de vos favoris' : 'Ajouté à vos favoris ❤️')
-      return next
-    })
-  }
-
-  const isFavorite = (productId: string) => favorites.includes(productId)
-
-  // 5. Notifications
-  const [notifications, setNotifications] = useState<NotificationItem[]>(DEFAULT_NOTIFICATIONS)
-
-  const unreadNotificationsCount = notifications.filter((n) => !n.read).length
-
-  const markAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }
-
-  // 6. Panier (AVEC CONDITION DE CONNEXION)
-  const [cart, setCart] = useState<Record<string, number>>({})
-  const [cartOpen, setCartOpen] = useState(false)
-
-  const addToCart = (productId: string, quantity = 1): boolean => {
-    // RÈGLE OBLIGATOIRE : pour ajouter un produit, il faut être connecté !
-    if (!user) {
-      openAuthModal('Connectez-vous pour ajouter ce produit à votre panier et passer commande !')
-      return false
-    }
-
-    setCart((prev) => ({
-      ...prev,
-      [productId]: (prev[productId] || 0) + quantity,
-    }))
-    showToast(`Produit ajouté au panier (${quantity})`)
-    return true
-  }
-
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => {
-      const next = { ...prev }
-      delete next[productId]
-      return next
-    })
-  }
-
-  const changeQuantity = (productId: string, delta: number) => {
-    setCart((prev) => {
-      const next = { ...prev, [productId]: (prev[productId] || 0) + delta }
-      if (next[productId] <= 0) delete next[productId]
-      return next
-    })
-  }
-
-  const clearCart = () => setCart({})
-
-  const cartCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0)
-
-  // Catalogue : l'API (gérée depuis l'admin) fait foi. Les données locales ne servent
-  // qu'à enrichir l'affichage (notes, ancien prix…) ou de secours si l'API est injoignable.
+  // Catalogue : l'API (gérée depuis l'admin) fait foi.
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS)
   const [catalogLive, setCatalogLive] = useState(false)
-
+  /** Vrai tant que la première réponse de l'API n'est pas arrivée (affichage de cartes « squelettes ») */
+  const [catalogLoading, setCatalogLoading] = useState(true)
   useEffect(() => {
     let cancelled = false
     api<ApiProduct[]>('/products')
       .then((rows) => {
         if (cancelled || !Array.isArray(rows)) return
-        setProducts(rows.map(mergeApiProduct))
+        setProducts(rows.map(fromApi))
         setCatalogLive(true)
       })
       .catch(() => {
-        /* API hors ligne : on garde le catalogue local */
+        /* API hors ligne : catalogue de secours */
+      })
+      .finally(() => {
+        if (!cancelled) setCatalogLoading(false)
       })
     return () => {
       cancelled = true
     }
   }, [])
 
-  // Retire du panier les produits disparus du catalogue
-  useEffect(() => {
-    setCart((prev) => {
-      const ids = new Set(products.map((p) => p.id))
-      const next = Object.fromEntries(Object.entries(prev).filter(([id]) => ids.has(id)))
-      return Object.keys(next).length === Object.keys(prev).length ? prev : next
-    })
+  const categories = useMemo(() => {
+    const present = [...new Set(products.map((p) => p.category))]
+    const known = KNOWN_CATEGORIES.filter((c) => present.includes(c))
+    return [...known, ...present.filter((c) => !KNOWN_CATEGORIES.includes(c)).sort()]
   }, [products])
 
+  // Réglages de la boutique (WhatsApp, livraison, Wave…)
+  const [settings, setSettings] = useState<ApiStoreSettings>(DEFAULT_SETTINGS)
+  useEffect(() => {
+    api<ApiStoreSettings>('/store-settings')
+      .then((s) => setSettings({ ...DEFAULT_SETTINGS, ...s, deliveryZones: Array.isArray(s.deliveryZones) ? s.deliveryZones : [] }))
+      .catch(() => undefined)
+  }, [])
+  const waLink = useCallback(
+    (text?: string) => `https://wa.me/${settings.whatsappNumber}${text ? `?text=${encodeURIComponent(text)}` : ''}`,
+    [settings.whatsappNumber],
+  )
+
+  // Avis publiés
+  const [reviews, setReviews] = useState<ApiReview[]>([])
+  const [reviewsLoaded, setReviewsLoaded] = useState(false)
+  const refreshReviews = useCallback(() => {
+    api<ApiReview[]>('/reviews')
+      .then((rows) => setReviews(Array.isArray(rows) ? rows : []))
+      .catch(() => setReviews([]))
+      .finally(() => setReviewsLoaded(true))
+  }, [])
+  useEffect(refreshReviews, [refreshReviews])
+  const ratingFor = useCallback(
+    (productId: string): Rating | null => {
+      const list = reviews.filter((r) => r.productSlug === productId)
+      if (!list.length) return null
+      return { average: list.reduce((s, r) => s + r.rating, 0) / list.length, count: list.length }
+    },
+    [reviews],
+  )
+
+  // Favoris
+  const [favorites, setFavorites] = useState<string[]>(() => readLocal<string[]>('ng_favorites', []))
+  useEffect(() => writeLocal('ng_favorites', favorites), [favorites])
+  const toggleFavorite = (productId: string) => {
+    const exists = favorites.includes(productId)
+    setFavorites((prev) => (exists ? prev.filter((id) => id !== productId) : [...prev, productId]))
+    showToast(exists ? 'Retiré de vos favoris' : 'Ajouté à vos favoris')
+  }
+  const isFavorite = (productId: string) => favorites.includes(productId)
+
+  // Panier, conservé sur l'appareil
+  const [cart, setCart] = useState<Record<string, number>>(() => readLocal<Record<string, number>>('ng_cart', {}))
+  const [cartOpen, setCartOpen] = useState(false)
+  useEffect(() => writeLocal('ng_cart', cart), [cart])
+
+  const maxQuantity = useCallback((product: Product) => (catalogLive ? Math.max(0, product.stock) : 20), [catalogLive])
+
+  const addToCart = (productId: string, quantity = 1): boolean => {
+    const product = products.find((p) => p.id === productId)
+    if (!product) return false
+    if (product.price === null) {
+      showToast('Prix à confirmer : demandez-le sur WhatsApp')
+      return false
+    }
+    const max = maxQuantity(product)
+    const current = cart[productId] || 0
+    if (max <= 0) {
+      showToast('Ce produit est en rupture de stock')
+      return false
+    }
+    const next = Math.min(max, current + quantity)
+    if (next === current) {
+      showToast(`Stock disponible : ${max} au maximum`)
+      return false
+    }
+    setCart((prev) => ({ ...prev, [productId]: next }))
+    showToast(next - current > 1 ? `${next - current} articles ajoutés au panier` : 'Ajouté au panier')
+    return true
+  }
+
+  const removeFromCart = (productId: string) =>
+    setCart((prev) => {
+      const next = { ...prev }
+      delete next[productId]
+      return next
+    })
+
+  const changeQuantity = (productId: string, delta: number) => {
+    const product = products.find((p) => p.id === productId)
+    setCart((prev) => {
+      const max = product ? maxQuantity(product) : 99
+      const value = Math.min(max, (prev[productId] || 0) + delta)
+      const next = { ...prev, [productId]: value }
+      if (value <= 0) delete next[productId]
+      return next
+    })
+  }
+
+  const clearCart = () => setCart({})
+
+  // Quand le vrai catalogue arrive : on retire les produits disparus et on ajuste au stock réel
+  useEffect(() => {
+    setCart((prev) => {
+      const next: Record<string, number> = {}
+      for (const [id, qty] of Object.entries(prev)) {
+        const product = products.find((p) => p.id === id)
+        if (!product || product.price === null) continue
+        const allowed = Math.min(qty, maxQuantity(product))
+        if (allowed > 0) next[id] = allowed
+      }
+      const same = Object.keys(next).length === Object.keys(prev).length && Object.entries(next).every(([id, q]) => prev[id] === q)
+      return same ? prev : next
+    })
+  }, [products, maxQuantity])
+
+  const cartCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0)
   const cartTotal = products.reduce((sum, item) => sum + (item.price ?? 0) * (cart[item.id] || 0), 0)
 
-  // 7. Recherche & Filtre par Catégorie
+  // Recherche & rayon
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>('Toutes les catégories')
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(ALL_CATEGORIES)
 
-  // 8. Toast notification
-  const [toastMessage, setToastMessage] = useState('')
+  // Compte client : la session est un cookie sécurisé, on demande au serveur qui est connecté
+  const [user, setUser] = useState<ApiCustomer | null>(null)
+  const [authReady, setAuthReady] = useState(false)
+  useEffect(() => {
+    writeLocal('ng_customer', null) // ancienne mémorisation locale des coordonnées, remplacée par le compte
+    api<ApiCustomer>('/customer/me')
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setAuthReady(true))
+  }, [])
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg)
-    setTimeout(() => {
-      setToastMessage((prev) => (prev === msg ? '' : prev))
-    }, 2200)
+  const goToLogin = useCallback(
+    (options: { then?: string; openCart?: boolean; mode?: 'login' | 'register' } = {}) => {
+      const then = options.then ?? (window.location.pathname.startsWith('/connexion') ? '/' : window.location.pathname)
+      try {
+        sessionStorage.setItem('ng_after_login', JSON.stringify({ then, openCart: Boolean(options.openCart) }))
+      } catch {
+        /* stockage indisponible */
+      }
+      setCartOpen(false)
+      navigate(options.mode === 'register' ? '/connexion?inscription' : '/connexion')
+    },
+    [navigate],
+  )
+
+  /** Après connexion ou inscription : retour à la page d'origine, panier rouvert si besoin */
+  const afterAuth = (customer: ApiCustomer, welcome: string) => {
+    setUser(customer)
+    let next = { then: '/', openCart: false }
+    try {
+      next = { ...next, ...JSON.parse(sessionStorage.getItem('ng_after_login') || '{}') }
+      sessionStorage.removeItem('ng_after_login')
+    } catch {
+      /* rien */
+    }
+    navigate(next.then || '/')
+    if (next.openCart) setCartOpen(true)
+    showToast(welcome)
   }
+
+  const login = async (identifier: string, password: string) => {
+    const customer = await api<ApiCustomer>('/customer/login', { method: 'POST', body: JSON.stringify({ identifier, password }) })
+    afterAuth(customer, `Bonjour ${customer.name.split(' ')[0]} !`)
+  }
+
+  const register = async (data: { name: string; phone: string; email?: string; password: string }) => {
+    const customer = await api<ApiCustomer>('/customer/register', { method: 'POST', body: JSON.stringify(data) })
+    afterAuth(customer, `Bienvenue ${customer.name.split(' ')[0]}, votre compte est créé !`)
+  }
+
+  const logout = async () => {
+    await api('/customer/logout', { method: 'POST' }).catch(() => undefined)
+    setUser(null)
+    setCartOpen(false)
+    showToast('Vous êtes déconnecté(e).')
+    if (['/compte', '/commandes'].includes(window.location.pathname)) navigate('/')
+  }
+
+  const openCart = () => {
+    if (user) setCartOpen(true)
+    else goToLogin({ openCart: true })
+  }
+
+  const [advisorOpen, setAdvisorOpen] = useState(false)
 
   return (
     <AppContext.Provider
       value={{
         currentPath,
         navigate,
-        catalogLive,
         theme,
         toggleTheme,
-        user,
-        login,
-        logout,
-        authModalOpen,
-        authModalReason,
-        openAuthModal,
-        closeAuthModal,
         cart,
         addToCart,
         removeFromCart,
@@ -350,17 +374,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cartTotal,
         cartOpen,
         setCartOpen,
+        maxQuantity,
         favorites,
         toggleFavorite,
         isFavorite,
-        notifications,
-        unreadNotificationsCount,
-        markAllNotificationsRead,
         products,
+        catalogLive,
+        catalogLoading,
+        categories,
         searchTerm,
         setSearchTerm,
         selectedCategory,
         setSelectedCategory,
+        settings,
+        waLink,
+        waDisplay: formatPhone(settings.whatsappNumber),
+        reviews,
+        reviewsLoaded,
+        ratingFor,
+        refreshReviews,
+        user,
+        authReady,
+        login,
+        register,
+        logout,
+        setUser,
+        openCart,
+        goToLogin,
+        advisorOpen,
+        setAdvisorOpen,
         toastMessage,
         showToast,
       }}

@@ -1,232 +1,169 @@
-import React, { useState } from 'react'
-import { ArrowRight, Check, Leaf, MessageCircle, Plus, Sparkles, Sun, Moon, X } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { ArrowRight, Check, Leaf, Lightbulb, MessageCircle, Moon, Plus, Sparkles, Sun, X } from 'lucide-react'
 import { BeautyAdvice } from '../api'
 import { requestBeautyAdvice } from '../gemini'
 import { formatXof } from '../format'
-
-export type AdvisorProduct = {
-  id: string
-  name: string
-  category: string
-  size: string
-  price: number | null
-  description: string
-  tone?: string
-  imageUrl?: string | null
-}
-
-interface BeautyAdvisorModalProps {
-  isOpen: boolean
-  onClose: () => void
-  catalog: AdvisorProduct[]
-  onAddToCart: (productId: string) => void
-  onAddMultipleToCart: (productIds: string[]) => void
-  waNumber: string
-}
+import { useApp } from '../context/AppContext'
+import ProductVisual from './ProductVisual'
 
 const PRESET_CONCERNS = [
-  { label: '🧴 Peau très sèche & tiraillements', value: 'Peau sèche, déshydratée et rugueuse' },
-  { label: '🌿 Acné & imperfections', value: 'Imperfections, acné, peau grasse et pores obstrués' },
-  { label: '✨ Taches brunes & éclat', value: 'Taches pigmentaires, manque d’éclat et teint terne' },
-  { label: '💧 Vergetures & fermeté', value: 'Vergetures, cicatrices, manque de souplesse cutanée' },
-  { label: '💆‍♀️ Cheveux secs ou cassants', value: 'Cheveux secs, cassants, pointes abîmées' },
-  { label: '🧔 Soin barbe douce', value: 'Entretien de la barbe, poils rêches et peau sous-jacente' },
+  { label: 'Peau sèche', value: 'Peau sèche, déshydratée et rugueuse' },
+  { label: 'Imperfections', value: 'Petites imperfections, peau grasse et pores visibles' },
+  { label: 'Teint terne', value: 'Teint terne, manque d’éclat' },
+  { label: 'Vergetures', value: 'Peau qui manque de souplesse, zones sujettes aux vergetures' },
+  { label: 'Cheveux secs', value: 'Cheveux secs, cassants, pointes abîmées' },
+  { label: 'Barbe', value: 'Entretien de la barbe, poils rêches et peau en dessous' },
 ]
 
-export const BeautyAdvisorModal: React.FC<BeautyAdvisorModalProps> = ({
-  isOpen,
-  onClose,
-  catalog,
-  onAddToCart,
-  onAddMultipleToCart,
-  waNumber,
-}) => {
-  const [selectedConcern, setSelectedConcern] = useState<string>('')
-  const [userInput, setUserInput] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(false)
+export const BeautyAdvisorModal: React.FC = () => {
+  const { advisorOpen, setAdvisorOpen, products, addToCart, waLink, catalogLive, maxQuantity } = useApp()
+  const [selectedConcern, setSelectedConcern] = useState('')
+  const [userInput, setUserInput] = useState('')
+  const [loading, setLoading] = useState(false)
   const [advice, setAdvice] = useState<BeautyAdvice | null>(null)
-  const [addedAll, setAddedAll] = useState<boolean>(false)
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({})
 
-  if (!isOpen) return null
+  useEffect(() => {
+    if (!advisorOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setAdvisorOpen(false)
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [advisorOpen, setAdvisorOpen])
 
-  const handleSelectConcern = (concern: typeof PRESET_CONCERNS[number]) => {
-    setSelectedConcern(concern.value)
-    setUserInput(concern.value)
-    void executeAdvice(concern.value)
-  }
+  if (!advisorOpen) return null
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!userInput.trim()) return
-    void executeAdvice(userInput)
-  }
+  const close = () => setAdvisorOpen(false)
 
-  const executeAdvice = async (query: string) => {
+  const executeAdvice = async (query: string, concern = selectedConcern) => {
     setLoading(true)
-    setAddedAll(false)
+    setAddedIds({})
     try {
       const result = await requestBeautyAdvice({
         message: query,
-        skinType: selectedConcern || undefined,
-        catalogProducts: catalog.map((p) => ({
-          id: p.id,
-          name: p.name,
-          category: p.category,
-          size: p.size,
-          price: p.price,
-          description: p.description,
-        })),
+        skinType: concern || undefined,
+        catalogProducts: products.map((p) => ({ id: p.id, name: p.name, category: p.category, size: p.size, price: p.price, description: p.description })),
       })
       setAdvice(result)
-    } catch (err) {
-      console.error('Erreur Conseiller Beauté:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  // Filtrer les produits recommandés parmi notre catalogue réel
-  const recommendedProducts = advice
-    ? catalog.filter((p) =>
-        advice.recommendedProductIds.some(
-          (recId) =>
-            recId.toLowerCase() === p.id.toLowerCase() ||
-            p.id.toLowerCase().includes(recId.toLowerCase()) ||
-            recId.toLowerCase().includes(p.id.toLowerCase()) ||
-            p.name.toLowerCase().includes(recId.toLowerCase()),
-        ),
-      )
-    : []
+  const recommended = advice ? products.filter((p) => advice.recommendedProductIds.includes(p.id)) : []
+  const buyable = recommended.filter((p) => p.price !== null && maxQuantity(p) > 0)
 
-  const handleAddAll = () => {
-    if (!recommendedProducts.length) return
-    const ids = recommendedProducts.map((p) => p.id)
-    onAddMultipleToCart(ids)
-    setAddedAll(true)
-    const newAdded: Record<string, boolean> = {}
-    ids.forEach((id) => {
-      newAdded[id] = true
-    })
-    setAddedIds(newAdded)
+  const addOne = (id: string) => {
+    if (addToCart(id, 1)) setAddedIds((prev) => ({ ...prev, [id]: true }))
   }
 
-  const handleAddSingle = (id: string) => {
-    onAddToCart(id)
-    setAddedIds((prev) => ({ ...prev, [id]: true }))
-    setTimeout(() => {
-      setAddedIds((prev) => ({ ...prev, [id]: false }))
-    }, 2000)
+  const addAll = () => {
+    buyable.forEach((p) => addToCart(p.id, 1))
+    setAddedIds(Object.fromEntries(buyable.map((p) => [p.id, true])))
   }
 
-  const money = formatXof
-
-  const buildWhatsAppUrl = () => {
-    if (!advice) return `https://wa.me/${waNumber}`
-    const productNames = recommendedProducts.map((p) => `• ${p.name} (${p.size})`).join('\n')
-    const message = `Bonjour NATURE & GRÂCE,\n\nGrâce à votre Conseiller Beauté IA Gemini, j'ai découvert le rituel recommandé pour mes besoins :\n\n"${advice.whatsappSummary}"\n\nProduits du rituel :\n${productNames}\n\nJ'aimerais commander ces soins. Pouvez-vous me préciser les frais et délais de livraison ? Merci !`
-    return `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`
-  }
+  const whatsappText = advice
+    ? `Bonjour NATURE & GRÂCE,\n\nLe conseiller beauté du site m’a proposé ce rituel : ${advice.whatsappSummary}\n\nProduits :\n${recommended
+        .map((p) => `• ${p.name} (${p.size})`)
+        .join('\n')}\n\nJ’aimerais commander ces soins. Pouvez-vous me préciser la livraison ? Merci !`
+    : ''
 
   return (
-    <div
-      className="advisor-overlay"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
-      <div className="advisor-modal" role="dialog" aria-modal="true">
-        <header className="advisor-header">
+    <div className="ng-modal-overlay ng-advisor-overlay" onMouseDown={(e) => e.target === e.currentTarget && close()}>
+      <div className="ng-advisor" role="dialog" aria-modal="true" aria-labelledby="advisor-title">
+        <header className="ng-advisor-head">
+          <span className="ng-advisor-ico">
+            <Sparkles size={20} />
+          </span>
           <div>
-            <div className="advisor-header-kicker">
-              <Sparkles size={13} className="floating-advisor-sparkle" />
-              <span>NATURE & GRÂCE · Intelligence Artificielle</span>
-            </div>
-            <h2>Conseiller Beauté & Soins Personnalisé</h2>
-            <p>Propulsé par Google Gemini · Un rituel 100% naturel adapté à vos besoins spécifiques</p>
+            <h2 id="advisor-title">Conseiller beauté</h2>
+            <p>Décrivez votre besoin : l’IA vous propose un rituel avec nos soins.</p>
           </div>
-          <button className="advisor-close-btn" onClick={onClose} aria-label="Fermer le conseiller beauté">
+          <button type="button" className="ng-icon-btn" onClick={close} aria-label="Fermer le conseiller">
             <X size={20} />
           </button>
         </header>
 
-        <div className="advisor-body">
-          {/* Sélection rapide de préoccupation */}
-          <section className="advisor-chips-section">
-            <span>QUEL EST VOTRE OBJECTIF DE SOIN ?</span>
-            <div className="advisor-chips">
-              {PRESET_CONCERNS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  className={`advisor-chip ${selectedConcern === c.value ? 'selected' : ''}`}
-                  onClick={() => handleSelectConcern(c)}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Formulaire de saisie personnalisée */}
-          <form className="advisor-form" onSubmit={handleSubmit}>
-            <div className="advisor-input-wrapper">
-              <input
-                className="advisor-input"
-                type="text"
-                placeholder="Ex. J'ai la peau réactive avec des petites taches brunes..."
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-              />
-              <button className="advisor-submit" type="submit" disabled={loading || !userInput.trim()}>
-                {loading ? (
-                  'Consultation…'
-                ) : (
-                  <>
-                    <Sparkles size={14} />
-                    <span>Créer mon rituel</span>
-                  </>
-                )}
+        <div className="ng-advisor-body">
+          <div className="ng-chips ng-advisor-chips" aria-label="Besoins fréquents">
+            {PRESET_CONCERNS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                className={`ng-chip ${selectedConcern === c.value ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedConcern(c.value)
+                  setUserInput(c.value)
+                  void executeAdvice(c.value, c.value)
+                }}
+                disabled={loading}
+              >
+                {c.label}
               </button>
-            </div>
+            ))}
+          </div>
+
+          <form
+            className="ng-advisor-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (userInput.trim()) void executeAdvice(userInput.trim())
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Ex. j’ai la peau sèche sur les jambes et les coudes…"
+              value={userInput}
+              maxLength={600}
+              onChange={(e) => setUserInput(e.target.value)}
+              aria-label="Votre besoin"
+            />
+            <button className="ng-btn ng-btn--primary" type="submit" disabled={loading || !userInput.trim()}>
+              <Sparkles size={15} /> {loading ? 'Un instant…' : 'Mon rituel'}
+            </button>
           </form>
 
-          {/* Loader */}
           {loading && (
-            <div className="advisor-loading">
-              <div className="advisor-spinner" />
-              <p>Gemini analyse votre besoin et compose votre rituel de soins naturels personnalisé…</p>
+            <div className="ng-advisor-loading" role="status">
+              <span className="ng-spinner" />
+              <p>Composition de votre rituel…</p>
             </div>
           )}
 
-          {/* Résultat du conseil */}
+          {!loading && !advice && (
+            <p className="ng-advisor-intro">
+              <Leaf size={16} /> Choisissez un besoin ci-dessus ou décrivez-le avec vos mots. N’indiquez pas d’informations
+              médicales ou personnelles sensibles.
+            </p>
+          )}
+
           {!loading && advice && (
-            <div className="advisor-result">
-              {/* Carte de diagnostic */}
-              <div className="advisor-diagnosis-card">
+            <div className="ng-advisor-result">
+              <div className="ng-advisor-diag">
                 <b>
-                  <Leaf size={14} /> Votre Diagnostic Beauté Naturel
+                  <Leaf size={15} /> Notre lecture de votre besoin
                 </b>
                 <p>{advice.diagnosis}</p>
               </div>
 
-              {/* Rituels Matin & Soir */}
-              <div className="advisor-routines-grid">
-                <div className="advisor-routine-box">
-                  <h4>
-                    <Sun size={15} color="#d49a37" /> Rituel du Matin
-                  </h4>
+              <div className="ng-advisor-routines">
+                <div>
+                  <h3>
+                    <Sun size={16} /> Le matin
+                  </h3>
                   <ol>
                     {advice.routineMorning.map((step, idx) => (
                       <li key={idx}>{step}</li>
                     ))}
                   </ol>
                 </div>
-
-                <div className="advisor-routine-box">
-                  <h4>
-                    <Moon size={15} color="#58768e" /> Rituel du Soir
-                  </h4>
+                <div>
+                  <h3>
+                    <Moon size={16} /> Le soir
+                  </h3>
                   <ol>
                     {advice.routineEvening.map((step, idx) => (
                       <li key={idx}>{step}</li>
@@ -235,10 +172,11 @@ export const BeautyAdvisorModal: React.FC<BeautyAdvisorModalProps> = ({
                 </div>
               </div>
 
-              {/* Astuces naturelles */}
-              {advice.naturalTips && advice.naturalTips.length > 0 && (
-                <div className="advisor-tips-box">
-                  <b>💡 Astuces & secrets de beauté au naturel</b>
+              {advice.naturalTips?.length > 0 && (
+                <div className="ng-advisor-tips">
+                  <b>
+                    <Lightbulb size={15} /> Astuces
+                  </b>
                   <ul>
                     {advice.naturalTips.map((tip, idx) => (
                       <li key={idx}>{tip}</li>
@@ -247,78 +185,51 @@ export const BeautyAdvisorModal: React.FC<BeautyAdvisorModalProps> = ({
                 </div>
               )}
 
-              {/* Produits recommandés */}
-              {recommendedProducts.length > 0 && (
-                <section className="advisor-products-section">
-                  <div className="advisor-products-heading">
-                    <h3>Les soins NATURE & GRÂCE de votre rituel</h3>
-                    <span style={{ fontSize: '10px', color: '#738072' }}>
-                      {recommendedProducts.length} soin{recommendedProducts.length > 1 ? 's' : ''} sélectionné{recommendedProducts.length > 1 ? 's' : ''}
-                    </span>
-                  </div>
-
-                  <div className="advisor-products-list">
-                    {recommendedProducts.map((prod) => (
-                      <div className="advisor-product-card" key={prod.id}>
-                        <div className="advisor-product-card-info">
-                          <b>{prod.name}</b>
-                          <small>{prod.category} · {prod.size}</small>
-                        </div>
-                        <div className="advisor-product-card-bottom">
-                          <strong>{money(prod.price)}</strong>
-                          <button
-                            type="button"
-                            className="advisor-add-single-btn"
-                            onClick={() => handleAddSingle(prod.id)}
-                            aria-label={`Ajouter ${prod.name} au panier`}
-                          >
-                            {addedIds[prod.id] ? (
-                              <>
-                                <Check size={12} /> Ajouté
-                              </>
-                            ) : (
-                              <>
-                                <Plus size={12} /> Ajouter
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="advisor-actions-bar">
-                    <button type="button" className="advisor-bundle-btn" onClick={handleAddAll}>
-                      {addedAll ? (
-                        <>
-                          <Check size={16} /> Routine complète ajoutée au panier !
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={16} /> Ajouter toute la routine au panier ({recommendedProducts.length} soins)
-                        </>
-                      )}
-                    </button>
-
-                    <a
-                      className="advisor-wa-btn"
-                      href={buildWhatsAppUrl()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <MessageCircle size={16} />
-                      <span>Commander cette routine sur WhatsApp</span>
-                      <ArrowRight size={14} />
+              {recommended.length > 0 && (
+                <section className="ng-advisor-products">
+                  <h3>Les soins de votre rituel</h3>
+                  <ul>
+                    {recommended.map((p) => {
+                      const canBuy = p.price !== null && maxQuantity(p) > 0
+                      return (
+                        <li key={p.id}>
+                          <span className="ng-advisor-thumb">
+                            <ProductVisual product={p} size="thumb" />
+                          </span>
+                          <div>
+                            <b>{p.name}</b>
+                            <small>
+                              {p.size} · {formatXof(p.price)}
+                            </small>
+                          </div>
+                          {canBuy ? (
+                            <button type="button" className={`ng-advisor-add ${addedIds[p.id] ? 'added' : ''}`} onClick={() => addOne(p.id)}>
+                              {addedIds[p.id] ? <Check size={14} /> : <Plus size={14} />} {addedIds[p.id] ? 'Ajouté' : 'Ajouter'}
+                            </button>
+                          ) : (
+                            <small className="ng-advisor-na">{p.price === null ? 'Prix à confirmer' : catalogLive ? 'En rupture' : ''}</small>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  <div className="ng-advisor-actions">
+                    {buyable.length > 1 && (
+                      <button type="button" className="ng-btn ng-btn--primary" onClick={addAll}>
+                        <Plus size={16} /> Tout ajouter au panier ({buyable.length})
+                      </button>
+                    )}
+                    <a className="ng-btn ng-btn--wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer">
+                      <MessageCircle size={16} /> Commander ce rituel sur WhatsApp <ArrowRight size={14} />
                     </a>
                   </div>
                 </section>
               )}
 
-              {advice.isDemo && (
-                <div className="advisor-demo-badge">
-                  Mode Démonstration · Pour activer la génération en direct via Gemini 3.8 Flash, renseignez GEMINI_API_KEY.
-                </div>
-              )}
+              <p className="ng-advisor-disclaimer">
+                Conseils indicatifs générés automatiquement{advice.isDemo ? ' (mode démonstration)' : ''}. Ils ne remplacent pas
+                l’avis d’un professionnel de santé. Faites un essai sur une petite zone de peau avant la première utilisation.
+              </p>
             </div>
           )}
         </div>
@@ -326,4 +237,5 @@ export const BeautyAdvisorModal: React.FC<BeautyAdvisorModalProps> = ({
     </div>
   )
 }
+
 export default BeautyAdvisorModal

@@ -1,0 +1,273 @@
+/* =====================================================================
+   IDENTITÉ VISUELLE : titres à empattements, tons cacao et crème,
+   photos produits (pastilles, 2e photo, galerie), animations.
+   Chargé en dernier.
+   ===================================================================== */
+:root {
+  --ng-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --ng-cocoa: #4a2f1d;
+  --ng-cocoa-600: #6b4429;
+  --ng-cream: #fbf6ee;
+  --ng-cream-line: #efe4d2;
+}
+html.dark {
+  --ng-cocoa: #e2c6a4;
+  --ng-cocoa-600: #d4b28a;
+  --ng-cream: #17140f;
+  --ng-cream-line: #2a241b;
+}
+
+/* ── Titres : police à empattements, plus « cosmétique naturelle » ── */
+.ng-hero h1,
+.ng-section-head h2,
+.ng-shop-head h1,
+.ng-pdp-info h1,
+.ng-story-hero h1,
+.ng-story-split h2,
+.ng-page-head h1,
+.ng-promo-card h3,
+.ng-gift h2,
+.ng-auth-head h1 {
+  font-family: var(--ng-font-display);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.ng-hero h1 { letter-spacing: -0.02em; }
+.ng-section-head h2 { font-size: clamp(22px, 2.5vw, 30px); }
+
+/* ── Bandes de fond chaudes ── */
+.ng-band {
+  position: relative;
+  padding: clamp(28px, 4vw, 48px) clamp(18px, 4vw, 48px);
+  border-radius: var(--ng-r-xl);
+}
+.ng-band--cream { background: var(--ng-cream); border: 1px solid var(--ng-cream-line); }
+.ng-section-head--center { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.ng-section-head--center p { font-size: 15px; max-width: 520px; }
+.ng-eyebrow--gold { background: var(--ng-gold-50); color: var(--ng-gold-600); }
+
+/* ── Accueil : pastilles de rayons seulement sur téléphone (doublon avec « Nos rayons » sur ordinateur) ── */
+@media (min-width: 861px) {
+  .ng-home > .ng-cats { display: none; }
+  .ng-cat-cards { grid-template-columns: repeat(3, 1fr); }
+}
+.ng-cat-card img { width: 72px; height: 72px; }
+
+/* Hero : la photo des cabosses de Soubré */
+.ng-hero {
+  background:
+    radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--ng-gold) 22%, transparent) 0, transparent 45%),
+    linear-gradient(120deg, var(--ng-cream) 0%, var(--ng-surface) 75%);
+  border-color: var(--ng-cream-line);
+}
+.ng-hero-badge { background: var(--ng-cocoa); color: #f6e7c8; }
+.ng-hero-badge b { font-family: var(--ng-font-display); }
+
+/* ── Du cacao à votre soin ── */
+.ng-journey-steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 24px);
+  counter-reset: none;
+}
+.ng-journey-steps li { display: flex; flex-direction: column; gap: 6px; text-align: center; align-items: center; }
+.ng-journey-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 999px 999px 18px 18px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: var(--ng-shadow-md);
+}
+.ng-journey-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ng-ease); }
+.ng-journey-steps li:hover .ng-journey-img img { transform: scale(1.06); }
+.ng-journey-img i {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ng-cocoa);
+  color: #f6e7c8;
+  font-style: normal;
+  font-family: var(--ng-font-display);
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+html.dark .ng-journey-img i { color: #1b130c; }
+.ng-journey-steps b { font-family: var(--ng-font-display); font-size: 19px; color: var(--ng-ink); }
+.ng-journey-steps p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ng-text); max-width: 240px; }
+.ng-journey-cta { display: flex; margin: 26px auto 0; }
+
+/* ── Coffret mis en avant ── */
+.ng-gift {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--ng-r-xl);
+  background: linear-gradient(135deg, var(--ng-cocoa) 0%, #2d1b10 100%);
+  color: #f3e6d0;
+}
+html.dark .ng-gift { background: linear-gradient(135deg, #2a1c12 0%, #1a110a 100%); }
+.ng-gift-media { height: 100%; min-height: 320px; overflow: hidden; cursor: pointer; }
+.ng-gift-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.9s var(--ng-ease); }
+.ng-gift:hover .ng-gift-media img { transform: scale(1.05); }
+.ng-gift-copy { padding: clamp(24px, 4vw, 48px); display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.ng-gift-copy .ng-eyebrow { background: rgba(232, 201, 131, 0.16); color: #e8c983; }
+.ng-gift h2 { margin: 0; font-size: clamp(26px, 3vw, 38px); line-height: 1.1; color: #fff7e8; }
+.ng-gift p { margin: 0; max-width: 460px; font-size: 15px; line-height: 1.65; color: #e2d3bb; }
+.ng-gift-price { display: flex; align-items: baseline; gap: 10px; }
+.ng-gift-price b { font-size: 28px; font-weight: 800; color: #e8c983; letter-spacing: -0.02em; }
+.ng-gift-price small { font-size: 13px; color: #cdb99a; }
+.ng-gift .ng-hero-actions { margin-top: 6px; }
+.ng-gift .ng-btn--primary { background: #e8c983; color: #2a1a0d; border-color: #e8c983; }
+.ng-gift .ng-btn--primary:hover { background: #f1d595; }
+.ng-gift .ng-btn--ghost { background: transparent; color: #f3e6d0; border-color: rgba(243, 230, 208, 0.35); }
+.ng-gift .ng-btn--ghost:hover { background: rgba(243, 230, 208, 0.08); }
+
+/* Bannières : lisibilité sur photo */
+.ng-promo-card img { filter: saturate(1.05); }
+
+/* ── Cartes produits : pastille, 2e photo au survol ── */
+.ng-badge-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.ng-badge-tag--bestseller { background: var(--ng-cocoa); color: #f6e7c8; }
+html.dark .ng-badge-tag--bestseller { color: #1b130c; }
+.ng-badge-tag--new { background: var(--ng-gold); color: #2a1e07; }
+.ng-pdp-media .ng-badge-tag { top: 16px; left: 16px; font-size: 12.5px; padding: 6px 12px; }
+
+.ng-card-alt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s var(--ng-ease), transform 0.7s var(--ng-ease);
+}
+@media (hover: hover) {
+  .ng-card:hover .ng-card-media.has-alt .ng-card-alt { opacity: 1; }
+}
+.ng-card-media .ng-fav { z-index: 3; }
+.ng-card-media .ng-stock-tag { z-index: 2; }
+
+/* Grilles produits pleine largeur (4 colonnes sur ordinateur, 3 sur tablette) */
+.ng-grid, .ng-grid--shop { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .ng-grid, .ng-grid--shop { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ── Chargement : cartes squelettes ── */
+.ng-card--skeleton { cursor: default; pointer-events: none; }
+.ng-skel {
+  background: linear-gradient(90deg, var(--ng-subtle) 0%, var(--ng-line) 40%, var(--ng-subtle) 80%);
+  background-size: 200% 100%;
+  animation: ng-shimmer 1.3s linear infinite;
+}
+.ng-skel-line { display: block; height: 11px; border-radius: 6px; }
+@keyframes ng-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* ── Ajout au panier : le bouton rebondit ── */
+.ng-bump { animation: ng-bump 0.55s var(--ng-ease); }
+.ng-bump .ng-count { animation: ng-bump 0.55s var(--ng-ease) 0.05s; }
+@keyframes ng-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  65% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+/* ── Fiche produit : galerie fixe à gauche, informations et onglets à droite ── */
+.ng-pdp-gallery { position: sticky; top: 170px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ng-pdp-gallery .ng-pdp-media { position: relative; top: auto; }
+.ng-pdp-media .ng-visual-photo { animation: ng-fade 0.45s var(--ng-ease); }
+.ng-pdp-thumbs { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.ng-pdp-thumbs::-webkit-scrollbar { display: none; }
+.ng-pdp-thumbs button {
+  flex: 0 0 76px;
+  height: 76px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--ng-subtle);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.ng-pdp-thumbs button:hover { opacity: 1; }
+.ng-pdp-thumbs button.active { border-color: var(--ng-emerald); opacity: 1; }
+.ng-pdp-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ng-pdp-info .ng-pdp-details { max-width: none; margin-top: 10px; padding-top: 18px; border-top: 1px solid var(--ng-line); }
+.ng-pdp-info .ng-pdp-details .ng-segmented { margin-bottom: 14px; }
+.ng-pdp-media .ng-visual--hero text { font-size: 10px; }
+
+/* ── Notre histoire ── */
+.ng-story-split--reverse { margin-top: clamp(32px, 5vw, 64px); }
+.ng-story-img { background: var(--ng-cream); }
+
+/* ── Crédits photos ── */
+.ng-credits { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; color: var(--ng-muted); }
+.ng-credits a { color: var(--ng-emerald); text-decoration: underline; }
+
+/* ── Bouton flottant du conseiller IA : réduit à une icône après défilement ── */
+.ng-floating-ai { overflow: hidden; transition: transform 0.25s var(--ng-ease), padding 0.35s var(--ng-ease), width 0.35s var(--ng-ease); }
+.ng-floating-ai span { white-space: nowrap; transition: opacity 0.2s, max-width 0.35s var(--ng-ease); max-width: 200px; }
+.ng-floating.compact .ng-floating-ai { width: 50px; height: 50px; padding: 0; justify-content: center; border-radius: 50%; }
+.ng-floating.compact .ng-floating-ai span { opacity: 0; max-width: 0; margin-left: -8px; }
+
+/* ── Téléphone ── */
+@media (max-width: 860px) {
+  /* Hero plus court : le bouton « Découvrir la boutique » visible sans défiler */
+  .ng-hero-art { height: 180px; }
+  .ng-hero-arch { inset: 0 20% 0 20%; }
+  .ng-hero-chip { display: none; }
+  .ng-hero h1 { margin-top: 10px; font-size: clamp(30px, 8.5vw, 38px); }
+  .ng-hero-copy > p { font-size: 14px; line-height: 1.55; }
+  .ng-hero-actions { margin-top: 18px; }
+
+  /* Rayons : cartes verticales, plus lisibles */
+  .ng-cat-card { flex: 0 0 132px; flex-direction: column; align-items: flex-start; padding: 8px 8px 12px; gap: 8px; }
+  .ng-cat-card img { width: 100%; height: 96px; }
+  .ng-cat-card b { font-size: 13.5px; line-height: 1.25; }
+  .ng-cat-card small { font-size: 11.5px; line-height: 1.35; display: block; }
+
+  .ng-band { border-radius: var(--ng-r-lg); padding: 26px 16px; }
+  .ng-journey-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  .ng-journey-steps b { font-size: 17px; }
+  .ng-journey-steps p { font-size: 12.5px; }
+
+  .ng-gift { grid-template-columns: 1fr; border-radius: var(--ng-r-lg); }
+  .ng-gift-media { min-height: 0; aspect-ratio: 16 / 10; }
+  .ng-gift-copy { padding: 22px 18px 24px; }
+  .ng-gift .ng-hero-actions { width: 100%; }
+
+  .ng-badge-tag { top: 8px; left: 8px; padding: 4px 8px; font-size: 10px; }
+  .ng-pdp-gallery { position: static; }
+  .ng-pdp-thumbs button { flex-basis: 62px; height: 62px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ng-skel, .ng-bump, .ng-bump .ng-count { animation: none; }
+}
+
+/* Cartes en ligne (petite photo) : la pastille passe en bas pour ne pas toucher le cœur */
+.ng-card--row .ng-badge-tag { top: auto; bottom: 8px; left: 8px; }

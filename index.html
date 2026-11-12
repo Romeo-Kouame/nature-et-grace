@@ -2,12 +2,34 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f8f7f1" />
-    <meta name="description" content="Prenez soin de vous naturellement avec les soins NATURE & GRÂCE." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0e4a35" />
     <title>NATURE & GRÂCE — Prenez soin de vous naturellement</title>
+    <meta
+      name="description"
+      content="Soins naturels au beurre de cacao de Côte d’Ivoire : beurre de cacao brut, chantilly, savon noir de cabosse et huiles végétales. Commande sur le site ou WhatsApp, paiement Wave."
+    />
+    <link rel="icon" type="image/jpeg" href="/logo.jpeg" />
+    <link rel="apple-touch-icon" href="/logo.jpeg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="NATURE & GRÂCE" />
+    <meta property="og:locale" content="fr_CI" />
+    <meta property="og:title" content="NATURE & GRÂCE — Prenez soin de vous naturellement" />
+    <meta
+      property="og:description"
+      content="Soins naturels au beurre de cacao de Côte d’Ivoire. Commande sur le site ou WhatsApp, paiement Wave."
+    />
+    <meta property="og:image" content="/logo.jpeg" />
+    <script>
+      // Applique le thème sombre avant l'affichage pour éviter un flash blanc
+      try {
+        var t = localStorage.getItem('ng_theme')
+        if (t === '"dark"' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
   </head>
   <body>
+    <noscript>Activez JavaScript pour utiliser la boutique NATURE & GRÂCE, ou écrivez-nous sur WhatsApp au +225 07 17 68 47 51.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

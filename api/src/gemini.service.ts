@@ -39,15 +39,16 @@ export class GeminiService {
   async getBeautyAdvice(dto: {
     message: string
     skinType?: string
-    history?: { role: 'user' | 'model'; text: string }[]
   }): Promise<BeautyAdviceResponse> {
     // 1. Récupération des produits actifs de la boutique
     let catalog: { id: string; slug: string; name: string; category: string; description: string; priceXof: number | null; size: string }[] = []
     try {
-      catalog = await this.db.product.findMany({
+      const rows = await this.db.product.findMany({
         where: { active: true },
         select: { id: true, slug: true, name: true, category: true, description: true, priceXof: true, size: true },
       })
+      // Le site identifie les produits par leur slug (URL, panier) : c'est lui qu'on donne à l'IA
+      catalog = rows.map((row) => ({ ...row, id: row.slug }))
     } catch {
       // Si la base n'est pas encore initialisée
     }
@@ -80,6 +81,7 @@ RÈGLES IMPORTANTES :
 2. Fournis un diagnostic clair expliquant le besoin et les bienfaits des ingrédients naturels choisis.
 3. Découpe la recommandation en rituel matin (routineMorning), rituel soir (routineEvening), et quelques conseils naturels du quotidien (naturalTips).
 4. Produis un court texte de synthèse pour commande WhatsApp (whatsappSummary).
+5. Tu n'es pas médecin : ne pose aucun diagnostic médical et ne promets pas de guérison. Pour une affection persistante, une grossesse, un bébé ou une peau très réactive, invite à demander l'avis d'un professionnel de santé et à tester le soin sur une petite zone.
 
 CATALOGUE DISPONIBLE :
 ${catalogDescription}
@@ -135,7 +137,8 @@ Message du client : "${dto.message}"`
       const text = response.text
       if (!text) throw new Error('Réponse vide de Gemini')
       const parsed = JSON.parse(text) as BeautyAdviceResponse
-      return { ...parsed, isDemo: false }
+      const available = new Set(catalog.map((c) => c.id))
+      return { ...parsed, recommendedProductIds: (parsed.recommendedProductIds ?? []).filter((id) => available.has(id)), isDemo: false }
     } catch (error) {
       this.logger.error('Erreur lors de l’appel Gemini:', error)
       // Fallback gracieux en cas d'erreur de quota ou réseau
@@ -154,7 +157,7 @@ Message du client : "${dto.message}"`
   }): Promise<ProductDescriptionResponse> {
     if (!this.ai) {
       return {
-        description: `Un soin d'exception signé NATURE & GRÂCE, formulé avec des ingrédients purs et naturels pour sublimer votre peau au quotidien. Riche en nutriments essentiels, il apporte douceur, éclat et protection naturelle. [Pour des descriptions rédigées en direct par Gemini 3.8 Flash, configurez GEMINI_API_KEY dans votre fichier .env]`,
+        description: `Un soin d'exception signé NATURE & GRÂCE, formulé avec des ingrédients purs et naturels pour sublimer votre peau au quotidien. Riche en nutriments essentiels, il apporte douceur, éclat et protection naturelle.`,
         suggestedTags: ['100% Naturel', 'Fait avec soin', 'Beauté saine'],
         isDemo: true,
       }
@@ -166,7 +169,7 @@ Catégorie : ${dto.category || 'Soin naturel'}
 Contenance : ${dto.size || '100 g'}
 Ingrédients / Notes : ${dto.keyIngredients || 'Ingrédients naturels purs'}
 
-La description doit être en français, d'environ 2 à 4 phrases percutantes, élégantes, mettant en avant les bienfaits pour la peau ou les cheveux, la sensorialité et le respect du corps. Ne mets pas de guillemets autour du texte.`
+La description doit être en français, d'environ 2 à 4 phrases percutantes, élégantes, mettant en avant les bienfaits pour la peau ou les cheveux, la sensorialité et le respect du corps. Ne mets pas de guillemets autour du texte. N'invente aucune propriété médicale, aucun chiffre et aucune certification.`
 
     try {
       const response = await this.ai.models.generateContent({
@@ -194,7 +197,18 @@ La description doit être en français, d'environ 2 à 4 phrases percutantes, é
   /**
    * Générateur de conseils experts hors-ligne en mode démonstration
    */
+  /** Ne garde que les recommandations présentes dans le catalogue actif. */
   private generateSmartDemoAdvice(
+    message: string,
+    skinType: string | undefined,
+    catalog: { id: string; name: string }[],
+  ): BeautyAdviceResponse {
+    const advice = this.buildDemoAdvice(message, skinType, catalog)
+    const available = new Set(catalog.map((c) => c.id))
+    return { ...advice, recommendedProductIds: advice.recommendedProductIds.filter((id) => available.has(id)) }
+  }
+
+  private buildDemoAdvice(
     message: string,
     skinType: string | undefined,
     catalog: { id: string; name: string }[],
