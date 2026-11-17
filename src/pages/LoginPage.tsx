@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Eye, EyeOff, Lock, ShoppingCart, UserPlus } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import Honeypot from '../components/Honeypot'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 function pendingAction(): { then?: string; openCart?: boolean } {
@@ -29,7 +30,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const pending = useMemo(pendingAction, [])
-  usePageMeta(mode === 'login' ? 'Se connecter' : 'Créer un compte')
+  usePageMeta(mode === 'login' ? 'Se connecter' : 'Créer un compte', 'Connectez-vous ou créez votre compte NATURE & GRÂCE pour commander et suivre vos commandes.')
 
   // Déjà connecté : inutile de rester ici
   useEffect(() => {
@@ -67,6 +68,8 @@ export const LoginPage: React.FC = () => {
         phone: String(data.get('phone')),
         email: String(data.get('email') || '').trim() || undefined,
         password: String(data.get('password')),
+        acceptTerms: data.get('acceptTerms') === 'on',
+        website: String(data.get('website') || ''),
       })
     } catch (err) {
       setError(err instanceof TypeError ? 'Connexion au serveur impossible. Réessayez dans un instant.' : (err as Error).message)
@@ -158,8 +161,9 @@ export const LoginPage: React.FC = () => {
                 <PasswordInput name="confirm" autoComplete="new-password" minLength={8} />
               </label>
             </div>
+            <Honeypot />
             <label className="ng-check">
-              <input type="checkbox" required />
+              <input type="checkbox" name="acceptTerms" required />
               <span>
                 J’accepte les{' '}
                 <a href="/cgv" target="_blank" rel="noreferrer">

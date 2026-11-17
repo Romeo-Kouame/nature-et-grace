@@ -1,13 +1,13 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
+import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import { Request, Response } from 'express'
 import * as bcrypt from 'bcryptjs'
-import { Customer, Prisma } from '@prisma/client'
+import { Customer, Prisma } from './generated/prisma/client'
 import { CustomerGuard, customerSessionVersion } from './auth'
 import { PrismaService } from './prisma.service'
 import { RateLimit } from './rate-limit'
-import { orderReference } from './images'
+import { assertConsent, assertHuman, orderReference } from './images'
 
 const MINUTE = 60_000
 const COOKIE = 'ng_customer'
@@ -17,6 +17,13 @@ class RegisterDto {
   @IsString() @MinLength(8) @MaxLength(25) phone!: string
   @IsOptional() @IsEmail() @MaxLength(120) email?: string
   @IsString() @MinLength(8) @MaxLength(200) password!: string
+  /** Case « J'accepte les CGV et la politique de confidentialité » */
+  @IsOptional() @IsBoolean() acceptTerms?: boolean
+  /** Champ piège anti-robots, toujours vide pour un humain */
+  @IsOptional() @IsString() @MaxLength(200) website?: string
+}
+class DeleteAccountDto {
+  @IsString() @MinLength(1) @MaxLength(200) password!: string
 }
 class LoginDto {
   /** Numéro de téléphone ou adresse e-mail */
@@ -57,12 +64,14 @@ export class CustomerController {
   @Post('register')
   @RateLimit('register', 5, 60 * MINUTE)
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: Response) {
+    assertHuman(dto.website)
+    assertConsent(dto.acceptTerms)
     const phone = normalizePhone(dto.phone)
     const email = dto.email?.trim().toLowerCase() || null
     if (await this.db.customer.findUnique({ where: { phone } })) throw new BadRequestException('Un compte existe déjà avec ce numéro. Connectez-vous.')
     if (email && (await this.db.customer.findUnique({ where: { email } }))) throw new BadRequestException('Un compte existe déjà avec cette adresse e-mail.')
     const customer = await this.db.customer.create({
-      data: { name: dto.name.trim(), phone, email, passwordHash: await bcrypt.hash(dto.password, 12) },
+      data: { name: dto.name.trim(), phone, email, passwordHash: await bcrypt.hash(dto.password, 12), termsAcceptedAt: new Date() },
     })
     await this.startSession(customer, response)
     return publicCustomer(customer)
@@ -127,6 +136,38 @@ export class CustomerController {
     const updated = await this.db.customer.update({ where: { id: customer.id }, data: { passwordHash: await bcrypt.hash(dto.newPassword, 12) } })
     await this.startSession(updated, response)
     return { message: 'Mot de passe modifié.' }
+  }
+
+  /**
+   * Suppression du compte à la demande du client (droit à l'effacement).
+   * Les commandes passées sont gardées pour la comptabilité, mais vidées de toute donnée personnelle
+   * (nom, téléphone, adresse) et les captures de paiement sont supprimées.
+   */
+  @Delete('me')
+  @HttpCode(200)
+  @UseGuards(CustomerGuard)
+  @RateLimit('customer-delete', 5, 15 * MINUTE)
+  async deleteMe(@Req() request: CustomerRequest, @Body() dto: DeleteAccountDto, @Res({ passthrough: true }) response: Response) {
+    const customer = await this.db.customer.findUniqueOrThrow({ where: { id: request.customerId } })
+    if (!(await bcrypt.compare(dto.password, customer.passwordHash))) throw new UnauthorizedException('Mot de passe incorrect.')
+    const inProgress = await this.db.order.count({
+      where: { customerId: customer.id, status: { in: ['pending', 'payment_review', 'confirmed', 'preparing', 'shipped'] } },
+    })
+    if (inProgress > 0) {
+      throw new BadRequestException('Une commande est encore en cours. Vous pourrez supprimer votre compte une fois qu’elle sera livrée ou annulée.')
+    }
+    await this.db.$transaction(async (tx) => {
+      const orders = await tx.order.findMany({ where: { customerId: customer.id }, select: { paymentProofUrl: true } })
+      const proofIds = orders.map((o) => o.paymentProofUrl?.split('/').pop()).filter((id): id is string => Boolean(id))
+      if (proofIds.length) await tx.image.deleteMany({ where: { id: { in: proofIds }, private: true } })
+      await tx.order.updateMany({
+        where: { customerId: customer.id },
+        data: { customerName: 'Client supprimé', phone: '', commune: '', address: '', deliveryNote: null, paymentProofUrl: null },
+      })
+      await tx.customer.delete({ where: { id: customer.id } })
+    })
+    response.clearCookie(COOKIE, this.cookieOptions())
+    return { message: 'Votre compte et vos données personnelles ont été supprimés.' }
   }
 
   @Get('orders')

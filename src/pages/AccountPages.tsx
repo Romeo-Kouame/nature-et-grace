@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, Heart, ImageUp, KeyRound, LogOut, MessageCircle, Package, Save, ShoppingBag, User as UserIcon } from 'lucide-react'
+import { ArrowRight, Check, Heart, ImageUp, KeyRound, LogOut, MessageCircle, Package, Save, ShoppingBag, Trash2, User as UserIcon } from 'lucide-react'
 import { useApp, formatPhone } from '../context/AppContext'
 import { api, ApiCustomer, CustomerOrder, imageFileToDataUrl, ORDER_STATUS_LABELS, OrderStatus } from '../api'
 import { formatXof } from '../format'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 /** Redirige vers la connexion si la personne n'est pas connectée. */
@@ -42,7 +43,7 @@ export const AccountPage: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [pwError, setPwError] = useState('')
-  usePageMeta('Votre compte')
+  usePageMeta('Votre compte', 'Votre espace client NATURE & GRÂCE : informations, adresse de livraison et mot de passe.')
 
   if (!ready || !user) return <div className="ng-container ng-subpage"><p className="ng-form-hint">Chargement…</p></div>
 
@@ -88,6 +89,7 @@ export const AccountPage: React.FC = () => {
 
   return (
     <div className="ng-container ng-subpage">
+      <Breadcrumb items={[{ label: 'Votre compte' }]} />
       <header className="ng-page-head ng-page-head--left">
         <span className="ng-eyebrow">MON ESPACE</span>
         <h1>Bonjour, {user.name.split(' ')[0]}</h1>
@@ -168,9 +170,65 @@ export const AccountPage: React.FC = () => {
               Changer le mot de passe
             </button>
           </form>
+
+          <DeleteAccountCard />
         </div>
       </div>
     </div>
+  )
+}
+
+/** Droit à l'effacement : le client supprime lui-même son compte et ses données personnelles. */
+const DeleteAccountCard: React.FC = () => {
+  const { deleteAccount } = useApp()
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const data = new FormData(e.currentTarget)
+    setBusy(true)
+    setError('')
+    try {
+      await deleteAccount(String(data.get('password') || ''))
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="ng-form-card ng-form ng-danger-card">
+      <h2 className="ng-h2">
+        <Trash2 size={20} /> Supprimer mon compte
+      </h2>
+      <p className="ng-form-hint">
+        Votre compte, vos coordonnées et vos captures de paiement sont effacés définitivement. Vos anciennes commandes sont
+        gardées pour la comptabilité de la boutique, sans votre nom, votre téléphone ni votre adresse.
+      </p>
+      {!open ? (
+        <button type="button" className="ng-btn ng-btn--ghost ng-btn--danger" onClick={() => setOpen(true)}>
+          Supprimer mon compte…
+        </button>
+      ) : (
+        <form className="ng-form" onSubmit={submit}>
+          <label>
+            Confirmez avec votre mot de passe
+            <input name="password" type="password" autoComplete="current-password" required autoFocus />
+          </label>
+          {error && <p className="ng-form-error" role="alert">{error}</p>}
+          <div className="ng-form-actions">
+            <button type="button" className="ng-btn ng-btn--ghost" onClick={() => { setOpen(false); setError('') }} disabled={busy}>
+              Annuler
+            </button>
+            <button type="submit" className="ng-btn ng-btn--danger" disabled={busy}>
+              {busy ? 'Suppression…' : 'Supprimer définitivement'}
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
   )
 }
 
@@ -273,7 +331,7 @@ export const OrdersPage: React.FC = () => {
   const { navigate } = useApp()
   const [orders, setOrders] = useState<CustomerOrder[] | null>(null)
   const [error, setError] = useState('')
-  usePageMeta('Vos commandes')
+  usePageMeta('Vos commandes', 'Suivez vos commandes NATURE & GRÂCE et envoyez votre preuve de paiement Wave.')
 
   const load = () =>
     api<CustomerOrder[]>('/customer/orders')
@@ -286,6 +344,7 @@ export const OrdersPage: React.FC = () => {
 
   return (
     <div className="ng-container ng-subpage">
+      <Breadcrumb items={[{ label: 'Vos commandes' }]} />
       <header className="ng-page-head ng-page-head--left">
         <span className="ng-eyebrow">MON ESPACE</span>
         <h1>Vos commandes</h1>

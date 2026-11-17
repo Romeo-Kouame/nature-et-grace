@@ -44,7 +44,7 @@ html.dark {
 .ng-band--cream { background: var(--ng-cream); border: 1px solid var(--ng-cream-line); }
 .ng-section-head--center { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
 .ng-section-head--center p { font-size: 15px; max-width: 520px; }
-.ng-eyebrow--gold { background: var(--ng-gold-50); color: var(--ng-gold-600); }
+.ng-eyebrow--gold { background: var(--ng-gold-50); color: var(--ng-gold-text); }
 
 /* ── Accueil : pastilles de rayons seulement sur téléphone (doublon avec « Nos rayons » sur ordinateur) ── */
 @media (min-width: 861px) {
@@ -61,6 +61,7 @@ html.dark {
   border-color: var(--ng-cream-line);
 }
 .ng-hero-badge { background: var(--ng-cocoa); color: #f6e7c8; }
+html.dark .ng-hero-badge { color: #24160c; }
 .ng-hero-badge b { font-family: var(--ng-font-display); }
 
 /* ── Du cacao à votre soin ── */
@@ -228,12 +229,6 @@ html.dark .ng-badge-tag--bestseller { color: #1b130c; }
 .ng-credits { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; color: var(--ng-muted); }
 .ng-credits a { color: var(--ng-emerald); text-decoration: underline; }
 
-/* ── Bouton flottant du conseiller IA : réduit à une icône après défilement ── */
-.ng-floating-ai { overflow: hidden; transition: transform 0.25s var(--ng-ease), padding 0.35s var(--ng-ease), width 0.35s var(--ng-ease); }
-.ng-floating-ai span { white-space: nowrap; transition: opacity 0.2s, max-width 0.35s var(--ng-ease); max-width: 200px; }
-.ng-floating.compact .ng-floating-ai { width: 50px; height: 50px; padding: 0; justify-content: center; border-radius: 50%; }
-.ng-floating.compact .ng-floating-ai span { opacity: 0; max-width: 0; margin-left: -8px; }
-
 /* ── Téléphone ── */
 @media (max-width: 860px) {
   /* Hero plus court : le bouton « Découvrir la boutique » visible sans défiler */
@@ -271,3 +266,28 @@ html.dark .ng-badge-tag--bestseller { color: #1b130c; }
 
 /* Cartes en ligne (petite photo) : la pastille passe en bas pour ne pas toucher le cœur */
 .ng-card--row .ng-badge-tag { top: auto; bottom: 8px; left: 8px; }
+
+/* ── Rangées de produits qui défilent (accueil, boutique, fiche produit) ── */
+.ng-rail-wrap { position: relative; }
+.ng-rail-track { grid-auto-columns: calc((100% - 4 * 16px) / 5); scroll-behavior: smooth; }
+.ng-rail-side {
+  position: absolute; top: 38%; z-index: 3;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border: 1px solid var(--ng-line, rgba(0,0,0,0.08)); border-radius: 50%;
+  background: var(--ng-surface); color: var(--ng-ink);
+  box-shadow: var(--ng-shadow-md); cursor: pointer;
+  opacity: 0; transform: translateY(-50%) scale(0.9);
+  transition: opacity 0.25s var(--ng-ease), transform 0.25s var(--ng-ease);
+}
+.ng-rail-side--prev { left: -14px; }
+.ng-rail-side--next { right: -14px; }
+.ng-rail-wrap:hover .ng-rail-side, .ng-rail-side:focus-visible { opacity: 1; transform: translateY(-50%) scale(1); }
+.ng-rail-side:hover { background: var(--ng-emerald); color: #fff; }
+.ng-shop-rails { display: grid; gap: 36px; }
+@media (max-width: 1024px) {
+  .ng-rail-track { grid-auto-columns: calc((100% - 3 * 16px) / 4); }
+}
+@media (max-width: 860px) {
+  .ng-rail-track { grid-auto-columns: 46%; }
+  .ng-rail-side { display: none; }
+}

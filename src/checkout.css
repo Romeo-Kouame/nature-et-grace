@@ -57,10 +57,8 @@ html.dark .ng-how-ico { color: #06140e; }
 
 /* Boutons flottants (ordinateur) */
 .ng-floating { position: fixed; right: 22px; bottom: 22px; z-index: 60; display: flex; align-items: center; gap: 10px; }
-.ng-floating-ai { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 18px; border: 0; border-radius: 99px; background: var(--ng-ink); color: var(--ng-bg); font-size: 13.5px; font-weight: 600; box-shadow: var(--ng-shadow-md); cursor: pointer; transition: transform 0.25s var(--ng-ease); }
-.ng-floating-ai svg { color: var(--ng-gold); }
-.ng-floating-wa { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 50%; background: #1f9d55; color: #fff; box-shadow: var(--ng-shadow-md); transition: transform 0.25s var(--ng-ease); }
-.ng-floating-ai:hover, .ng-floating-wa:hover { transform: translateY(-3px); }
+.ng-floating-wa { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 50%; background: #167a45; color: #fff; box-shadow: var(--ng-shadow-md); transition: transform 0.25s var(--ng-ease); }
+.ng-floating-wa:hover { transform: translateY(-3px); }
 
 /* =====================================================================
    PANIER
@@ -153,10 +151,10 @@ html.dark .ng-cart-success-ico { color: #06140e; }
 .ng-advisor-routines { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .ng-advisor-routines > div { padding: 16px; border-radius: var(--ng-r-md); border: 1px solid var(--ng-line); }
 .ng-advisor-routines h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--ng-ink); font-size: 15px; }
-.ng-advisor-routines h3 svg { color: var(--ng-gold-600); }
+.ng-advisor-routines h3 svg { color: var(--ng-gold-text); }
 .ng-advisor-routines ol, .ng-advisor-tips ul { margin: 0; padding-left: 18px; color: var(--ng-text); font-size: 14px; line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
 .ng-advisor-tips { padding: 16px; border-radius: var(--ng-r-md); background: var(--ng-gold-50); }
-.ng-advisor-tips b { color: var(--ng-gold-600); margin-bottom: 8px; }
+.ng-advisor-tips b { color: var(--ng-gold-text); margin-bottom: 8px; }
 .ng-advisor-products h3 { margin: 4px 0 10px; color: var(--ng-ink); font-size: 16px; }
 .ng-advisor-products ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .ng-advisor-products li { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 14px; border: 1px solid var(--ng-line); }
@@ -188,7 +186,7 @@ html.dark .ng-advisor-add:hover, html.dark .ng-advisor-add.added { color: #06140
 .ng-legal p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--ng-text); }
 .ng-legal a { color: var(--ng-emerald); text-decoration: underline; }
 .ng-legal-identity { white-space: pre-line; }
-.ng-legal-todo { display: flex; gap: 10px; align-items: flex-start; max-width: 760px; margin: 0 0 8px; padding: 14px 16px; border-radius: var(--ng-r-md); background: var(--ng-gold-50); color: var(--ng-gold-600); font-size: 14px; line-height: 1.5; }
+.ng-legal-todo { display: flex; gap: 10px; align-items: flex-start; max-width: 760px; margin: 0 0 8px; padding: 14px 16px; border-radius: var(--ng-r-md); background: var(--ng-gold-50); color: var(--ng-gold-text); font-size: 14px; line-height: 1.5; }
 .ng-legal-todo svg { flex-shrink: 0; margin-top: 1px; }
 
 .ng-footer-legal { display: flex; flex-wrap: wrap; gap: 6px 16px; }
@@ -236,3 +234,35 @@ html.dark .ng-advisor-add:hover, html.dark .ng-advisor-add.added { color: #06140
 
 @keyframes ng-toast-top { from { opacity: 0; transform: translate(-50%, -16px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .ng-qty--sm { align-self: flex-start; width: fit-content; }
+.ng-hp { position: absolute !important; left: -10000px !important; width: 1px; height: 1px; overflow: hidden; }
+
+/* ── Bandeau cookies (seulement si la mesure d'audience est configurée) ── */
+.ng-cookies {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 90;
+  width: min(720px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 18px; padding: 16px 18px;
+  background: var(--ng-surface); color: var(--ng-text); border: 1px solid var(--ng-line); border-radius: 16px;
+  box-shadow: var(--ng-shadow-md); animation: ng-fade-up 0.35s var(--ng-ease) both;
+}
+.ng-cookies-text { display: flex; gap: 12px; flex: 1; min-width: 0; }
+.ng-cookies-text > svg { color: var(--ng-gold-600, #b08a3e); flex-shrink: 0; margin-top: 2px; }
+.ng-cookies-text b { color: var(--ng-ink); font-size: 14.5px; }
+.ng-cookies-text p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; }
+.ng-cookies-text a { color: var(--ng-emerald); text-decoration: underline; }
+/* Les deux boutons ont la même taille et le même style : aucun choix n'est mis en avant */
+.ng-cookies-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex-shrink: 0; }
+.ng-cookies-actions .ng-btn { min-width: 110px; justify-content: center; }
+@media (max-width: 860px) {
+  .ng-cookies { flex-direction: column; align-items: stretch; bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .ng-cookies-actions .ng-btn { min-width: 0; }
+}
+
+/* Écran affiché si l'interface plante (ErrorBoundary) : styles autonomes, sans dépendre du reste */
+.ng-crash { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 24px; text-align: center; font-family: system-ui, sans-serif; background: #fbf8f1; color: #1d2b24; }
+.ng-crash img { border-radius: 16px; }
+.ng-crash h1 { margin: 0; font-size: 22px; }
+.ng-crash p { margin: 0; max-width: 420px; line-height: 1.5; color: #4b5a52; }
+.ng-crash-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.ng-crash-actions button, .ng-crash-actions a { padding: 12px 18px; border-radius: 12px; font: 600 14px system-ui, sans-serif; cursor: pointer; text-decoration: none; }
+.ng-crash-actions button { border: 0; background: #0e4a35; color: #fff; }
+.ng-crash-actions a { border: 1px solid #1f9d55; color: #1f7a45; background: #fff; }

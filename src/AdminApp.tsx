@@ -51,6 +51,8 @@ export default function AdminApp() {
   const [message, setMessage] = useState('')
   const [passwordOpen, setPasswordOpen] = useState(false)
   const [seenAt, setSeenAt] = useState(readSeen)
+  /** false : commandes en cours + 3 derniers mois (liste légère) ; true : tout l'historique */
+  const [allOrders, setAllOrders] = useState(false)
 
   useEffect(() => {
     document.title = 'Administration · NATURE & GRÂCE'
@@ -69,7 +71,7 @@ export default function AdminApp() {
   const load = useCallback(async () => {
     const [items, sales, store, revs] = await Promise.all([
       api<ApiProduct[]>('/admin/products'),
-      api<ApiOrder[]>('/admin/orders'),
+      api<ApiOrder[]>(allOrders ? '/admin/orders?all=1' : '/admin/orders'),
       api<ApiStoreSettings>('/store-settings'),
       api<ApiReview[]>('/admin/reviews'),
     ])
@@ -78,7 +80,7 @@ export default function AdminApp() {
     setSettings({ ...DEFAULT_SETTINGS, ...store })
     setReviews(revs)
     setLoggedIn(true)
-  }, [])
+  }, [allOrders])
 
   useEffect(() => {
     api<{ email: string }>('/admin/me')
@@ -233,7 +235,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {tab === 'orders' && <OrdersPanel orders={orders} newIds={new Set(newOrders.map((o) => o.id))} reload={load} notify={notify} fail={fail} />}
+        {tab === 'orders' && <OrdersPanel orders={orders} newIds={new Set(newOrders.map((o) => o.id))} reload={load} notify={notify} fail={fail} showingAll={allOrders} onShowAll={() => setAllOrders(true)} />}
         {tab === 'products' && <ProductsPanel products={products} lowStock={lowStock} reload={load} notify={notify} fail={fail} />}
         {tab === 'reviews' && <ReviewsPanel reviews={reviews} products={products} reload={load} notify={notify} fail={fail} />}
         {tab === 'store' && <StorePanel settings={settings} setSettings={setSettings} notify={notify} fail={fail} />}
@@ -246,7 +248,7 @@ type PanelProps = { reload: () => Promise<void>; notify: (m: string) => void; fa
 
 /* ───────────────────────── COMMANDES ───────────────────────── */
 
-function OrdersPanel({ orders, newIds, reload, notify, fail }: PanelProps & { orders: ApiOrder[]; newIds: Set<string> }) {
+function OrdersPanel({ orders, newIds, reload, notify, fail, showingAll, onShowAll }: PanelProps & { orders: ApiOrder[]; newIds: Set<string>; showingAll: boolean; onShowAll: () => void }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all' | 'todo'>('todo')
 
@@ -365,6 +367,12 @@ function OrdersPanel({ orders, newIds, reload, notify, fail }: PanelProps & { or
             )
           })}
         </div>
+      )}
+      {!showingAll && (
+        <p className="adm-muted adm-older">
+          Sont affichées les commandes en cours et celles des 3 derniers mois.{' '}
+          <button type="button" className="adm-btn" onClick={onShowAll}>Afficher aussi les plus anciennes</button>
+        </p>
       )}
     </section>
   )
@@ -744,6 +752,7 @@ function StorePanel({ settings, setSettings, notify, fail }: Omit<PanelProps, 'r
           deliveryCommunes: data.get('deliveryCommunes'),
           deliveryInfo: data.get('deliveryInfo'),
           legalInfo: data.get('legalInfo'),
+          storeAddress: data.get('storeAddress'),
           deliveryZones: zones.filter((z) => z.name.trim()).map(({ name, feeXof, delay }) => ({ name: name.trim(), feeXof, delay: delay || undefined })),
         }),
       })
@@ -792,6 +801,10 @@ function StorePanel({ settings, setSettings, notify, fail }: Omit<PanelProps, 'r
         <label>Identité de l’entreprise
           <textarea name="legalInfo" defaultValue={settings.legalInfo} rows={4} maxLength={1500} placeholder={'Raison sociale\nForme juridique et numéro RCCM\nAdresse du siège\nResponsable de la publication'} />
           <small className="adm-muted">Affichée dans les mentions légales du site.</small>
+        </label>
+        <label>Adresse de la boutique ou du point de retrait
+          <input name="storeAddress" defaultValue={settings.storeAddress ?? ''} maxLength={300} placeholder="Ex. Cocody Angré 8e tranche, Abidjan" />
+          <small className="adm-muted">Facultatif. Si elle est renseignée, une carte Google Maps avec itinéraire s’affiche sur la page Contact.</small>
         </label>
       </section>
 

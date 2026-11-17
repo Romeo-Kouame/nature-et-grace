@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, ChevronRight, Heart, Leaf, MessageCircle, Minus, Plus, Share2, ShieldCheck, Sparkles, Truck } from 'lucide-react'
+import { ArrowRight, Check, Heart, Leaf, MessageCircle, Minus, Plus, Share2, ShieldCheck, Sparkles, Truck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import ProductCard, { BADGE_LABELS, Stars } from '../components/ProductCard'
+import ProductRail from '../components/ProductRail'
+import { BADGE_LABELS, Stars } from '../components/ProductCard'
 import { flyToCart } from '../flyToCart'
 import ProductVisual from '../components/ProductVisual'
 import { PRODUCT_DETAILS, ProductDetails } from '../data/productDetails'
 import { formatXof } from '../format'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 const DEFAULT_DETAILS: ProductDetails = {
@@ -68,7 +70,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   const similarProducts = [
     ...products.filter((p) => p.id !== product.id && p.category === product.category),
     ...products.filter((p) => p.id !== product.id && p.category !== product.category),
-  ].slice(0, 4)
+  ].slice(0, 10)
 
   const openCategory = () => {
     setSearchTerm('')
@@ -104,17 +106,13 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
 
   return (
     <div className="ng-container ng-subpage">
-      <nav className="ng-breadcrumb" aria-label="Fil d’Ariane">
-        <button type="button" onClick={() => navigate('/')}>
-          Accueil
-        </button>
-        <ChevronRight size={14} />
-        <button type="button" onClick={openCategory}>
-          {product.category}
-        </button>
-        <ChevronRight size={14} />
-        <span>{product.name}</span>
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: 'Boutique', path: '/boutique' },
+          { label: product.category, path: '/boutique', onClick: openCategory },
+          { label: product.name },
+        ]}
+      />
 
       <section className="ng-pdp">
         <div className="ng-pdp-gallery">
@@ -321,19 +319,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
       )}
 
       {similarProducts.length > 0 && (
-        <section>
-          <div className="ng-section-head">
-            <h2>Vous aimerez aussi</h2>
-            <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
-              Tout voir <ArrowRight size={15} />
-            </button>
-          </div>
-          <div className="ng-grid">
-            {similarProducts.map((p, i) => (
-              <ProductCard product={p} key={p.id} index={i} />
-            ))}
-          </div>
-        </section>
+        <ProductRail title="Vous aimerez aussi" products={similarProducts} onSeeAll={() => navigate('/boutique')} />
       )}
     </div>
   )

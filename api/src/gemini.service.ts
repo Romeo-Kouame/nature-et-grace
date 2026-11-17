@@ -22,6 +22,25 @@ export interface ProductDescriptionResponse {
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name)
   private ai: GoogleGenAI | null = null
+  /**
+   * Plafond d'appels Gemini par jour (toutes personnes confondues), pour maîtriser la facture.
+   * Au-delà, le site bascule sur les conseils de démonstration jusqu'au lendemain.
+   */
+  private readonly dailyLimit = Math.max(0, Number(process.env.GEMINI_DAILY_LIMIT ?? 300) || 0)
+  private usage = { day: '', count: 0 }
+
+  /** Réserve un appel dans le quota du jour ; false si le plafond est atteint. */
+  private takeQuota(): boolean {
+    const day = new Date().toISOString().slice(0, 10)
+    if (this.usage.day !== day) this.usage = { day, count: 0 }
+    if (this.usage.count >= this.dailyLimit) {
+      if (this.usage.count === this.dailyLimit) this.logger.warn(`Plafond quotidien Gemini atteint (${this.dailyLimit} appels) : mode démonstration jusqu'à demain.`)
+      this.usage.count += 1
+      return false
+    }
+    this.usage.count += 1
+    return true
+  }
 
   constructor(private readonly db: PrismaService) {
     const apiKey = process.env.GEMINI_API_KEY
@@ -55,9 +74,9 @@ export class GeminiService {
 
     if (!catalog.length) {
       catalog = [
-        { id: 'beurre-de-cacao-brut', slug: 'beurre-de-cacao-brut', name: 'Beurre de cacao brut', category: 'Beurre de cacao', size: '100 g', priceXof: 1500, description: 'Soin pur et riche, cicatrisant, nourrissant, idéal pour peaux sèches, vergetures et lèvres gercées.' },
+        { id: 'beurre-de-cacao-brut', slug: 'beurre-de-cacao-brut', name: 'Beurre de cacao brut', category: 'Beurre de cacao', size: '100 g', priceXof: 1500, description: 'Soin pur et riche, nourrissant, idéal pour les peaux sèches, les zones rugueuses et les lèvres sèches.' },
         { id: 'chantilly-beurre-cacao', slug: 'chantilly-beurre-cacao', name: 'Chantilly de cacao', category: 'Beurre de cacao', size: '100 g', priceXof: 2000, description: 'Texture fouettée, légère et fondante, hydrate le corps et nourrit les cheveux sans effet lourd.' },
-        { id: 'savon-noir-cabosse-cacao', slug: 'savon-noir-cabosse-cacao', name: 'Savon noir de cabosse', category: 'Savons naturels', size: '100 g', priceXof: 2000, description: 'Savon traditionnel purifiant et doux, nettoie en profondeur, aide contre acné, boutons et teint terne.' },
+        { id: 'savon-noir-cabosse-cacao', slug: 'savon-noir-cabosse-cacao', name: 'Savon noir de cabosse', category: 'Savons naturels', size: '100 g', priceXof: 2000, description: 'Savon traditionnel doux, nettoie la peau en profondeur, adapté aux peaux mixtes à grasses.' },
         { id: 'huile-de-coco', slug: 'huile-de-coco', name: 'Huile de coco pure', category: 'Huiles naturelles', size: '100 ml', priceXof: 2500, description: 'Huile satinée multi-usage pour hydrater la peau, sceller l’hydratation des cheveux et bain d’huile.' },
         { id: 'huile-de-neem', slug: 'huile-de-neem', name: 'Huile de neem', category: 'Huiles naturelles', size: '100 ml', priceXof: 3000, description: 'Huile végétale protectrice et purifiante, très efficace contre les imperfections, démangeaisons et pellicules.' },
         { id: 'huile-de-karite', slug: 'huile-de-karite', name: 'Huile de karité', category: 'Huiles naturelles', size: '100 ml', priceXof: 2500, description: 'Concentré de douceur végétale réparatrice, répare les zones sèches et protège la barrière cutanée.' },
@@ -65,7 +84,7 @@ export class GeminiService {
     }
 
     // 2. Si pas de clé d'API, retourner un conseil intelligent basé sur les règles de soin
-    if (!this.ai) {
+    if (!this.ai || !this.takeQuota()) {
       return this.generateSmartDemoAdvice(dto.message, dto.skinType, catalog)
     }
 
@@ -155,7 +174,7 @@ Message du client : "${dto.message}"`
     size?: string
     keyIngredients?: string
   }): Promise<ProductDescriptionResponse> {
-    if (!this.ai) {
+    if (!this.ai || !this.takeQuota()) {
       return {
         description: `Un soin d'exception signé NATURE & GRÂCE, formulé avec des ingrédients purs et naturels pour sublimer votre peau au quotidien. Riche en nutriments essentiels, il apporte douceur, éclat et protection naturelle.`,
         suggestedTags: ['100% Naturel', 'Fait avec soin', 'Beauté saine'],
@@ -247,7 +266,7 @@ La description doit être en français, d'environ 2 à 4 phrases percutantes, é
 
     if (textLower.includes('vergeture') || textLower.includes('cicatrice') || textLower.includes('grossesse')) {
       return {
-        diagnosis: 'Les vergetures et marques cutanées ont besoin d’une régénération intense et d’acides gras protecteurs. Le Beurre de cacao brut est le joyau ivoirien par excellence pour assouplir la peau en profondeur et atténuer visiblement les marques.',
+        diagnosis: 'Les zones sujettes aux vergetures ont besoin d’être bien nourries. Le Beurre de cacao brut, riche en matières grasses, aide à nourrir et assouplir la peau.',
         recommendedProductIds: [beurreId, chantillyId, cocoId].filter(Boolean) as string[],
         routineMorning: [
           'Masser délicatement les zones concernées avec la Chantilly de cacao, facile à étaler avant de s’habiller.',
@@ -259,7 +278,7 @@ La description doit être en français, d'environ 2 à 4 phrases percutantes, é
           'La régularité est la clé : appliquez matin et soir pendant au moins 6 à 8 semaines.',
           'Toujours appliquer après la douche lorsque les pores sont ouverts et la peau encore légèrement humide.',
         ],
-        whatsappSummary: 'Rituel Anti-vergetures & Fermeté (Beurre de cacao brut, Chantilly de cacao)',
+        whatsappSummary: 'Rituel souplesse de la peau (Beurre de cacao brut, Chantilly de cacao)',
         isDemo: true,
       }
     }
@@ -284,7 +303,7 @@ La description doit être en français, d'environ 2 à 4 phrases percutantes, é
 
     // Par défaut : Peau sèche, éclat & douceur
     return {
-      diagnosis: 'Votre peau mérite un rituel doux, régénérant et 100% naturel. Le cacao ivoirien regorge d’antioxydants, de vitamine E et de polyphénols qui redonnent souplesse, velouté et éclat naturel au teint.',
+      diagnosis: 'Votre peau mérite un rituel simple et doux. Le beurre de cacao ivoirien nourrit la peau et l’aide à rester souple et douce.',
       recommendedProductIds: [savonId, chantillyId, beurreId].filter(Boolean) as string[],
       routineMorning: [
         'Nettoyage tout en douceur avec la mousse onctueuse du Savon noir de cabosse.',

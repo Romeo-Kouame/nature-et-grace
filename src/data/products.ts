@@ -107,4 +107,5 @@ export const DEFAULT_SETTINGS: ApiStoreSettings = {
   waveNumber: '',
   deliveryZones: [],
   legalInfo: '',
+  storeAddress: '',
 }

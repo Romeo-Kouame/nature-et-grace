@@ -2,12 +2,16 @@
 
 Guide pour installer, lancer et faire évoluer la boutique en local.
 
+Les documents de référence (exigences, parcours, maquette, schéma, plan) sont dans [`docs/`](docs/). Les règles à respecter sont dans [`CLAUDE.md`](CLAUDE.md).
+
 ## 1. Prérequis
 
-- Node.js 20 ou plus récent, et npm.
+- Node.js 20.19 ou plus récent (22 recommandé), et npm.
 - Une base PostgreSQL (locale, Docker, ou hébergée comme Neon).
 
-Le site utilise React, TypeScript et Vite. L'API utilise NestJS, Prisma et PostgreSQL.
+Le site utilise React, TypeScript et Vite. L'API utilise NestJS, Prisma 7 et PostgreSQL.
+
+Avec Prisma 7, l'adresse de la base se lit dans `api/prisma.config.ts` (qui charge `api/.env`) et le client Prisma est généré dans `api/src/generated/` par `npm install` et `npm run build` : ce dossier n'est pas versionné.
 
 ## 2. Installer
 
@@ -29,6 +33,10 @@ Dans `api/.env` :
 | `TRUST_PROXY` | `true` une fois l'API derrière un hébergeur, pour que les limites anti-abus voient la vraie adresse IP |
 | `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` | Compte de la propriétaire (12 caractères minimum) |
 | `GEMINI_API_KEY` | Facultatif : active la vraie IA (conseiller beauté, rédaction des fiches) |
+| `GEMINI_DAILY_LIMIT` | Plafond d'appels IA par jour (300 par défaut) ; au-delà, mode démonstration |
+| `NODE_ENV` | `production` en ligne : HTTPS obligatoire et en-tête HSTS |
+
+Dans `.env` (site) : `VITE_API_URL`, `VITE_SITE_URL` (adresse publique, pour le sitemap et le partage) et, si vous voulez une mesure d'audience, `VITE_GA_ID` (le bandeau cookies n'apparaît que dans ce cas).
 
 La clé Gemini reste uniquement sur le serveur : le site n'appelle jamais Google directement.
 
@@ -138,3 +146,12 @@ npm run preview  # aperçu de la version de production
 ```
 
 Dans `api` : `npm run build` compile l'API dans `dist`, `npm start` la démarre. `prisma:seed-admin` ne modifie jamais un compte existant.
+
+Sauvegardes (dans `api`, `pg_dump`/`pg_restore` nécessaires, ou `PG_BIN` vers leur dossier) :
+
+```bash
+npm run db:backup          # sauvegarde dans api/backups (14 gardées, jamais dans git)
+npm run db:restore-check   # recharge la dernière dans une base temporaire et compare
+```
+
+Surveillance : `GET /api/health` répond 200 si l'API et la base fonctionnent. `npm run build` (site) génère aussi `dist/sitemap.xml` et `dist/robots.txt`.

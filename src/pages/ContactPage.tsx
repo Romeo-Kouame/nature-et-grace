@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
-import { ChevronDown, MapPin, MessageCircle, Send, ShieldCheck, Truck } from 'lucide-react'
+import { ChevronDown, MapPin, MessageCircle, Navigation, Send, ShieldCheck, Truck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { formatXof } from '../format'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 export const ContactPage: React.FC = () => {
   const { showToast, settings, waLink, waDisplay } = useApp()
   usePageMeta('Contact & livraison', 'Contactez NATURE & GRÂCE sur WhatsApp : commandes, conseils, zones et frais de livraison, paiement Wave.')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const [showMap, setShowMap] = useState(false)
+  const address = settings.storeAddress?.trim() ?? ''
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [message, setMessage] = useState('')
@@ -44,6 +47,7 @@ export const ContactPage: React.FC = () => {
 
   return (
     <div className="ng-container ng-subpage">
+      <Breadcrumb items={[{ label: 'Contact & livraison' }]} />
       <header className="ng-page-head">
         <span className="ng-eyebrow">CONTACT & LIVRAISON</span>
         <h1>Une question ? On vous répond.</h1>
@@ -95,6 +99,43 @@ export const ContactPage: React.FC = () => {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {address && (
+        <section className="ng-map">
+          <div className="ng-map-head">
+            <div>
+              <h2 className="ng-h2">
+                <MapPin size={20} /> Nous trouver
+              </h2>
+              <p className="ng-form-hint">{address}</p>
+            </div>
+            <a
+              className="ng-btn ng-btn--primary ng-btn--sm"
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Navigation size={15} /> Itinéraire
+            </a>
+          </div>
+          {/* La carte Google n'est chargée qu'à la demande : pas de cookie Google sans action du visiteur */}
+          {showMap ? (
+            <iframe
+              className="ng-map-frame"
+              title={`Carte : ${address}`}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          ) : (
+            <button type="button" className="ng-map-placeholder" onClick={() => setShowMap(true)}>
+              <MapPin size={26} />
+              <b>Afficher la carte</b>
+              <small>La carte est fournie par Google Maps.</small>
+            </button>
+          )}
         </section>
       )}
 

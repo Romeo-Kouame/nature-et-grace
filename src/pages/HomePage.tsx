@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, Gift, Leaf, MessageCircle, MoreHorizontal, ShieldCheck, ShoppingBag, Sparkles, Truck, Wallet } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import ProductCard, { BADGE_ORDER, ProductCardSkeleton } from '../components/ProductCard'
+import { BADGE_ORDER } from '../components/ProductCard'
+import ProductRail from '../components/ProductRail'
 import { CATEGORY_INFO, PHOTOS } from '../data/products'
 import { formatXof } from '../format'
 import { flyToCart } from '../flyToCart'
@@ -26,7 +27,7 @@ export const HomePage: React.FC = () => {
     [products, catalogLive],
   )
   const sorted = useMemo(() => [...(available.length ? available : products)].sort((a, b) => BADGE_ORDER(a) - BADGE_ORDER(b)), [available, products])
-  const featured = sorted.slice(0, 4)
+  const featured = sorted.slice(0, 10)
   const hasBestsellers = featured.some((p) => p.badge === 'bestseller')
   // Coffret mis en avant : le coffret disponible le mieux classé (meilleure vente d'abord)
   const giftBox = sorted.find((p) => p.category === 'Rituels & Coffrets' && p.imageUrl && p.price !== null)
@@ -203,32 +204,14 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* PRODUITS À DÉCOUVRIR */}
-      {catalogLoading ? (
-        <section>
-          <div className="ng-section-head">
-            <h2>Nos meilleures ventes</h2>
-          </div>
-          <div className="ng-rows" aria-busy="true">
-            {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} variant="row" />)}
-          </div>
-        </section>
-      ) : featured.length > 0 && (
-        <section>
-          <div className="ng-section-head">
-            <div>
-              <h2>{hasBestsellers ? 'Nos meilleures ventes' : 'À découvrir'}</h2>
-              <p>Les soins préférés de nos clientes.</p>
-            </div>
-            <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
-              Tout voir <ArrowRight size={15} />
-            </button>
-          </div>
-          <div className="ng-rows">
-            {featured.map((product, i) => (
-              <ProductCard product={product} key={product.id} variant="row" index={i} />
-            ))}
-          </div>
-        </section>
+      {(catalogLoading || featured.length > 0) && (
+        <ProductRail
+          title={catalogLoading || hasBestsellers ? 'Nos meilleures ventes' : 'À découvrir'}
+          subtitle="La sélection de la boutique."
+          products={featured}
+          loading={catalogLoading}
+          onSeeAll={() => navigate('/boutique')}
+        />
       )}
 
       {/* DU CACAO À VOTRE PEAU */}
@@ -313,19 +296,7 @@ export const HomePage: React.FC = () => {
 
       {/* TOUS LES SOINS */}
       {products.length > 4 && (
-        <section>
-          <div className="ng-section-head">
-            <h2>Tous nos soins</h2>
-            <button type="button" className="ng-link" onClick={() => navigate('/boutique')}>
-              Voir la boutique <ArrowRight size={15} />
-            </button>
-          </div>
-          <div className="ng-scroller">
-            {sorted.map((product, i) => (
-              <ProductCard product={product} key={product.id} index={i} />
-            ))}
-          </div>
-        </section>
+        <ProductRail title="Tous nos soins" products={sorted} onSeeAll={() => navigate('/boutique')} seeAllLabel="Voir la boutique" autoplay={6000} />
       )}
 
       {/* AVIS RÉELS (publiés par la boutique) */}

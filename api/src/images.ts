@@ -22,3 +22,16 @@ export function decodeImage(dataUrl: string): { mime: string; data: Uint8Array<A
 
 /** Référence courte d'une commande, identique côté client et côté administration. */
 export const orderReference = (id: string) => id.slice(-6).toUpperCase()
+
+/**
+ * Anti-spam « pot de miel » : les formulaires contiennent un champ caché `website`
+ * que les humains ne voient pas. S'il est rempli, l'envoi vient d'un robot.
+ */
+export function assertHuman(honeypot?: string) {
+  if (honeypot && honeypot.trim() !== '') throw new BadRequestException('Envoi refusé. Réessayez ou contactez la boutique sur WhatsApp.')
+}
+
+/** Le consentement doit être donné explicitement et vérifié côté serveur, pas seulement dans le navigateur. */
+export function assertConsent(accepted?: boolean, message = 'Vous devez accepter les conditions de vente et la politique de confidentialité.') {
+  if (accepted !== true) throw new BadRequestException(message)
+}

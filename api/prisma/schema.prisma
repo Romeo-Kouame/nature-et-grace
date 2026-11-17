@@ -1,10 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  // Client généré dans le code de l'API, au format CommonJS (celui de NestJS)
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
+// L'adresse de la base est dans prisma.config.ts (Prisma 7)
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum OrderStatus {
@@ -37,6 +40,8 @@ model StoreSettings {
   deliveryZones     Json     @default("[]")
   /// Identité légale affichée dans les mentions légales (raison sociale, RCCM, adresse…)
   legalInfo         String   @default("")
+  /// Adresse physique de la boutique ou du point de retrait (carte Google Maps de la page Contact ; vide = pas de carte)
+  storeAddress      String   @default("")
   updatedAt         DateTime @updatedAt
 }
 
@@ -61,6 +66,8 @@ model Review {
   /// Un avis déposé sur le site attend la validation de la boutique
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
+
+  @@index([published, createdAt])
 }
 
 model Product {
@@ -81,6 +88,8 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
+
+  @@index([active, category])
 }
 
 /// Compte client : obligatoire pour accéder au panier et commander
@@ -94,6 +103,8 @@ model Customer {
   commune       String?
   address       String?
   deliveryZone  String?
+  /// Date à laquelle le client a accepté les CGV et la politique de confidentialité
+  termsAcceptedAt DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   orders        Order[]
@@ -115,9 +126,15 @@ model Order {
   /// Frais de livraison connus au moment de la commande ; null = à confirmer par la boutique
   deliveryFeeXof Int?
   paymentProofUrl String?
+  /// Identifiant unique généré par le navigateur pour chaque envoi : un double envoi ne crée pas deux commandes
+  clientKey      String?     @unique
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   items          OrderItem[]
+
+  @@index([createdAt])
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
@@ -130,4 +147,7 @@ model OrderItem {
   quantity       Int
   order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product        Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
 }

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { Check, MessageCircle, Sparkles } from 'lucide-react'
+import React, { useEffect } from 'react'
+import { Check, MessageCircle } from 'lucide-react'
 import { AppProvider, useApp } from './context/AppContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -18,6 +18,9 @@ import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/LoginPage'
 import { AccountPage, OrdersPage } from './pages/AccountPages'
 import { useReveal } from './hooks/useReveal'
+import CookieBanner from './components/CookieBanner'
+import { initAnalytics, trackPageView } from './analytics'
+import { SITE_URL, useJsonLd } from './hooks/useJsonLd'
 import './nature.css'
 import './pages.css'
 import './checkout.css'
@@ -52,22 +55,42 @@ function renderPage(path: string) {
       return <LegalPage kind="cgv" />
     case '/confidentialite':
       return <LegalPage kind="confidentialite" />
+    case '/remboursement':
+      return <LegalPage kind="remboursement" />
+    case '/cookies':
+      return <LegalPage kind="cookies" />
     default:
       return <NotFoundPage />
   }
 }
 
 function AppContent() {
-  const { currentPath, toastMessage, waLink, setAdvisorOpen } = useApp()
+  const { currentPath, toastMessage, waLink, settings } = useApp()
   useReveal()
-  // Le bouton du conseiller IA se réduit à une icône dès qu'on fait défiler la page
-  const [scrolled, setScrolled] = useState(false)
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 320)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  useEffect(() => initAnalytics(), [])
+  // Une page vue par changement de page (uniquement si le visiteur a accepté la mesure d'audience)
+  useEffect(() => trackPageView(currentPath), [currentPath])
+
+  // Fiche entreprise pour Google (type « Store », une sorte de LocalBusiness), construite à partir des réglages de la boutique
+  useJsonLd('business', {
+    '@context': 'https://schema.org',
+    '@type': 'Store',
+    name: 'NATURE & GRÂCE',
+    slogan: 'Prenez soin de vous naturellement',
+    description: 'Soins naturels au beurre de cacao, karité, savon noir et huiles végétales de Côte d’Ivoire.',
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo.jpeg`,
+    image: `${SITE_URL}/photos/a-hero.webp`,
+    telephone: `+${settings.whatsappNumber}`,
+    currenciesAccepted: 'XOF',
+    paymentAccepted: 'Wave',
+    areaServed: settings.deliveryCommunes,
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'CI',
+      ...(settings.storeAddress ? { streetAddress: settings.storeAddress } : {}),
+    },
+  })
 
   return (
     <div className="app-shell">
@@ -90,16 +113,14 @@ function AppContent() {
         </div>
       )}
 
-      {/* Boutons flottants (ordinateur) : sur téléphone, la barre du bas les remplace */}
-      <div className={`ng-floating ${scrolled ? 'compact' : ''}`}>
-        <button type="button" className="ng-floating-ai" onClick={() => setAdvisorOpen(true)} aria-label="Conseiller beauté IA" title="Conseiller beauté IA">
-          <Sparkles size={18} /> <span>Conseiller beauté IA</span>
-        </button>
+      {/* Bouton WhatsApp flottant (ordinateur) : sur téléphone, la barre du bas le remplace */}
+      <div className="ng-floating">
         <a className="ng-floating-wa" href={waLink()} target="_blank" rel="noreferrer" aria-label="Écrire à la boutique sur WhatsApp">
           <MessageCircle size={22} />
         </a>
       </div>
 
+      <CookieBanner />
       <CartDrawer />
       <BeautyAdvisorModal />
     </div>

@@ -1,8 +1,8 @@
 import 'dotenv/config'
-import { PrismaClient } from '@prisma/client'
+import { createPrismaClient } from '../src/db'
 import { DEMO_PRODUCTS, REAL_PRODUCT_PHOTOS } from './demo-catalog'
 
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 
 /** Retire les produits de démonstration ; ceux qui ont déjà été commandés sont masqués pour garder l'historique. */
 async function main() {

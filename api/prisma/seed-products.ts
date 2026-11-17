@@ -1,7 +1,7 @@
 import 'dotenv/config'
-import { PrismaClient } from '@prisma/client'
+import { createPrismaClient } from '../src/db'
 
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 const examples = [
   { name: 'Beurre de cacao brut', slug: 'beurre-de-cacao-brut', category: 'Beurre de cacao', description: 'Un soin riche et nourrissant, idéal pour les peaux en quête de douceur.', size: '100 g', priceXof: 1500, stock: 0 },
   { name: 'Chantilly de beurre de cacao', slug: 'chantilly-beurre-cacao', category: 'Beurre de cacao', description: 'Une texture légère et onctueuse pour un rituel de soin tout en douceur.', size: '100 g', priceXof: 2000, stock: 0 },

@@ -1,8 +1,8 @@
 import 'dotenv/config'
-import { PrismaClient } from '@prisma/client'
+import { createPrismaClient } from '../src/db'
 import { DEMO_PRODUCTS, REAL_PRODUCT_PHOTOS } from './demo-catalog'
 
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 
 async function main() {
   for (const { slug, ...data } of DEMO_PRODUCTS) {

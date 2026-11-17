@@ -11,3 +11,8 @@ api/dist/
 api/prisma/dev.db
 
 *.tsbuildinfo
+
+# Sauvegardes de la base (données personnelles : jamais dans git)
+api/backups/
+# Client Prisma généré (npm run build / npm install le recrée)
+api/src/generated/

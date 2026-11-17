@@ -3,6 +3,8 @@ import { MessageSquarePlus, Send, Star, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { Stars } from '../components/ProductCard'
 import { api } from '../api'
+import Honeypot from '../components/Honeypot'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -19,6 +21,8 @@ export const TestimonialsPage: React.FC = () => {
   const [rating, setRating] = useState(5)
   const [productSlug, setProductSlug] = useState('')
   const [comment, setComment] = useState('')
+  const [consent, setConsent] = useState(false)
+  const [website, setWebsite] = useState('')
 
   const stats = useMemo(() => {
     const count = reviews.length
@@ -39,11 +43,12 @@ export const TestimonialsPage: React.FC = () => {
     try {
       const res = await api<{ message: string }>('/reviews', {
         method: 'POST',
-        body: JSON.stringify({ authorName, city, rating, comment, productSlug: productSlug || undefined }),
+        body: JSON.stringify({ authorName, city, rating, comment, productSlug: productSlug || undefined, consent, website }),
       })
       showToast(res.message)
       setShowForm(false)
       setComment('')
+      setConsent(false)
     } catch (err) {
       const offline = err instanceof TypeError
       setError(offline ? 'Le site ne parvient pas à joindre la boutique. Vous pouvez envoyer votre avis sur WhatsApp.' : (err as Error).message)
@@ -57,6 +62,7 @@ export const TestimonialsPage: React.FC = () => {
 
   return (
     <div className="ng-container ng-subpage">
+      <Breadcrumb items={[{ label: 'Avis clients' }]} />
       <header className="ng-page-head">
         <span className="ng-eyebrow">AVIS CLIENTS</span>
         <h1>Vos retours sur nos soins.</h1>
@@ -194,7 +200,15 @@ export const TestimonialsPage: React.FC = () => {
                   required
                 />
               </label>
-              <p className="ng-form-hint">Votre avis est envoyé à la boutique et publié après vérification. Votre prénom et votre ville seront affichés.</p>
+              <p className="ng-form-hint">Votre avis est envoyé à la boutique et publié après vérification.</p>
+              <label className="ng-check">
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
+                <span>
+                  J’accepte que mon prénom, ma ville et mon avis soient publiés sur le site (voir la{' '}
+                  <a href="/confidentialite" target="_blank" rel="noreferrer">politique de confidentialité</a>).
+                </span>
+              </label>
+              <Honeypot value={website} onChange={setWebsite} />
               {error && (
                 <p className="ng-form-error" role="alert">
                   {error}{' '}

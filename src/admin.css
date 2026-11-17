@@ -8,7 +8,7 @@ body { margin: 0; }
 .adm-login button, .adm-login input { font-family: var(--ng-font); }
 .adm-shell a, .adm-login a { color: inherit; text-decoration: none; }
 .adm-muted { color: var(--ng-muted); font-size: 13px; line-height: 1.5; margin: 0; }
-.adm-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--ng-gold-600); }
+.adm-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--ng-gold-text, #86672a); }
 
 /* Connexion */
 .adm-login { display: grid; place-items: center; padding: 24px 16px; position: relative; }
@@ -60,7 +60,7 @@ body { margin: 0; }
 .adm-btn--primary { background: var(--ng-emerald); border-color: var(--ng-emerald); color: #fff; }
 .adm-btn--primary:hover { background: var(--ng-emerald-600); color: #fff; }
 html.dark .adm-btn--primary, html.dark .adm-btn--primary:hover { color: #06140e; }
-.adm-btn--wa, .adm-shell a.adm-btn--wa { background: #1f9d55; border-color: #1f9d55; color: #fff; }
+.adm-btn--wa, .adm-shell a.adm-btn--wa { background: #167a45; border-color: #167a45; color: #fff; }
 .adm-btn--wa:hover, .adm-shell a.adm-btn--wa:hover { color: #fff; filter: brightness(1.05); }
 .adm-btn--ghost { background: transparent; border-color: transparent; color: var(--ng-muted); }
 .adm-btn--danger { color: var(--ng-red); border-color: color-mix(in srgb, var(--ng-red) 35%, transparent); background: transparent; }
@@ -73,7 +73,7 @@ html.dark .adm-btn--primary, html.dark .adm-btn--primary:hover { color: #06140e;
 .adm-alert.error { background: color-mix(in srgb, var(--ng-red) 10%, var(--ng-surface)); color: var(--ng-red); }
 .adm-alert.success { background: var(--ng-emerald-50); color: var(--ng-emerald); }
 .adm-alert.info { background: var(--ng-gold-50); color: var(--ng-gold-600); font-weight: 600; }
-.adm-alert.warn { background: var(--ng-gold-50); color: var(--ng-gold-600); }
+.adm-alert.warn { background: var(--ng-gold-50); color: var(--ng-gold-text, #86672a); }
 .adm-empty { padding: 40px 16px; text-align: center; color: var(--ng-muted); background: var(--ng-surface); border: 1px dashed var(--ng-line); border-radius: var(--ng-r-md); }
 .adm-new { display: inline-block; padding: 2px 8px; border-radius: 99px; background: var(--ng-red); color: #fff; font-size: 11px; font-weight: 700; }
 .adm-password { max-width: 480px; }
@@ -137,7 +137,7 @@ html.dark .adm-btn--primary, html.dark .adm-btn--primary:hover { color: #06140e;
 .adm-product-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .adm-product-meta em { padding: 2px 8px; border-radius: 99px; background: var(--ng-subtle); font-style: normal; font-size: 12px; font-weight: 600; color: var(--ng-text); }
 .adm-product-meta em.ok { background: var(--ng-emerald-50); color: var(--ng-emerald); }
-.adm-product-meta em.low { background: var(--ng-gold-50); color: var(--ng-gold-600); }
+.adm-product-meta em.low { background: var(--ng-gold-50); color: var(--ng-gold-text, #86672a); }
 .adm-product-meta em.out { background: color-mix(in srgb, var(--ng-red) 12%, transparent); color: var(--ng-red); }
 .adm-product-meta em.hidden { background: var(--ng-line); color: var(--ng-muted); }
 
@@ -212,3 +212,4 @@ html.dark .adm-btn--primary, html.dark .adm-btn--primary:hover { color: #06140e;
 .adm-gallery-item button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #fff; cursor: pointer; }
 .adm-gallery-add { width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--ng-line); border-radius: 12px; background: none; color: var(--ng-muted); font-size: 12px; font-weight: 600; cursor: pointer; }
 .adm-gallery-add:hover { border-color: var(--ng-emerald); color: var(--ng-emerald); }
+.adm-older { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; font-size: 13px; }

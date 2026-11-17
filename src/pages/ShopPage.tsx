@@ -2,22 +2,27 @@ import React, { useMemo, useState } from 'react'
 import { ArrowUpDown, Sparkles, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import ProductCard, { BADGE_ORDER, ProductCardSkeleton } from '../components/ProductCard'
+import ProductRail from '../components/ProductRail'
 import { ALL_CATEGORIES } from '../types'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
-
-const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+import { matchesQuery } from '../format'
 
 export const ShopPage: React.FC = () => {
   const { products, categories, selectedCategory, setSelectedCategory, searchTerm, setSearchTerm, setAdvisorOpen, catalogLoading } = useApp()
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc'>('featured')
-  usePageMeta(selectedCategory === ALL_CATEGORIES ? 'Boutique' : selectedCategory)
+  usePageMeta(
+    selectedCategory === ALL_CATEGORIES ? 'Boutique' : selectedCategory,
+    selectedCategory === ALL_CATEGORIES
+      ? 'Tous les soins naturels NATURE & GRÂCE : beurre de cacao, karité, savon noir, huiles végétales et coffrets. Commande en ligne ou sur WhatsApp.'
+      : `${selectedCategory} NATURE & GRÂCE : soins naturels de Côte d’Ivoire, prix en FCFA, commande en ligne ou sur WhatsApp, paiement Wave.`,
+  )
 
   const filteredProducts = useMemo(() => {
     let list = [...products]
     if (selectedCategory !== ALL_CATEGORIES) list = list.filter((p) => p.category === selectedCategory)
     if (searchTerm.trim()) {
-      const q = normalize(searchTerm.trim())
-      list = list.filter((p) => normalize(`${p.name} ${p.category} ${p.description}`).includes(q))
+      list = list.filter((p) => matchesQuery(`${p.name} ${p.category} ${p.description}`, searchTerm))
     }
     // Les prix à confirmer passent après les prix connus
     const price = (v: number | null, dir: 1 | -1) => (v === null ? Number.POSITIVE_INFINITY : dir * v)
@@ -29,8 +34,15 @@ export const ShopPage: React.FC = () => {
 
   const chips = [ALL_CATEGORIES, ...categories]
 
+  const showRails = selectedCategory === ALL_CATEGORIES && !searchTerm.trim() && sortBy === 'featured'
+  const rails = useMemo(
+    () => categories.map((cat) => ({ cat, list: filteredProducts.filter((p) => p.category === cat) })).filter((r) => r.list.length > 0),
+    [categories, filteredProducts],
+  )
+
   return (
     <div className="ng-container ng-shop">
+      <Breadcrumb items={selectedCategory === ALL_CATEGORIES ? [{ label: 'Boutique' }] : [{ label: 'Boutique', path: '/boutique', onClick: () => setSelectedCategory(ALL_CATEGORIES) }, { label: selectedCategory }]} />
       <div className="ng-shop-head">
         <div>
           <h1>
@@ -94,6 +106,13 @@ export const ShopPage: React.FC = () => {
           >
             Voir tous les produits
           </button>
+        </div>
+      ) : showRails ? (
+        // Vue « Tout » sans recherche : une rangée qui défile par rayon
+        <div className="ng-shop-rails">
+          {rails.map(({ cat, list }) => (
+            <ProductRail key={cat} title={cat} subtitle={`${list.length} produit${list.length > 1 ? 's' : ''}`} products={list} onSeeAll={() => setSelectedCategory(cat)} autoplay={0} />
+          ))}
         </div>
       ) : (
         <div className="ng-grid ng-grid--shop">
