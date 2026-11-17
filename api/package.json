@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "prisma:generate": "prisma generate",
@@ -11,7 +11,10 @@
     "prisma:seed-admin": "tsx prisma/seed-admin.ts",
     "prisma:seed-products": "tsx prisma/seed-products.ts",
     "prisma:seed-demo": "tsx prisma/seed-demo.ts",
-    "prisma:remove-demo": "tsx prisma/remove-demo.ts"
+    "prisma:remove-demo": "tsx prisma/remove-demo.ts",
+    "db:backup": "node scripts/backup.mjs backup",
+    "db:restore-check": "node scripts/backup.mjs restore-check",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",
@@ -19,12 +22,14 @@
     "@nestjs/core": "^11.0.0",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
-    "@prisma/client": "^6.19.0",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
+    "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
@@ -33,8 +38,12 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/node": "^22.15.30",
-    "prisma": "^6.19.0",
+    "@types/pg": "^8.23.1",
+    "prisma": "^7.10.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.19"
   }
 }

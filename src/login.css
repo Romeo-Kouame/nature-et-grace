@@ -1,0 +1,173 @@
+/* ─────────────────────────────────────────────────────────────
+   Page de connexion autonome (/connexion)
+   Deux colonnes séparées par un filet : la marque à gauche, le formulaire à droite.
+   ───────────────────────────────────────────────────────────── */
+
+.app-shell--bare { min-height: 100vh; background: var(--ng-bg); }
+.ng-login { --ng-login-border: #c3ccc7; }
+html.dark .ng-login { --ng-login-border: #33463d; }
+
+.ng-login {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(440px, 1fr);
+  border-bottom: 1px solid var(--ng-line);
+}
+
+/* ───── Colonne gauche ───── */
+.ng-login-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 28px clamp(24px, 4vw, 64px) 40px;
+  border-right: 1px solid var(--ng-line);
+  overflow: hidden;
+}
+.ng-login-back {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px 8px 10px; margin-bottom: 22px;
+  border: 1px solid var(--ng-line); border-radius: 999px;
+  background: var(--ng-surface); color: var(--ng-ink);
+  font: 600 14px var(--ng-font); cursor: pointer;
+  transition: background 0.2s var(--ng-ease), border-color 0.2s var(--ng-ease);
+}
+.ng-login-back:hover { background: var(--ng-subtle); border-color: var(--ng-emerald-100); }
+.ng-login-logo { align-self: flex-start; display: block; border-radius: 50%; }
+.ng-login-logo img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; display: block; box-shadow: 0 0 0 3px var(--ng-gold-50), var(--ng-shadow-sm); }
+
+.ng-login-hero {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(8px, 2vw, 28px);
+  margin-top: 12px;
+}
+.ng-login-title {
+  position: relative; z-index: 2;
+  margin: 0;
+  font-family: var(--ng-font-display);
+  font-size: clamp(44px, 3.9vw, 78px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--ng-ink);
+}
+.ng-login-title em { font-style: normal; color: var(--ng-emerald); }
+
+/* Montage photo, à la manière d'une mosaïque d'aperçus */
+.ng-login-collage { position: relative; width: 100%; min-width: 260px; max-width: 440px; aspect-ratio: 440 / 470; justify-self: center; }
+.ng-lc { position: absolute; display: block; object-fit: cover; box-shadow: 0 18px 40px rgba(15, 29, 23, 0.18); }
+.ng-lc--main { top: 0; left: 30%; width: 58%; height: 72%; border-radius: 22px; z-index: 2; }
+.ng-lc--back { top: 22%; left: 2%; width: 40%; height: 46%; border-radius: 18px; z-index: 1; opacity: 0.92; }
+.ng-lc--card { top: 56%; left: 12%; width: 38%; height: 40%; border-radius: 18px; z-index: 3; border: 6px solid var(--ng-surface); }
+.ng-lc--round { top: 60%; left: 56%; width: 36%; aspect-ratio: 1; height: auto; border-radius: 50%; z-index: 4; border: 5px solid var(--ng-emerald); box-shadow: 0 0 0 5px var(--ng-surface), 0 18px 40px rgba(15, 29, 23, 0.2); }
+.ng-lc-chip {
+  position: absolute; z-index: 5;
+  width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%;
+  box-shadow: 0 10px 24px rgba(15, 29, 23, 0.22);
+  animation: ng-lc-float 5s ease-in-out infinite;
+}
+.ng-lc-chip--leaf { top: 6%; left: 12%; background: var(--ng-gold); color: #24160c; }
+.ng-lc-chip--heart { top: 56%; left: 84%; background: #b23a48; color: #fff; animation-delay: -2.5s; }
+.ng-lc-pill {
+  position: absolute; z-index: 5; top: 4%; right: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 10px;
+  background: var(--ng-emerald); color: #fff;
+  font: 700 12.5px var(--ng-font); white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(14, 74, 53, 0.3);
+}
+html.dark .ng-lc-pill { background: #0e4a35; }
+@keyframes ng-lc-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* ───── Colonne droite ───── */
+.ng-login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px clamp(24px, 5vw, 80px);
+}
+.ng-login-box { width: min(100%, 560px); }
+.ng-login-box h2 { margin: 0; font: 700 22px var(--ng-font); letter-spacing: -0.01em; color: var(--ng-ink); }
+.ng-login-sub { margin: 6px 0 22px; color: var(--ng-muted); font-size: 15px; }
+.ng-login-box .ng-auth-reason { margin-bottom: 18px; }
+
+.ng-login-form { display: flex; flex-direction: column; gap: 14px; }
+.ng-login-form > input,
+.ng-login-form .ng-password input {
+  width: 100%;
+  height: 58px;
+  padding: 0 18px;
+  border: 1px solid var(--ng-login-border);
+  border-radius: 16px;
+  background: var(--ng-surface);
+  color: var(--ng-ink);
+  font: 500 16px var(--ng-font);
+  transition: border-color 0.2s var(--ng-ease), box-shadow 0.2s var(--ng-ease);
+}
+.ng-login-form > input::placeholder,
+.ng-login-form .ng-password input::placeholder { color: var(--ng-muted); }
+.ng-login-form > input:focus,
+.ng-login-form .ng-password input:focus { outline: none; border-color: var(--ng-emerald); box-shadow: 0 0 0 3px var(--ng-emerald-100); }
+.ng-login-form .ng-password button { right: 10px; }
+
+.ng-login-primary,
+.ng-login-secondary {
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  font: 700 16.5px var(--ng-font);
+  cursor: pointer;
+  transition: background 0.2s var(--ng-ease), transform 0.15s var(--ng-ease), border-color 0.2s var(--ng-ease);
+}
+.ng-login-primary { margin-top: 4px; border: 0; background: var(--ng-emerald); color: #fff; }
+.ng-login-primary:hover:not(:disabled) { background: var(--ng-emerald-600); }
+.ng-login-primary:active:not(:disabled) { transform: scale(0.99); }
+.ng-login-primary:disabled { opacity: 0.7; cursor: progress; }
+html.dark .ng-login-primary { color: #06140e; }
+.ng-login-secondary { border: 1.5px solid var(--ng-emerald); background: transparent; color: var(--ng-emerald); }
+.ng-login-secondary:hover { background: var(--ng-emerald-50); }
+
+.ng-login-forgot { align-self: center; margin-top: 8px; color: var(--ng-ink); font-size: 15.5px; font-weight: 600; text-decoration: none; }
+.ng-login-forgot:hover { text-decoration: underline; }
+.ng-login-gap { height: 26px; border-bottom: 1px solid var(--ng-line); margin-bottom: 12px; }
+.ng-login-terms { font-size: 14px; line-height: 1.45; color: var(--ng-ink); }
+.ng-login-terms input { flex-shrink: 0; }
+
+.ng-login-perks { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin: 26px 0 0; padding: 0; color: var(--ng-muted); font-size: 13.5px; font-weight: 600; }
+.ng-login-perks li { display: inline-flex; align-items: center; gap: 6px; }
+.ng-login-perks svg { color: var(--ng-gold-text); }
+
+.ng-login-legal,
+.ng-login-help { margin: 16px 0 0; text-align: center; font-size: 13.5px; line-height: 1.55; color: var(--ng-ink); }
+.ng-login-legal a { color: var(--ng-gold-text); font-weight: 600; text-decoration: underline; }
+.ng-login-help a { color: var(--ng-wa-text); font-weight: 700; text-decoration: none; }
+.ng-login-help a:hover { text-decoration: underline; }
+.ng-login-mark { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 26px 0 0; color: var(--ng-emerald); font: 700 15px var(--ng-font-display); letter-spacing: 0.02em; }
+
+/* ───── Écrans moyens : le titre passe au-dessus du montage ───── */
+@media (max-width: 1499px) {
+  .ng-login { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .ng-login-hero { grid-template-columns: 1fr; align-content: center; gap: 26px; }
+  .ng-login-title { font-size: clamp(40px, 4.2vw, 60px); }
+  .ng-login-title br:first-of-type { display: none; }
+  .ng-login-collage { max-width: 360px; min-width: 0; }
+}
+
+/* ───── Téléphone et tablette : une seule colonne ───── */
+@media (max-width: 860px) {
+  .ng-login { grid-template-columns: 1fr; border-bottom: 0; }
+  .ng-login-brand { border-right: 0; border-bottom: 1px solid var(--ng-line); padding: 16px 16px 22px; }
+  .ng-login-back { margin-bottom: 16px; }
+  .ng-login-logo img { width: 56px; height: 56px; }
+  .ng-login-hero { margin-top: 10px; }
+  .ng-login-title { font-size: clamp(32px, 9vw, 44px); }
+  .ng-login-collage { display: none; }
+  .ng-login-panel { align-items: flex-start; padding: 24px 16px 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ng-lc-chip { animation: none; }
+}

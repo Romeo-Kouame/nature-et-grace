@@ -5,7 +5,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 
 export const NotFoundPage: React.FC = () => {
   const { navigate } = useApp()
-  usePageMeta('Page introuvable')
+  usePageMeta('Page introuvable', 'Cette page n’existe pas ou a été déplacée. Retrouvez tous nos soins naturels dans la boutique NATURE & GRÂCE.')
 
   return (
     <div className="ng-container ng-subpage">

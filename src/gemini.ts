@@ -86,7 +86,7 @@ function getOfflineBeautyAdvice(
 
   if (combined.includes('vergeture') || combined.includes('cicatrice') || combined.includes('grossesse')) {
     return {
-      diagnosis: 'Les fibres cutanées étirées ont besoin de nutriments relipidants pour regagner en élasticité et souplesse. Le Beurre de cacao brut est le soin traditionnel le plus concentré en vitamine E et polyphénols réparateurs.',
+      diagnosis: 'Les zones sujettes aux vergetures ont besoin d’être bien nourries. Le Beurre de cacao brut, riche en matières grasses, aide à nourrir et assouplir la peau.',
       recommendedProductIds: [beurreId, chantillyId, cocoId].filter(Boolean) as string[],
       routineMorning: [
         'Masser les zones sujettes aux vergetures avec la Chantilly de cacao pour une pénétration douce et rapide.',
@@ -98,7 +98,7 @@ function getOfflineBeautyAdvice(
         'Appliquez toujours le beurre juste après la douche lorsque la peau est encore légèrement humide pour sceller l’hydratation.',
         'La régularité quotidienne est le facteur clé pour des résultats visibles.',
       ],
-      whatsappSummary: 'Rituel Anti-vergetures & Fermeté (Beurre de cacao brut, Chantilly de cacao)',
+      whatsappSummary: 'Rituel souplesse de la peau (Beurre de cacao brut, Chantilly de cacao)',
       isDemo: true,
     }
   }
@@ -122,7 +122,7 @@ function getOfflineBeautyAdvice(
   }
 
   return {
-    diagnosis: 'Votre peau mérite un soin enveloppant et protecteur. Le cacao brut d’origine ivoirienne régénère la barrière hydrolipidique et redonne au teint un éclat chaud et velouté.',
+    diagnosis: 'Votre peau mérite un soin enveloppant et protecteur. Le beurre de cacao ivoirien nourrit la peau et l’aide à rester souple et douce.',
     recommendedProductIds: [savonId, chantillyId, beurreId].filter(Boolean) as string[],
     routineMorning: [
       'Nettoyage délicat avec la mousse douce du Savon noir de cabosse de cacao.',

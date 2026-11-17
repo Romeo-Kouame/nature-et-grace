@@ -1,17 +1,35 @@
 export const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace(/\/$/, '')
 
+/** Délai au-delà duquel on considère que le serveur ne répond pas */
+const TIMEOUT_MS = 20_000
+
+/** Erreur réseau (serveur injoignable ou trop lent) : distincte d'un refus du serveur */
+export class NetworkError extends TypeError {}
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers)
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    credentials: 'include',
-    headers,
-  })
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS)
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      credentials: 'include',
+      headers,
+      signal: options.signal ?? controller.signal,
+    })
+  } catch {
+    // Pas de réseau, serveur arrêté ou trop lent : message compréhensible plutôt que « Failed to fetch »
+    throw new NetworkError('Le site ne parvient pas à joindre la boutique. Vérifiez votre connexion puis réessayez.')
+  } finally {
+    window.clearTimeout(timer)
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
     const message = Array.isArray(body.message) ? body.message[0] : body.message
-    throw new Error(message || `La requête a échoué (${response.status}).`)
+    if (response.status >= 500) throw new Error(message || 'Une erreur est survenue. Réessayez dans un instant.')
+    throw new Error(message || 'La demande n’a pas pu aboutir. Réessayez.')
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
@@ -82,6 +100,8 @@ export type ApiStoreSettings = {
   waveNumber: string
   deliveryZones: DeliveryZone[]
   legalInfo: string
+  /** Adresse de la boutique ou du point de retrait (carte de la page Contact) */
+  storeAddress: string
 }
 
 export type ApiReview = {

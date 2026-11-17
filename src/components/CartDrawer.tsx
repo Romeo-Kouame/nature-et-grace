@@ -6,6 +6,7 @@ import { formatXof } from '../format'
 
 type CustomerDetails = { customerName: string; phone: string; deliveryZone: string; commune: string; address: string }
 import ProductVisual from './ProductVisual'
+import Honeypot from './Honeypot'
 
 type Step = 'cart' | 'details' | 'done'
 type LastOrder = CreatedOrder & { customerName: string; createdAt: string; proofSent?: boolean }
@@ -21,6 +22,8 @@ export const CartDrawer: React.FC = () => {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [lastOrder, setLastOrder] = useState<LastOrder | null>(null)
+  /** Clé unique de la commande en cours d'envoi : un renvoi (double clic, réseau lent) ne crée pas de doublon */
+  const orderKey = useRef('')
   const [proofState, setProofState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [proofMessage, setProofMessage] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
@@ -84,6 +87,12 @@ export const CartDrawer: React.FC = () => {
     }
     const note = String(form.get('deliveryNote') || '').trim()
     const saveAddress = form.get('saveAddress') === 'on'
+    const acceptTerms = form.get('acceptTerms') === 'on'
+    if (!acceptTerms) {
+      setError('Cochez la case pour accepter les conditions générales de vente.')
+      return
+    }
+    if (!orderKey.current) orderKey.current = newOrderKey()
 
     if (!catalogLive || items.some((p) => !p.apiId)) {
       setError('La commande en ligne est momentanément indisponible. Envoyez-la sur WhatsApp : votre panier et vos coordonnées y sont repris.')
@@ -102,6 +111,9 @@ export const CartDrawer: React.FC = () => {
           deliveryZone: details.deliveryZone || undefined,
           deliveryNote: note || undefined,
           saveAddress,
+          acceptTerms,
+          clientKey: orderKey.current,
+          website: String(form.get('website') || ''),
           items: items.map((p) => ({ productId: p.apiId, quantity: cart[p.id] })),
         }),
       })
@@ -110,6 +122,7 @@ export const CartDrawer: React.FC = () => {
       if (saveAddress) setUser({ ...user, commune: details.commune, address: details.address, deliveryZone: details.deliveryZone || null })
       setProofState('idle')
       setProofMessage('')
+      orderKey.current = ''
       clearCart()
       setStep('done')
     } catch (err) {
@@ -410,6 +423,15 @@ export const CartDrawer: React.FC = () => {
                 <input type="checkbox" name="saveAddress" defaultChecked={!user.address} />
                 <span>Enregistrer cette adresse dans mon compte</span>
               </label>
+              <label className="ng-check">
+                <input type="checkbox" name="acceptTerms" required />
+                <span>
+                  J’ai lu et j’accepte les{' '}
+                  <a href="/cgv" target="_blank" rel="noreferrer">conditions générales de vente</a> et la{' '}
+                  <a href="/remboursement" target="_blank" rel="noreferrer">politique de remboursement</a>.
+                </span>
+              </label>
+              <Honeypot />
             </div>
             <footer className="ng-cart-foot">
               <dl className="ng-cart-totals">
@@ -479,3 +501,9 @@ export const CartDrawer: React.FC = () => {
 }
 
 export default CartDrawer
+
+/** Identifiant aléatoire d'un envoi de commande */
+function newOrderKey() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
+}

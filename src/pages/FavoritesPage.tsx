@@ -2,15 +2,17 @@ import React from 'react'
 import { ArrowRight, Heart } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import ProductCard from '../components/ProductCard'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 export const FavoritesPage: React.FC = () => {
   const { products, favorites, navigate } = useApp()
   const favoriteProducts = products.filter((p) => favorites.includes(p.id))
-  usePageMeta('Mes favoris')
+  usePageMeta('Mes favoris', 'Les soins NATURE & GRÂCE que vous avez mis de côté.')
 
   return (
     <div className="ng-container ng-subpage">
+      <Breadcrumb items={[{ label: 'Mes favoris' }]} />
       <header className="ng-page-head ng-page-head--left">
         <h1>
           Mes favoris <span>{favoriteProducts.length}</span>

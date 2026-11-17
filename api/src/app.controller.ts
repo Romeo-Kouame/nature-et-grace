@@ -1,20 +1,21 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req, Res, UseGuards,
-  BadRequestException, NotFoundException, UnauthorizedException,
+  Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Query, Req, Res, UseGuards,
+  BadRequestException, Logger, NotFoundException, ServiceUnavailableException, UnauthorizedException,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import {
-  ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsEnum, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateNested,
+  ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsEnum, IsIn, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength, ValidateNested,
 } from 'class-validator'
 import { Type } from 'class-transformer'
 import { Request, Response } from 'express'
 import * as bcrypt from 'bcryptjs'
-import { OrderStatus, Prisma } from '@prisma/client'
-import { AdminGuard, CustomerGuard } from './auth'
+import { OrderStatus, Prisma } from './generated/prisma/client'
+import { AdminGuard, CustomerGuard, checkPassword } from './auth'
 import { PrismaService } from './prisma.service'
 import { GeminiService } from './gemini.service'
-import { RateLimit } from './rate-limit'
-import { decodeImage, orderReference } from './images'
+import { RateLimit, accountLimiter } from './rate-limit'
+import { assertConsent, assertHuman, decodeImage, orderReference, sessionCookieBase } from './images'
+import { normalizePhone } from './customer.controller'
 
 const MINUTE = 60_000
 
@@ -52,6 +53,12 @@ class CreateOrderDto {
   /** Enregistrer cette adresse comme adresse par défaut du compte */
   @IsOptional() @IsBoolean() saveAddress?: boolean
   @IsArray() @ArrayMaxSize(30) @ValidateNested({ each: true }) @Type(() => OrderLineDto) items!: OrderLineDto[]
+  /** Case « J'accepte les conditions générales de vente » */
+  @IsOptional() @IsBoolean() acceptTerms?: boolean
+  /** Identifiant unique de cet envoi (généré par le navigateur) : un double envoi renvoie la même commande */
+  @IsOptional() @IsString() @Matches(/^[A-Za-z0-9-]{8,64}$/) clientKey?: string
+  /** Champ piège anti-robots */
+  @IsOptional() @IsString() @MaxLength(200) website?: string
 }
 class ImageDto {
   @IsString() @MaxLength(6_000_000) image!: string
@@ -84,6 +91,7 @@ class StoreSettingsDto {
   @IsString() @MinLength(2) @MaxLength(1000) waveInstructions!: string
   @IsOptional() @IsString() @MaxLength(120) waveNumber?: string
   @IsOptional() @IsString() @MaxLength(1500) legalInfo?: string
+  @IsOptional() @IsString() @MaxLength(300) storeAddress?: string
   @IsOptional() @IsArray() @ArrayMaxSize(60) @ValidateNested({ each: true }) @Type(() => DeliveryZoneDto) deliveryZones?: DeliveryZoneDto[]
 }
 class CreateReviewDto {
@@ -92,6 +100,14 @@ class CreateReviewDto {
   @IsOptional() @IsString() @MaxLength(80) productSlug?: string
   @IsInt() @Min(1) @Max(5) rating!: number
   @IsString() @MinLength(10) @MaxLength(1000) comment!: string
+  /** Accord pour publier le prénom, la ville et le texte de l'avis */
+  @IsOptional() @IsBoolean() consent?: boolean
+  /** Champ piège anti-robots */
+  @IsOptional() @IsString() @MaxLength(200) website?: string
+}
+class ClientErrorDto {
+  @IsString() @MaxLength(300) message!: string
+  @IsString() @MaxLength(200) path!: string
 }
 class ReviewPublishDto {
   @IsBoolean() published!: boolean
@@ -108,6 +124,7 @@ const parseZones = (value: Prisma.JsonValue): DeliveryZone[] =>
 
 @Controller()
 export class AppController {
+  private readonly clientLogger = new Logger('Navigateur')
   constructor(
     private readonly db: PrismaService,
     private readonly jwt: JwtService,
@@ -128,20 +145,46 @@ export class AppController {
     return this.gemini.generateProductDescription(dto)
   }
 
+  // ───────────── Surveillance ─────────────
+
+  /** Pour un service de surveillance (UptimeRobot, Better Stack…) : 200 si l'API et la base répondent. */
+  @Get('health')
+  @Header('Cache-Control', 'no-store')
+  async health() {
+    try {
+      await this.db.$queryRaw`SELECT 1`
+      return { status: 'ok' }
+    } catch {
+      throw new ServiceUnavailableException({ status: 'error', message: 'Base de données injoignable.' })
+    }
+  }
+
+  /** Erreurs survenues dans le navigateur des visiteurs : journalisées pour être corrigées */
+  @Post('client-errors')
+  @HttpCode(204)
+  @RateLimit('client-error', 20, 10 * MINUTE)
+  clientError(@Body() dto: ClientErrorDto) {
+    this.clientLogger.warn(`Erreur navigateur sur ${dto.path} : ${dto.message}`)
+  }
+
   // ───────────── Boutique (public) ─────────────
 
+  // Les données publiques changent peu : le navigateur peut les garder 1 minute
   @Get('products')
+  @Header('Cache-Control', 'public, max-age=60')
   products() {
     return this.db.product.findMany({ where: { active: true }, orderBy: [{ category: 'asc' }, { name: 'asc' }] })
   }
 
   @Get('store-settings')
+  @Header('Cache-Control', 'public, max-age=60')
   async storeSettings() {
     const settings = await this.db.storeSettings.upsert({ where: { id: 'store' }, create: { id: 'store' }, update: {} })
     return { ...settings, deliveryZones: parseZones(settings.deliveryZones) }
   }
 
   @Get('reviews')
+  @Header('Cache-Control', 'public, max-age=60')
   reviews() {
     return this.db.review.findMany({ where: { published: true }, orderBy: { createdAt: 'desc' }, take: 100 })
   }
@@ -149,6 +192,8 @@ export class AppController {
   @Post('reviews')
   @RateLimit('review', 5, 60 * MINUTE)
   async createReview(@Body() dto: CreateReviewDto) {
+    assertHuman(dto.website)
+    assertConsent(dto.consent, 'Cochez la case pour accepter la publication de votre prénom, de votre ville et de votre avis.')
     const product = dto.productSlug ? await this.db.product.findUnique({ where: { slug: dto.productSlug } }) : null
     await this.db.review.create({
       data: {
@@ -171,12 +216,27 @@ export class AppController {
   @RateLimit('order', 10, 60 * MINUTE)
   async createOrder(@Req() request: Request, @Body() dto: CreateOrderDto) {
     const customerId = (request as Request & { customerId: string }).customerId
+    assertHuman(dto.website)
+    assertConsent(dto.acceptTerms, 'Vous devez accepter les conditions générales de vente pour commander.')
+    // Double clic, réseau qui hésite, renvoi : la même clé renvoie la commande déjà créée
+    if (dto.clientKey) {
+      const existing = await this.db.order.findUnique({ where: { clientKey: dto.clientKey } })
+      if (existing) {
+        if (existing.customerId !== customerId) throw new BadRequestException('Commande invalide. Rechargez la page.')
+        return {
+          id: existing.id, reference: orderReference(existing.id), status: existing.status, totalXof: existing.totalXof,
+          deliveryFeeXof: existing.deliveryFeeXof, deliveryZone: existing.deliveryZone,
+        }
+      }
+    }
     if (!dto.items?.length) throw new BadRequestException('Ajoutez au moins un produit à la commande.')
+    const phone = normalizePhone(dto.phone)
     const uniqueIds = [...new Set(dto.items.map((item) => item.productId))]
     if (uniqueIds.length !== dto.items.length) throw new BadRequestException('Regroupez les quantités d’un même produit.')
     const settings = await this.storeSettings()
     const zone = dto.deliveryZone ? settings.deliveryZones.find((z) => z.name === dto.deliveryZone) : undefined
-    return this.db.$transaction(async (tx) => {
+    try {
+    return await this.db.$transaction(async (tx) => {
       const products = await tx.product.findMany({ where: { id: { in: uniqueIds }, active: true } })
       if (products.length !== uniqueIds.length) throw new BadRequestException('Un produit n’est plus disponible.')
       const lines = dto.items.map((line) => {
@@ -188,9 +248,9 @@ export class AppController {
       const totalXof = lines.reduce((sum, line) => sum + line.product.priceXof! * line.quantity, 0)
       const order = await tx.order.create({
         data: {
-          customerId, customerName: dto.customerName.trim(), phone: dto.phone.trim(), commune: dto.commune.trim(),
+          customerId, customerName: dto.customerName.trim(), phone, commune: dto.commune.trim(),
           address: dto.address.trim(), deliveryNote: dto.deliveryNote?.trim(), totalXof,
-          deliveryZone: zone?.name ?? null, deliveryFeeXof: zone?.feeXof ?? null,
+          deliveryZone: zone?.name ?? null, deliveryFeeXof: zone?.feeXof ?? null, clientKey: dto.clientKey ?? null,
           items: { create: lines.map(({ product, quantity }) => ({
             productId: product.id, productName: product.name, productSize: product.size,
             unitPriceXof: product.priceXof!, quantity,
@@ -212,6 +272,19 @@ export class AppController {
         deliveryFeeXof: order.deliveryFeeXof, deliveryZone: order.deliveryZone,
       }
     })
+    } catch (error) {
+      // Deux envois simultanés avec la même clé : le second récupère la commande créée par le premier
+      if (dto.clientKey && error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const existing = await this.db.order.findUnique({ where: { clientKey: dto.clientKey } })
+        if (existing && existing.customerId === customerId) {
+          return {
+            id: existing.id, reference: orderReference(existing.id), status: existing.status, totalXof: existing.totalXof,
+            deliveryFeeXof: existing.deliveryFeeXof, deliveryZone: existing.deliveryZone,
+          }
+        }
+      }
+      throw error
+    }
   }
 
   /** Le client joint la capture de son paiement Wave ; elle n'est visible que depuis l'administration. */
@@ -224,8 +297,13 @@ export class AppController {
     if (!order || order.customerId !== (request as Request & { customerId: string }).customerId) throw new NotFoundException('Commande introuvable.')
     if (!['pending', 'payment_review'].includes(order.status)) throw new BadRequestException('Cette commande est déjà confirmée : envoyez votre preuve sur WhatsApp.')
     const { mime, data } = decodeImage(dto.image)
-    const image = await this.db.image.create({ data: { mime, data, private: true } })
-    await this.db.order.update({ where: { id }, data: { paymentProofUrl: `/admin/images/${image.id}`, status: 'payment_review' } })
+    // Une seule capture par commande : la nouvelle remplace l'ancienne, qui est supprimée
+    const previousId = order.paymentProofUrl?.split('/').pop()
+    await this.db.$transaction(async (tx) => {
+      const image = await tx.image.create({ data: { mime, data, private: true } })
+      await tx.order.update({ where: { id }, data: { paymentProofUrl: `/admin/images/${image.id}`, status: 'payment_review' } })
+      if (previousId) await tx.image.deleteMany({ where: { id: previousId, private: true } })
+    })
     return { message: 'Preuve de paiement reçue. La boutique va la vérifier.' }
   }
 
@@ -235,9 +313,16 @@ export class AppController {
   @HttpCode(200)
   @RateLimit('login', 8, 15 * MINUTE)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
-    const admin = await this.db.admin.findUnique({ where: { email: dto.email.trim().toLowerCase() } })
-    if (!admin || !(await bcrypt.compare(dto.password, admin.passwordHash))) throw new UnauthorizedException('Adresse courriel ou mot de passe invalide.')
-    const token = await this.jwt.signAsync({ sub: admin.id, version: admin.updatedAt.getTime() })
+    const email = dto.email.trim().toLowerCase()
+    const limiterKey = `admin-account:${email}`
+    accountLimiter.assertNotBlocked(limiterKey, 8)
+    const admin = await this.db.admin.findUnique({ where: { email } })
+    if (!(await checkPassword(dto.password, admin?.passwordHash)) || !admin) {
+      accountLimiter.recordFailure(limiterKey, 15 * MINUTE)
+      throw new UnauthorizedException('Adresse courriel ou mot de passe invalide.')
+    }
+    accountLimiter.reset(limiterKey)
+    const token = await this.jwt.signAsync({ sub: admin.id, kind: 'admin', version: admin.updatedAt.getTime() })
     response.cookie('ng_admin', token, this.cookieOptions())
     return { email: admin.email }
   }
@@ -262,7 +347,7 @@ export class AppController {
     if (!admin) throw new NotFoundException('Compte administrateur introuvable.')
     if (!(await bcrypt.compare(dto.currentPassword, admin.passwordHash))) throw new UnauthorizedException('Mot de passe actuel incorrect.')
     const updated = await this.db.admin.update({ where: { id: adminId }, data: { passwordHash: await bcrypt.hash(dto.newPassword, 12) } })
-    const token = await this.jwt.signAsync({ sub: updated.id, version: updated.updatedAt.getTime() })
+    const token = await this.jwt.signAsync({ sub: updated.id, kind: 'admin', version: updated.updatedAt.getTime() })
     response.cookie('ng_admin', token, this.cookieOptions())
     return { message: 'Mot de passe modifié.' }
   }
@@ -319,8 +404,14 @@ export class AppController {
 
   @Get('admin/orders')
   @UseGuards(AdminGuard)
-  async adminOrders() {
-    const orders = await this.db.order.findMany({ include: { items: true }, orderBy: { createdAt: 'desc' } })
+  async adminOrders(@Query('all') all?: string) {
+    // Par défaut : les commandes en cours + celles des 3 derniers mois, pour garder la liste légère.
+    // `?all=1` renvoie tout l'historique (bouton « Afficher aussi les plus anciennes »).
+    const since = new Date(Date.now() - 90 * 24 * 60 * MINUTE)
+    const where: Prisma.OrderWhereInput = all === '1'
+      ? {}
+      : { OR: [{ createdAt: { gte: since } }, { status: { in: ['pending', 'payment_review', 'confirmed', 'preparing', 'shipped'] } }] }
+    const orders = await this.db.order.findMany({ where, include: { items: true }, orderBy: { createdAt: 'desc' } })
     return orders.map((order) => ({ ...order, reference: orderReference(order.id) }))
   }
 
@@ -356,7 +447,7 @@ export class AppController {
     if (new Set(names).size !== names.length) throw new BadRequestException('Deux zones de livraison portent le même nom.')
     const data = {
       whatsappNumber, deliveryCommunes: dto.deliveryCommunes, deliveryInfo: dto.deliveryInfo, waveInstructions: dto.waveInstructions,
-      waveNumber: dto.waveNumber?.trim() ?? '', legalInfo: dto.legalInfo?.trim() ?? '', deliveryZones: deliveryZones as Prisma.InputJsonValue,
+      waveNumber: dto.waveNumber?.trim() ?? '', legalInfo: dto.legalInfo?.trim() ?? '', storeAddress: dto.storeAddress?.trim() ?? '', deliveryZones: deliveryZones as Prisma.InputJsonValue,
     }
     const saved = await this.db.storeSettings.upsert({ where: { id: 'store' }, create: { id: 'store', ...data }, update: data })
     return { ...saved, deliveryZones: parseZones(saved.deliveryZones) }
@@ -413,7 +504,6 @@ export class AppController {
   }
 
   private cookieOptions() {
-    const secure = process.env.COOKIE_SECURE === 'true'
-    return { httpOnly: true, secure, sameSite: secure ? 'none' as const : 'lax' as const, path: '/', maxAge: 8 * 60 * 60 * 1000 }
+    return { ...sessionCookieBase(), maxAge: 8 * 60 * 60 * 1000 }
   }
 }

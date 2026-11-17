@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  BookOpen, ChevronDown, CircleHelp, FileText, Heart, Home, LayoutGrid, Leaf, LogOut, Menu, MessageCircle, Moon, Package, Search,
+  BookOpen, ChevronDown, CircleHelp, FileText, Heart, Home, LayoutGrid, Leaf, LogOut, Menu, MessageCircle, Moon, Package,
   ShoppingCart, Sparkles, Star, Sun, Truck, User as UserIcon, X,
 } from 'lucide-react'
 import { useApp, formatPhone } from '../context/AppContext'
+import SearchBox from './SearchBox'
 
 const NAV_LINKS = [
   { path: '/', label: 'Accueil', icon: Home },
@@ -33,15 +34,12 @@ function useDropdown() {
 
 export const Navbar: React.FC = () => {
   const {
-    currentPath, navigate, theme, toggleTheme, cartCount, openCart, favorites, searchTerm, setSearchTerm, waLink, setAdvisorOpen,
+    currentPath, navigate, theme, toggleTheme, cartCount, openCart, favorites, waLink, setAdvisorOpen,
     user, logout, goToLogin,
   } = useApp()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [searchInput, setSearchInput] = useState(searchTerm)
   const account = useDropdown()
   const help = useDropdown()
-
-  useEffect(() => setSearchInput(searchTerm), [searchTerm])
 
   useEffect(() => {
     if (!drawerOpen) return
@@ -49,12 +47,6 @@ export const Navbar: React.FC = () => {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [drawerOpen])
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSearchTerm(searchInput.trim())
-    navigate('/boutique')
-  }
 
   const go = (path: string) => {
     navigate(path)
@@ -73,22 +65,6 @@ export const Navbar: React.FC = () => {
 
   const isActive = (path: string) => (path === '/boutique' ? currentPath === path || currentPath.startsWith('/produit/') : currentPath === path)
   const firstName = user?.name.split(' ')[0]
-
-  const searchForm = (extraClass = '') => (
-    <form className={`ng-search ${extraClass}`} onSubmit={handleSearchSubmit} role="search">
-      <Search size={18} />
-      <input
-        type="search"
-        placeholder="Rechercher un soin : beurre de cacao, savon noir…"
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        aria-label="Rechercher un produit"
-      />
-      <button type="submit" aria-label="Rechercher">
-        <Search size={17} />
-      </button>
-    </form>
-  )
 
   return (
     <>
@@ -125,7 +101,7 @@ export const Navbar: React.FC = () => {
               </span>
             </a>
 
-            {searchForm()}
+            <SearchBox />
 
             <div className="ng-actions">
               {/* COMPTE */}
@@ -255,7 +231,7 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {searchForm('ng-search-mobile')}
+          <SearchBox className="ng-search-mobile" />
 
           <nav className="ng-nav" aria-label="Navigation principale">
             {NAV_LINKS.map((link) => (

@@ -24,7 +24,9 @@
   --ng-line: #ebefec;
   --ng-ink: #0f1d17;
   --ng-text: #3b4a43;
-  --ng-muted: #7a8781;
+  --ng-wa-text: #167a45;
+  --ng-gold-text: #86672a;
+  --ng-muted: #5f6b66; /* contraste ≥ 4,5:1 sur fond blanc, gris et crème (WCAG AA) */
 
   /* Formes & ombres */
   --ng-r-sm: 10px;
@@ -71,6 +73,8 @@ html.dark {
   --ng-line: #1f2e27;
   --ng-ink: #eef4f0;
   --ng-text: #c3d1ca;
+  --ng-wa-text: #3fbf77;
+  --ng-gold-text: var(--ng-gold-600);
   --ng-muted: #8a9a92;
   --ng-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --ng-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
@@ -366,7 +370,7 @@ html.dark .ng-promo { background: #0f2a1f; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--ng-gold-600);
+  color: var(--ng-gold-text);
   font-weight: 600;
 }
 
@@ -527,7 +531,7 @@ html.dark .ng-promo { background: #0f2a1f; }
   padding: 6px 12px;
   border-radius: 99px;
   background: var(--ng-gold-50);
-  color: var(--ng-gold-600);
+  color: var(--ng-gold-text);
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -598,7 +602,7 @@ html.dark .ng-promo { background: #0f2a1f; }
   display: grid;
   place-items: center;
   background: var(--ng-gold-50);
-  color: var(--ng-gold-600);
+  color: var(--ng-gold-text);
 }
 .ng-hero-trust {
   grid-column: 1 / -1;
@@ -870,7 +874,7 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
 .ng-footer-cta {
   display: inline-flex; align-items: center; gap: 8px;
   height: 44px; padding: 0 18px; border-radius: 12px;
-  background: #1f9d55; color: #fff; font-size: 14px; font-weight: 600;
+  background: #167a45; color: #fff; font-size: 14px; font-weight: 600;
   transition: transform 0.25s var(--ng-ease), background 0.2s;
 }
 .ng-footer-cta:hover { background: #22b061; transform: translateY(-2px); }
@@ -899,8 +903,8 @@ html.dark .ng-footer-main { background: #08150f; border-top: 1px solid var(--ng-
   padding: 20px 0 88px; border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 12.5px; color: #8fb0a1;
 }
-.ng-footer-admin { display: inline-flex; align-items: center; gap: 3px; color: #8fb0a1; opacity: 0.7; }
-.ng-footer-admin:hover { opacity: 1; color: #fff; }
+.ng-footer-admin { display: inline-flex; align-items: center; gap: 3px; color: #a9c4b7; }
+.ng-footer-admin:hover { color: #fff; }
 
 /* =====================================================================
    PANIER, TOAST, BOUTONS FLOTTANTS (restylage des éléments existants)
@@ -1074,4 +1078,31 @@ html.dark .ng-chip.active { color: #06140e; }
   .ng-toolbar { position: static; flex-direction: column; align-items: stretch; margin: 0 calc(-1 * var(--ng-gutter)) 12px; padding: 8px var(--ng-gutter); }
   .ng-sort { align-self: flex-start; }
 }
-.ng-wa-btn { color: #1f9d55 !important; }
+.ng-wa-btn { color: var(--ng-wa-text) !important; }
+
+/* ── Recherche en direct : suggestions sous la barre ── */
+.ng-search { position: relative; }
+.ng-search input::-webkit-search-cancel-button { display: none; }
+.ng-search .ng-search-clear { width: 30px; height: 30px; border-radius: 50%; background: transparent; color: var(--ng-muted); }
+.ng-search .ng-search-clear:hover { background: var(--ng-subtle); color: var(--ng-ink); }
+.ng-suggest {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 80;
+  background: var(--ng-surface); border: 1px solid var(--ng-line); border-radius: 14px;
+  box-shadow: var(--ng-shadow-md); overflow: hidden;
+  animation: ng-fade 0.15s var(--ng-ease) both;
+}
+.ng-suggest ul { list-style: none; margin: 0; padding: 6px; max-height: min(60vh, 420px); overflow-y: auto; }
+.ng-suggest-item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.ng-suggest-item.active { background: var(--ng-subtle); }
+.ng-suggest-img { width: 44px; height: 44px; border-radius: 9px; overflow: hidden; flex-shrink: 0; background: var(--ng-subtle); }
+.ng-suggest-img > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ng-suggest-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.ng-suggest-text b { font-size: 14px; color: var(--ng-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ng-suggest-text small { font-size: 12px; color: var(--ng-muted); }
+.ng-suggest-price { font-size: 13.5px; font-weight: 700; color: var(--ng-ink); white-space: nowrap; }
+.ng-search .ng-suggest-all {
+  width: 100%; height: auto; border-radius: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px; border-top: 1px solid var(--ng-line); background: transparent; color: var(--ng-emerald); font-size: 13.5px; font-weight: 600;
+}
+.ng-search .ng-suggest-all:hover { background: var(--ng-subtle); }
+.ng-suggest-empty { margin: 0; padding: 16px; font-size: 13.5px; color: var(--ng-muted); }

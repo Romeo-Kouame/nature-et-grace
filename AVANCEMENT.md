@@ -43,6 +43,19 @@ Boutique en ligne de soins naturels : présentation des produits, commande sur l
 - Génération IA des fiches réservée à l'admin ; aucune clé IA dans le navigateur.
 - Images contrôlées (format réel, taille) ; preuves Wave visibles uniquement par l'admin.
 
+### Conformité aux bonnes pratiques (`CLAUDE.md`)
+
+- Consentements vérifiés par le serveur (CGV à l'inscription et à la commande, publication des avis), champ piège anti-robots.
+- Une commande envoyée deux fois n'est créée qu'une fois ; jamais de survente, même avec des commandes simultanées.
+- Le client peut supprimer son compte ; ses commandes sont gardées sans données personnelles.
+- Pages politique de remboursement et politique cookies ; bandeau cookies et mesure d'audience seulement si un identifiant Google Analytics est configuré.
+- Sitemap et robots.txt générés à chaque build, fil d'Ariane, données Google de l'entreprise, description propre à chaque page.
+- Écran de secours en cas de plantage, erreurs journalisées, page de surveillance `/api/health`, HTTPS et en-têtes de sécurité en production.
+- Plafond quotidien d'appels IA, cache, index, sauvegardes avec test de restauration.
+- Contrastes conformes WCAG AA (audit axe sans erreur, clair et sombre), promesses non prouvables retirées des textes.
+- Prisma 7 : plus aucune faille connue dans les dépendances de production.
+- Documents de référence dans `docs/`.
+
 ## Vérifications faites
 
 Testé en local sur une base PostgreSQL de test :

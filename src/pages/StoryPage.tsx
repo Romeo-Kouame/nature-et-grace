@@ -1,6 +1,7 @@
 import React from 'react'
 import { ArrowRight, HeartHandshake, Leaf, ShieldCheck, Sparkles } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { PHOTOS } from '../data/products'
 
@@ -33,6 +34,7 @@ export const StoryPage: React.FC = () => {
 
   return (
     <div className="ng-container ng-subpage">
+      <Breadcrumb items={[{ label: 'Notre histoire' }]} />
       <section className="ng-story-hero">
         <div>
           <span className="ng-eyebrow">
@@ -95,7 +97,7 @@ export const StoryPage: React.FC = () => {
 
       <section className="ng-story-split ng-story-split--reverse" data-reveal>
         <div>
-          <h2>Le meilleur du cacao ivoirien</h2>
+          <h2>Le cacao ivoirien, de la cabosse au soin</h2>
           <p>
             Nous travaillons le cacao de Soubré, de Daloa et des grandes régions productrices. De la cabosse au pot, chaque
             étape est pensée pour garder un beurre brut, sans additif inutile.

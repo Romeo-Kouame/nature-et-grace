@@ -61,7 +61,7 @@ export const PRODUCT_DETAILS: Record<string, ProductDetails> = {
       'Sur le corps : massez directement pour un fini soyeux et lumineux',
     ],
     ingredients: '100% Huile de noix de coco vierge de première pression.',
-    origin: 'Origine naturelle garantie.',
+    origin: 'Origine naturelle.',
   },
   'huile-de-neem': {
     benefits: [

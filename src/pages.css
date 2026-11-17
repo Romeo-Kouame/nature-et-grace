@@ -57,11 +57,11 @@
 .ng-qty span { min-width: 28px; text-align: center; font-weight: 700; color: var(--ng-ink); }
 .ng-pdp-add { flex: 1; height: 50px; }
 .ng-pdp-out { margin: 6px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--ng-subtle); font-size: 14px; color: var(--ng-text); }
-.ng-btn--wa { height: 50px; background: #1f9d55; color: #fff; }
+.ng-btn--wa { height: 50px; background: #167a45; color: #fff; }
 .ng-btn--wa:hover { background: #22b061; transform: translateY(-1px); }
 .ng-pdp-ai { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px dashed color-mix(in srgb, var(--ng-gold) 60%, transparent); border-radius: 12px; background: var(--ng-gold-50); color: var(--ng-text); font-size: 13.5px; text-align: left; cursor: pointer; transition: border-color 0.2s; }
-.ng-pdp-ai svg { color: var(--ng-gold-600); flex-shrink: 0; }
-.ng-pdp-ai b { color: var(--ng-gold-600); }
+.ng-pdp-ai svg { color: var(--ng-gold-text); flex-shrink: 0; }
+.ng-pdp-ai b { color: var(--ng-gold-text); }
 .ng-pdp-ai:hover { border-color: var(--ng-gold); }
 .ng-pdp-trust { list-style: none; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid var(--ng-line); display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 13px; color: var(--ng-text); }
 .ng-pdp-trust li { display: flex; align-items: center; gap: 8px; }
@@ -110,8 +110,8 @@ html.dark .ng-steps li > span { color: #06140e; }
 .ng-info-card b { font-size: 16px; color: var(--ng-ink); }
 .ng-info-card p { margin: 0; font-size: 13.5px; color: var(--ng-muted); }
 .ng-info-card strong { margin-top: 10px; font-size: 14px; color: var(--ng-ink); }
-.ng-info-card--wa > span { background: #e7f6ed; color: #1f9d55; }
-.ng-info-card--wa strong { color: #1f9d55; }
+.ng-info-card--wa > span { background: #e7f6ed; color: #167a45; }
+.ng-info-card--wa strong { color: var(--ng-wa-text); }
 .ng-info-card--wa:hover { transform: translateY(-4px); box-shadow: var(--ng-shadow-md); }
 .ng-contact-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: start; }
 
@@ -221,3 +221,23 @@ html.dark .ng-steps li > span { color: #06140e; }
   .ng-modal-overlay { place-items: end center; padding: 0; }
   .ng-modal { width: 100%; border-radius: 24px 24px 0 0; max-height: 92vh; padding-bottom: calc(24px + env(safe-area-inset-bottom)); animation: ng-sheet-up 0.4s var(--ng-ease); }
 }
+
+/* Fil d'Ariane en liste de liens */
+.ng-breadcrumb ol { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; margin: 0; padding: 0; list-style: none; min-width: 0; }
+.ng-breadcrumb li { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.ng-breadcrumb li:last-child { overflow: hidden; }
+.ng-breadcrumb a { color: var(--ng-muted); white-space: nowrap; text-decoration: none; }
+.ng-breadcrumb a:hover { color: var(--ng-emerald); text-decoration: underline; }
+.ng-shop > .ng-breadcrumb { margin-bottom: 14px; }
+
+/* Carte Google Maps (page Contact) */
+.ng-map { display: grid; gap: 14px; }
+.ng-map-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.ng-map-head .ng-h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.ng-map-head p { margin: 4px 0 0; }
+.ng-map-frame, .ng-map-placeholder { width: 100%; height: 320px; border: 1px solid var(--ng-line); border-radius: var(--ng-r-lg, 18px); }
+.ng-map-placeholder { display: grid; place-content: center; justify-items: center; gap: 6px; background: var(--ng-subtle); color: var(--ng-ink); cursor: pointer; font: inherit; }
+.ng-map-placeholder svg { color: var(--ng-emerald); }
+.ng-map-placeholder small { color: var(--ng-muted); }
+.ng-map-placeholder:hover { border-color: var(--ng-emerald); }
+@media (max-width: 860px) { .ng-map-frame, .ng-map-placeholder { height: 240px; } }

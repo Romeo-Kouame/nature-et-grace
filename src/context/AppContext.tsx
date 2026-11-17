@@ -54,8 +54,10 @@ interface AppContextType {
   /** true une fois la session vérifiée auprès du serveur */
   authReady: boolean
   login: (identifier: string, password: string) => Promise<void>
-  register: (data: { name: string; phone: string; email?: string; password: string }) => Promise<void>
+  register: (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string }) => Promise<void>
   logout: () => Promise<void>
+  /** Supprime définitivement le compte (mot de passe demandé) */
+  deleteAccount: (password: string) => Promise<void>
   setUser: (user: ApiCustomer) => void
   /** Ouvre le panier, ou envoie vers la connexion puis rouvre le panier après coup */
   openCart: () => void
@@ -338,7 +340,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     afterAuth(customer, `Bonjour ${customer.name.split(' ')[0]} !`)
   }
 
-  const register = async (data: { name: string; phone: string; email?: string; password: string }) => {
+  const register = async (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string }) => {
     const customer = await api<ApiCustomer>('/customer/register', { method: 'POST', body: JSON.stringify(data) })
     afterAuth(customer, `Bienvenue ${customer.name.split(' ')[0]}, votre compte est créé !`)
   }
@@ -349,6 +351,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCartOpen(false)
     showToast('Vous êtes déconnecté(e).')
     if (['/compte', '/commandes'].includes(window.location.pathname)) navigate('/')
+  }
+
+  const deleteAccount = async (password: string) => {
+    const res = await api<{ message: string }>('/customer/me', { method: 'DELETE', body: JSON.stringify({ password }) })
+    setUser(null)
+    setCartOpen(false)
+    clearCart()
+    showToast(res.message)
+    navigate('/')
   }
 
   const openCart = () => {
@@ -398,6 +409,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         login,
         register,
         logout,
+        deleteAccount,
         setUser,
         openCart,
         goToLogin,

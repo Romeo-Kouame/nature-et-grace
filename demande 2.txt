@@ -1,0 +1,3 @@
+Remplir la base dans l'admin. Renseignez les stocks des 3 produits actifs (actuellement à 0, donc affichés « Rupture de stock »). Activez les huiles avec leur prix et créez le coffret s'il doit être en vente.
+Passer une commande test. Je n'ai pas pu la tester, faute de base de données sur ce poste. Vérifiez qu'elle apparaît bien dans l'admin.
+Prochaine étape quand vous voulez : refaire les pages restantes (fiche produit, avis, histoire, contact, favoris, fenêtres de connexion et du conseiller IA).

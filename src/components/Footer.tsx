@@ -7,6 +7,8 @@ const LEGAL_LINKS = [
   { path: '/mentions-legales', label: 'Mentions légales' },
   { path: '/cgv', label: 'Conditions de vente' },
   { path: '/confidentialite', label: 'Confidentialité' },
+  { path: '/remboursement', label: 'Retours et remboursements' },
+  { path: '/cookies', label: 'Cookies' },
 ]
 
 export const Footer: React.FC = () => {
