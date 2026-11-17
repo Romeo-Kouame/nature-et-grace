@@ -23,6 +23,14 @@ export class AllErrorsFilter implements ExceptionFilter {
       return
     }
 
+    // Erreurs du lecteur de requêtes (corps trop lourd, JSON mal formé) : erreurs du visiteur, pas du serveur
+    const parserStatus = (exception as { status?: unknown; type?: unknown } | null)?.status
+    if (typeof parserStatus === 'number' && parserStatus >= 400 && parserStatus < 500) {
+      const message = parserStatus === 413 ? 'Envoi trop volumineux.' : 'Requête invalide.'
+      response.status(parserStatus).json({ statusCode: parserStatus, message })
+      return
+    }
+
     const stack = exception instanceof Error ? exception.stack : String(exception)
     this.logger.error(`${request.method} ${request.path} → 500`, stack)
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({

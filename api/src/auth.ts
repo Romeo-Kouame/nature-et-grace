@@ -1,6 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
+import { createHmac } from 'node:crypto'
 import { Request } from 'express'
+import * as bcrypt from 'bcryptjs'
 import { PrismaService } from './prisma.service'
 
 @Injectable()
@@ -11,7 +13,8 @@ export class AdminGuard implements CanActivate {
     const token = request.cookies?.['ng_admin']
     if (!token) throw new UnauthorizedException('Connexion administrateur requise.')
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string; version: number }>(token)
+      const payload = await this.jwt.verifyAsync<{ sub: string; kind: string; version: number }>(token)
+      if (payload.kind !== 'admin') throw new Error('wrong kind')
       const admin = await this.prisma.admin.findUnique({ where: { id: payload.sub } })
       if (!admin || admin.updatedAt.getTime() !== payload.version) throw new Error('invalid session')
       const adminRequest = request as Request & { adminId: string }
@@ -44,5 +47,18 @@ export class CustomerGuard implements CanActivate {
   }
 }
 
-/** Empreinte du mot de passe glissée dans la session : changer de mot de passe déconnecte les autres appareils. */
-export const customerSessionVersion = (passwordHash: string) => passwordHash.slice(-12)
+/**
+ * Empreinte du mot de passe glissée dans la session : changer de mot de passe déconnecte les autres appareils.
+ * C'est un HMAC du hachage (clé `JWT_SECRET`) : la session ne révèle rien du mot de passe haché.
+ */
+export const customerSessionVersion = (passwordHash: string) =>
+  createHmac('sha256', process.env.JWT_SECRET ?? '').update(passwordHash).digest('base64url').slice(0, 22)
+
+/** Hachage factice : la vérification prend le même temps, que le compte existe ou non. */
+const DUMMY_HASH = bcrypt.hashSync('compte-inexistant-pour-egaliser-le-temps', 12)
+
+/** Vérifie le mot de passe en temps constant vis-à-vis de l'existence du compte. */
+export async function checkPassword(password: string, passwordHash: string | undefined | null): Promise<boolean> {
+  const ok = await bcrypt.compare(password, passwordHash ?? DUMMY_HASH)
+  return ok && Boolean(passwordHash)
+}

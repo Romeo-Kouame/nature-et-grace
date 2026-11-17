@@ -4,13 +4,14 @@ import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength, MinLength } from '
 import { Request, Response } from 'express'
 import * as bcrypt from 'bcryptjs'
 import { Customer, Prisma } from './generated/prisma/client'
-import { CustomerGuard, customerSessionVersion } from './auth'
+import { CustomerGuard, checkPassword, customerSessionVersion } from './auth'
 import { PrismaService } from './prisma.service'
-import { RateLimit } from './rate-limit'
-import { assertConsent, assertHuman, orderReference } from './images'
+import { RateLimit, accountLimiter } from './rate-limit'
+import { assertConsent, assertHuman, orderReference, sessionCookieBase } from './images'
 
 const MINUTE = 60_000
 const COOKIE = 'ng_customer'
+const ACCOUNT_MAX_FAILURES = 10
 
 class RegisterDto {
   @IsString() @MinLength(2) @MaxLength(80) name!: string
@@ -83,13 +84,22 @@ export class CustomerController {
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const id = dto.identifier.trim()
     let customer: Customer | null = null
-    if (id.includes('@')) customer = await this.db.customer.findUnique({ where: { email: id.toLowerCase() } })
+    let accountKey = id.toLowerCase()
+    if (id.includes('@')) customer = await this.db.customer.findUnique({ where: { email: accountKey } })
     else {
-      try { customer = await this.db.customer.findUnique({ where: { phone: normalizePhone(id) } }) } catch { customer = null }
+      try {
+        accountKey = normalizePhone(id)
+        customer = await this.db.customer.findUnique({ where: { phone: accountKey } })
+      } catch { customer = null }
     }
-    if (!customer || !(await bcrypt.compare(dto.password, customer.passwordHash))) {
+    // Limite par compte visé, en plus de la limite par adresse IP
+    const limiterKey = `customer-account:${accountKey}`
+    accountLimiter.assertNotBlocked(limiterKey, ACCOUNT_MAX_FAILURES)
+    if (!(await checkPassword(dto.password, customer?.passwordHash)) || !customer) {
+      accountLimiter.recordFailure(limiterKey, 15 * MINUTE)
       throw new UnauthorizedException('Numéro (ou e-mail) ou mot de passe incorrect.')
     }
+    accountLimiter.reset(limiterKey)
     await this.startSession(customer, response)
     return publicCustomer(customer)
   }
@@ -187,7 +197,6 @@ export class CustomerController {
   }
 
   private cookieOptions() {
-    const secure = process.env.COOKIE_SECURE === 'true'
-    return { httpOnly: true, secure, sameSite: secure ? ('none' as const) : ('lax' as const), path: '/', maxAge: 30 * 24 * 60 * 60 * 1000 }
+    return { ...sessionCookieBase(), maxAge: 30 * 24 * 60 * 60 * 1000 }
   }
 }

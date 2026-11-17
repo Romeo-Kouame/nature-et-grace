@@ -44,6 +44,7 @@ Tous les textes respectent un contraste d'au moins 4,5:1 (vérifié avec axe, no
 - **Boutique** : titre et nombre de produits, puces de rayons, tri. Vue « Tout » sans recherche : une rangée par rayon. Rayon, recherche ou tri : grille.
 - **Fiche produit** : galerie, prix, stock, quantité, ajout au panier, WhatsApp, partage, bienfaits, utilisation, composition, avis, « Vous aimerez aussi ».
 - **Panier** : tiroir latéral en 3 étapes (panier, coordonnées, confirmation).
+- **Connexion** (`/connexion`) : page autonome sur deux colonnes séparées par un filet. À gauche : retour à la boutique, logo, grand titre « Prenez soin de vous naturellement. » et montage de photos du terroir. À droite : champs arrondis, bouton vert plein « Se connecter », « Mot de passe oublié ? », séparateur, bouton contour « Créer un nouveau compte », rappel des conditions, aide WhatsApp. Sur téléphone, le titre passe au-dessus du formulaire et les photos sont masquées.
 - **Compte / Commandes** : cartes de formulaires ; suivi visuel en 5 étapes.
 - **Contact** : cartes WhatsApp / Wave / Livraison, tableau des zones, carte et itinéraire, FAQ.
 

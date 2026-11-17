@@ -26,6 +26,7 @@ import './pages.css'
 import './checkout.css'
 import './account.css'
 import './visual.css'
+import './login.css'
 
 function renderPage(path: string) {
   const clean = path.replace(/\/+$/, '') || '/'
@@ -91,6 +92,24 @@ function AppContent() {
       ...(settings.storeAddress ? { streetAddress: settings.storeAddress } : {}),
     },
   })
+
+  // Page de connexion : page autonome, sans l'en-tête ni le pied de page du site (comme les grandes boutiques en ligne)
+  if ((currentPath.replace(/\/+$/, '') || '/') === '/connexion') {
+    return (
+      <div className="app-shell app-shell--bare">
+        <main id="contenu" key={currentPath}>
+          <LoginPage />
+        </main>
+        {toastMessage && (
+          <div className="ng-toast" role="status">
+            <Check size={16} />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+        <CookieBanner />
+      </div>
+    )
+  }
 
   return (
     <div className="app-shell">

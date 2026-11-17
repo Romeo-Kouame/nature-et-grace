@@ -11,7 +11,7 @@
 | `/histoire` | Notre histoire | Public |
 | `/contact` | Contact, livraison, FAQ, carte | Public |
 | `/favoris` | Favoris (sur l'appareil) | Public |
-| `/connexion`, `/connexion?inscription` | Connexion / création de compte | Public |
+| `/connexion`, `/connexion?inscription` | Connexion / création de compte (page autonome, sans menu) | Public |
 | `/compte` | Votre compte | Client connecté |
 | `/commandes` | Vos commandes | Client connecté |
 | `/mentions-legales`, `/cgv`, `/confidentialite`, `/remboursement`, `/cookies` | Pages légales | Public |
@@ -45,6 +45,10 @@ En attente de confirmation ──► Paiement en vérification ──► Confirm
 ```
 
 ## Compte client
+
+- « Se connecter » (menu compte, menu mobile, panier, pages réservées) → page `/connexion` autonome : la marque à gauche, le formulaire à droite ; bouton « Retour à la boutique ».
+- « Créer un nouveau compte » bascule sur le formulaire d'inscription sur la même page (`/connexion?inscription`) ; « J'ai déjà un compte » revient à la connexion.
+- « Mot de passe oublié ? » ouvre WhatsApp (pas encore de service d'envoi de SMS ou d'e-mails).
 
 - Inscription réussie → toast de bienvenue, retour à la page demandée (ou au panier).
 - Mauvais identifiants → un seul message générique.

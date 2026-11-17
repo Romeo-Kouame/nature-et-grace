@@ -10,11 +10,12 @@ import { Type } from 'class-transformer'
 import { Request, Response } from 'express'
 import * as bcrypt from 'bcryptjs'
 import { OrderStatus, Prisma } from './generated/prisma/client'
-import { AdminGuard, CustomerGuard } from './auth'
+import { AdminGuard, CustomerGuard, checkPassword } from './auth'
 import { PrismaService } from './prisma.service'
 import { GeminiService } from './gemini.service'
-import { RateLimit } from './rate-limit'
-import { assertConsent, assertHuman, decodeImage, orderReference } from './images'
+import { RateLimit, accountLimiter } from './rate-limit'
+import { assertConsent, assertHuman, decodeImage, orderReference, sessionCookieBase } from './images'
+import { normalizePhone } from './customer.controller'
 
 const MINUTE = 60_000
 
@@ -229,6 +230,7 @@ export class AppController {
       }
     }
     if (!dto.items?.length) throw new BadRequestException('Ajoutez au moins un produit à la commande.')
+    const phone = normalizePhone(dto.phone)
     const uniqueIds = [...new Set(dto.items.map((item) => item.productId))]
     if (uniqueIds.length !== dto.items.length) throw new BadRequestException('Regroupez les quantités d’un même produit.')
     const settings = await this.storeSettings()
@@ -246,7 +248,7 @@ export class AppController {
       const totalXof = lines.reduce((sum, line) => sum + line.product.priceXof! * line.quantity, 0)
       const order = await tx.order.create({
         data: {
-          customerId, customerName: dto.customerName.trim(), phone: dto.phone.trim(), commune: dto.commune.trim(),
+          customerId, customerName: dto.customerName.trim(), phone, commune: dto.commune.trim(),
           address: dto.address.trim(), deliveryNote: dto.deliveryNote?.trim(), totalXof,
           deliveryZone: zone?.name ?? null, deliveryFeeXof: zone?.feeXof ?? null, clientKey: dto.clientKey ?? null,
           items: { create: lines.map(({ product, quantity }) => ({
@@ -295,8 +297,13 @@ export class AppController {
     if (!order || order.customerId !== (request as Request & { customerId: string }).customerId) throw new NotFoundException('Commande introuvable.')
     if (!['pending', 'payment_review'].includes(order.status)) throw new BadRequestException('Cette commande est déjà confirmée : envoyez votre preuve sur WhatsApp.')
     const { mime, data } = decodeImage(dto.image)
-    const image = await this.db.image.create({ data: { mime, data, private: true } })
-    await this.db.order.update({ where: { id }, data: { paymentProofUrl: `/admin/images/${image.id}`, status: 'payment_review' } })
+    // Une seule capture par commande : la nouvelle remplace l'ancienne, qui est supprimée
+    const previousId = order.paymentProofUrl?.split('/').pop()
+    await this.db.$transaction(async (tx) => {
+      const image = await tx.image.create({ data: { mime, data, private: true } })
+      await tx.order.update({ where: { id }, data: { paymentProofUrl: `/admin/images/${image.id}`, status: 'payment_review' } })
+      if (previousId) await tx.image.deleteMany({ where: { id: previousId, private: true } })
+    })
     return { message: 'Preuve de paiement reçue. La boutique va la vérifier.' }
   }
 
@@ -306,9 +313,16 @@ export class AppController {
   @HttpCode(200)
   @RateLimit('login', 8, 15 * MINUTE)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
-    const admin = await this.db.admin.findUnique({ where: { email: dto.email.trim().toLowerCase() } })
-    if (!admin || !(await bcrypt.compare(dto.password, admin.passwordHash))) throw new UnauthorizedException('Adresse courriel ou mot de passe invalide.')
-    const token = await this.jwt.signAsync({ sub: admin.id, version: admin.updatedAt.getTime() })
+    const email = dto.email.trim().toLowerCase()
+    const limiterKey = `admin-account:${email}`
+    accountLimiter.assertNotBlocked(limiterKey, 8)
+    const admin = await this.db.admin.findUnique({ where: { email } })
+    if (!(await checkPassword(dto.password, admin?.passwordHash)) || !admin) {
+      accountLimiter.recordFailure(limiterKey, 15 * MINUTE)
+      throw new UnauthorizedException('Adresse courriel ou mot de passe invalide.')
+    }
+    accountLimiter.reset(limiterKey)
+    const token = await this.jwt.signAsync({ sub: admin.id, kind: 'admin', version: admin.updatedAt.getTime() })
     response.cookie('ng_admin', token, this.cookieOptions())
     return { email: admin.email }
   }
@@ -333,7 +347,7 @@ export class AppController {
     if (!admin) throw new NotFoundException('Compte administrateur introuvable.')
     if (!(await bcrypt.compare(dto.currentPassword, admin.passwordHash))) throw new UnauthorizedException('Mot de passe actuel incorrect.')
     const updated = await this.db.admin.update({ where: { id: adminId }, data: { passwordHash: await bcrypt.hash(dto.newPassword, 12) } })
-    const token = await this.jwt.signAsync({ sub: updated.id, version: updated.updatedAt.getTime() })
+    const token = await this.jwt.signAsync({ sub: updated.id, kind: 'admin', version: updated.updatedAt.getTime() })
     response.cookie('ng_admin', token, this.cookieOptions())
     return { message: 'Mot de passe modifié.' }
   }
@@ -490,7 +504,6 @@ export class AppController {
   }
 
   private cookieOptions() {
-    const secure = process.env.COOKIE_SECURE === 'true'
-    return { httpOnly: true, secure, sameSite: secure ? 'none' as const : 'lax' as const, path: '/', maxAge: 8 * 60 * 60 * 1000 }
+    return { ...sessionCookieBase(), maxAge: 8 * 60 * 60 * 1000 }
   }
 }

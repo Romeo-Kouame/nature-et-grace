@@ -35,3 +35,15 @@ export function assertHuman(honeypot?: string) {
 export function assertConsent(accepted?: boolean, message = 'Vous devez accepter les conditions de vente et la politique de confidentialité.') {
   if (accepted !== true) throw new BadRequestException(message)
 }
+
+/**
+ * Options communes des cookies de session.
+ * En production (`COOKIE_SECURE=true`), `SameSite=None` est nécessaire si le site et l'API sont sur des domaines différents.
+ * Si l'API est sur un sous-domaine du site (ex. api.mondomaine.ci), mettre `COOKIE_SAMESITE=lax` : protection CSRF renforcée.
+ */
+export function sessionCookieBase() {
+  const secure = process.env.COOKIE_SECURE === 'true'
+  const wanted = process.env.COOKIE_SAMESITE?.toLowerCase()
+  const sameSite = wanted === 'lax' || wanted === 'strict' ? wanted : secure ? 'none' : 'lax'
+  return { httpOnly: true, secure, sameSite: sameSite as 'lax' | 'strict' | 'none', path: '/' }
+}

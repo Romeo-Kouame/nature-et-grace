@@ -43,7 +43,7 @@ Versions minimales : Node 20.19 (recommandé 22+), TypeScript 5.6.
 
 Site (`.env`) : `VITE_API_URL`, `VITE_SITE_URL`, `VITE_GA_ID` (facultatif).
 
-API (`api/.env`) : `DATABASE_URL`, `JWT_SECRET` (32 caractères minimum), `WEB_ORIGIN`, `COOKIE_SECURE`, `TRUST_PROXY`, `NODE_ENV`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_DAILY_LIMIT`.
+API (`api/.env`) : `DATABASE_URL`, `JWT_SECRET` (32 caractères minimum), `WEB_ORIGIN`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `TRUST_PROXY`, `NODE_ENV`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_DAILY_LIMIT`.
 
 Les fichiers `.env` sont exclus de git ; seuls les `.env.example` sont publiés.
 
@@ -51,12 +51,20 @@ Les fichiers `.env` sont exclus de git ; seuls les `.env.example` sont publiés.
 
 - Droits vérifiés côté serveur : `AdminGuard`, `CustomerGuard` ; un client n'accède qu'à ses propres commandes.
 - Limites anti-abus par adresse IP sur la connexion, l'inscription, les commandes, les avis, les preuves, l'IA et le signalement d'erreurs.
+- Connexion : en plus, blocage par compte visé après 10 échecs (8 pour l'admin) en 15 minutes ; temps de réponse identique que le compte existe ou non (pas de devinette des numéros inscrits).
+- Taille des requêtes : 100 ko maximum, sauf l'envoi de photos (7 Mo). Seul le format JSON est accepté.
+- Sessions : jeton marqué « client » ou « admin », chacun refusé par l'autre espace ; l'empreinte du mot de passe est un HMAC qui ne révèle rien du hachage.
+- Une seule preuve de paiement par commande (la précédente est supprimée au remplacement) ; téléphone de commande vérifié au format ivoirien.
 - Consentements (CGV, publication d'un avis) vérifiés par le serveur ; champ piège anti-robots.
 - Commande protégée contre le double envoi (`clientKey` unique) et la survente (décrément conditionnel du stock dans une transaction).
-- CORS limité à `WEB_ORIGIN` et refus des écritures venant d'une autre origine.
+- CORS limité à `WEB_ORIGIN` ; toute écriture doit porter un en-tête `Origin` (ou `Referer`) du site, sinon elle est refusée (anti-CSRF).
 - En production : redirection HTTPS, en-tête HSTS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `x-powered-by` masqué.
 - Erreurs imprévues journalisées (sans le contenu des requêtes) ; le visiteur ne reçoit qu'un message générique.
 - La RLS (Row Level Security) de PostgreSQL n'est pas utilisée : seule l'API accède à la base, avec un seul utilisateur, et c'est elle qui applique les droits.
+
+## En-têtes du site (à configurer chez l'hébergeur du site)
+
+L'API envoie ses propres en-têtes de sécurité, mais les pages du site sont servies par l'hébergeur du site. Y ajouter : `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`. Fichier de configuration à préparer selon l'hébergeur choisi.
 
 ## Performance
 
