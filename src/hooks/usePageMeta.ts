@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const BRAND = 'NATURE & GRÂCE'
+const BRAND = 'Nature & Grâce'
 const DEFAULT_DESCRIPTION =
   'Soins naturels au beurre de cacao de Côte d’Ivoire : beurre de cacao brut, chantilly, savon noir de cabosse et huiles végétales. Commande sur le site ou WhatsApp, paiement Wave.'
 

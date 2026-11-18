@@ -16,7 +16,7 @@ const DEBOUNCE_MS = 180
  * Le catalogue est déjà chargé dans le navigateur : la recherche ne fait aucun appel au serveur.
  * Utilisable au clavier : flèches haut/bas, Entrée, Échap.
  */
-export const SearchBox: React.FC<{ className?: string }> = ({ className = '' }) => {
+export const SearchBox: React.FC<{ className?: string; autoFocus?: boolean }> = ({ className = '', autoFocus = false }) => {
   const { products, catalogLoading, currentPath, navigate, searchTerm, setSearchTerm, setSelectedCategory } = useApp()
   const [value, setValue] = useState(searchTerm)
   const [open, setOpen] = useState(false)
@@ -25,6 +25,11 @@ export const SearchBox: React.FC<{ className?: string }> = ({ className = '' }) 
   const inputRef = useRef<HTMLInputElement>(null)
   const listId = useId()
   const onShop = currentPath === '/boutique'
+
+  // Ouverture depuis l'icône loupe de l'en-tête : le curseur est directement dans le champ
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus()
+  }, [autoFocus])
 
   // Recherche effacée ailleurs (bouton « × » de la boutique, autre barre…) : on se resynchronise
   useEffect(() => {

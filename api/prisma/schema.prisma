@@ -99,7 +99,10 @@ model Customer {
   /// Numéro ivoirien normalisé : 225 + 10 chiffres
   phone         String   @unique
   email         String?  @unique
-  passwordHash  String
+  /// Absent pour un compte créé avec Google (connexion sans mot de passe)
+  passwordHash  String?
+  /// Identifiant Google (« sub ») si le client se connecte avec son compte Google
+  googleId      String?  @unique
   commune       String?
   address       String?
   deliveryZone  String?

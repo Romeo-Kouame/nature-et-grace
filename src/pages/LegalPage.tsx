@@ -17,11 +17,11 @@ const TITLES: Record<LegalKind, string> = {
 }
 
 const DESCRIPTIONS: Record<LegalKind, string> = {
-  mentions: 'Mentions légales de NATURE & GRÂCE : éditeur du site, hébergement, propriété intellectuelle et crédits photos.',
-  cgv: 'Conditions générales de vente de NATURE & GRÂCE : commande, prix, livraison, paiement Wave et réclamations.',
-  confidentialite: 'Politique de confidentialité de NATURE & GRÂCE : données collectées, utilisation, conservation et vos droits.',
-  remboursement: 'Retours, échanges et remboursements chez NATURE & GRÂCE : délais, conditions et démarche sur WhatsApp.',
-  cookies: 'Cookies et stockage utilisés par le site NATURE & GRÂCE, et comment modifier votre choix.',
+  mentions: 'Mentions légales de Nature & Grâce : éditeur du site, hébergement, propriété intellectuelle et crédits photos.',
+  cgv: 'Conditions générales de vente de Nature & Grâce : commande, prix, livraison, paiement Wave et réclamations.',
+  confidentialite: 'Politique de confidentialité de Nature & Grâce : données collectées, utilisation, conservation et vos droits.',
+  remboursement: 'Retours, échanges et remboursements chez Nature & Grâce : délais, conditions et démarche sur WhatsApp.',
+  cookies: 'Cookies et stockage utilisés par le site Nature & Grâce, et comment modifier votre choix.',
 }
 
 /**
@@ -64,13 +64,13 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
       {kind === 'mentions' && (
         <article>
           <h2>Éditeur du site</h2>
-          {identity ? <p className="ng-legal-identity">{identity}</p> : <p>NATURE &amp; GRÂCE — informations à compléter.</p>}
+          {identity ? <p className="ng-legal-identity">{identity}</p> : <p>Nature &amp; Grâce — informations à compléter.</p>}
           <p>Contact : WhatsApp et téléphone {waDisplay}.</p>
           <h2>Hébergement</h2>
           <p>Le nom et l’adresse de l’hébergeur du site seront indiqués lors de sa mise en ligne.</p>
           <h2>Propriété intellectuelle</h2>
           <p>
-            Le nom NATURE &amp; GRÂCE, le logo et les textes de ce site appartiennent à la marque. Toute reproduction sans
+            Le nom Nature &amp; Grâce, le logo et les textes de ce site appartiennent à la marque. Toute reproduction sans
             autorisation est interdite.
           </p>
           <h2 id="credits-photos">Crédits photos</h2>
@@ -93,7 +93,7 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
         <article>
           <h2>1. Objet</h2>
           <p>
-            Les présentes conditions s’appliquent aux commandes passées auprès de NATURE &amp; GRÂCE sur ce site ou par
+            Les présentes conditions s’appliquent aux commandes passées auprès de Nature &amp; Grâce sur ce site ou par
             WhatsApp. Passer commande vaut acceptation de ces conditions.
           </p>
           <h2>2. Produits et prix</h2>
@@ -173,6 +173,8 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
           <p>Ces éléments sont indispensables au fonctionnement de la boutique ; ils ne servent ni à la publicité ni au suivi :</p>
           <ul>
             <li>un cookie de connexion à votre compte (30 jours), supprimé à la déconnexion ;</li>
+            <li>si vous utilisez « Continuer avec Google », deux cookies temporaires (20 minutes au plus) qui sécurisent l’aller-retour avec Google ;</li>
+            <li>la conversation avec la conseillère IA, gardée dans l’onglet et effacée à sa fermeture ;</li>
             <li>votre panier, vos favoris et votre choix de thème, gardés sur votre appareil ;</li>
             <li>votre choix concernant la mesure d’audience.</li>
           </ul>
@@ -193,6 +195,11 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
           <p>
             Les boutons WhatsApp ouvrent l’application WhatsApp, soumise à ses propres règles.
             {settings.storeAddress ? ' La carte de la page Contact est fournie par Google Maps, qui peut déposer ses propres cookies.' : ''}
+          </p>
+          <p>
+            Sur les formulaires de connexion, d’inscription et d’avis, une vérification anti-robot Cloudflare Turnstile peut
+            s’afficher. Elle sert uniquement à bloquer les envois automatiques, sans publicité ni suivi d’une page à l’autre.
+            Le bouton « Continuer avec Google » vous mène sur le site de Google, soumis à ses propres règles.
           </p>
           <p>Voir aussi la {link('/confidentialite', 'politique de confidentialité')}.</p>
         </article>
@@ -224,10 +231,24 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
             Le site garde sur votre téléphone ou ordinateur votre panier, vos favoris et votre choix de thème, ainsi qu’un
             cookie de connexion. Le détail figure dans la {link('/cookies', 'politique cookies')}.
           </p>
-          <h2>Conseiller IA</h2>
+          <h2>Connexion avec Google</h2>
           <p>
-            Le texte que vous saisissez dans le conseiller beauté est transmis au service d’intelligence artificielle Google
-            Gemini pour composer la réponse. N’y indiquez pas d’informations personnelles ou médicales sensibles.
+            Si vous choisissez « Continuer avec Google », Google nous transmet uniquement votre nom, votre adresse e-mail
+            (vérifiée par Google) et un identifiant de compte. Nous ne recevons ni votre mot de passe Google ni vos contacts.
+            Votre numéro de téléphone vous est ensuite demandé pour la livraison.
+          </p>
+          <h2>Protection anti-robot</h2>
+          <p>
+            Les formulaires de connexion, d’inscription et d’avis peuvent utiliser Cloudflare Turnstile. Ce service analyse
+            des signaux techniques du navigateur (et votre adresse IP) pour vérifier qu’un humain envoie le formulaire. Ces
+            informations ne servent qu’à cette vérification.
+          </p>
+          <h2>Conseillère IA (chat)</h2>
+          <p>
+            Les messages que vous écrivez dans le chat de la conseillère sont transmis au service d’intelligence artificielle
+            Google Gemini pour composer la réponse. La conversation n’est pas enregistrée par la boutique : elle reste dans
+            l’onglet de votre navigateur et disparaît à sa fermeture. N’y indiquez pas d’informations personnelles ou
+            médicales sensibles.
           </p>
           <h2>Vos droits</h2>
           <p>

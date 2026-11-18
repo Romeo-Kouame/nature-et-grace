@@ -1,5 +1,5 @@
 /* =====================================================================
-   NATURE & GRÂCE — panier, commande, conseiller IA et éléments communs
+   Nature & Grâce — panier, commande, conseiller IA et éléments communs
    S'appuie sur les variables --ng-* définies dans nature.css
    ===================================================================== */
 
@@ -56,9 +56,6 @@ html.dark .ng-how-ico { color: #06140e; }
 @keyframes ng-toast { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 /* Boutons flottants (ordinateur) */
-.ng-floating { position: fixed; right: 22px; bottom: 22px; z-index: 60; display: flex; align-items: center; gap: 10px; }
-.ng-floating-wa { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 50%; background: #167a45; color: #fff; box-shadow: var(--ng-shadow-md); transition: transform 0.25s var(--ng-ease); }
-.ng-floating-wa:hover { transform: translateY(-3px); }
 
 /* =====================================================================
    PANIER
@@ -121,54 +118,8 @@ html.dark .ng-cart-success-ico { color: #06140e; }
 .ng-cart-links { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 16px; }
 .ng-cart-link { border: 0; background: none; color: var(--ng-emerald); font-weight: 600; font-size: 14px; padding: 8px; cursor: pointer; }
 .ng-cart-link--muted { color: var(--ng-muted); font-weight: 500; font-size: 13px; }
-
-/* =====================================================================
-   CONSEILLER BEAUTÉ IA
-   ===================================================================== */
-.ng-advisor-overlay { z-index: 115; }
-.ng-advisor { width: min(720px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; border-radius: var(--ng-r-lg); background: var(--ng-surface); box-shadow: var(--ng-shadow-lg); overflow: hidden; animation: ng-modal-in 0.4s var(--ng-ease); }
-.ng-advisor-head { display: flex; align-items: center; gap: 14px; padding: 20px 22px; background: linear-gradient(120deg, var(--ng-emerald), #0a3626); color: #f2f7f4; }
-.ng-advisor-head > div { flex: 1; }
-.ng-advisor-head h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
-.ng-advisor-head p { margin: 4px 0 0; font-size: 13.5px; opacity: 0.85; }
-.ng-advisor-head .ng-icon-btn { color: #fff; }
-.ng-advisor-ico { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border-radius: 14px; background: rgba(255, 255, 255, 0.12); color: var(--ng-gold); }
-.ng-advisor-body { flex: 1; overflow-y: auto; padding: 20px 22px 24px; }
-.ng-advisor-chips { flex-wrap: wrap; margin-bottom: 14px; }
-.ng-advisor-form { display: flex; gap: 10px; }
-.ng-advisor-form input { flex: 1; min-width: 0; height: 48px; padding: 0 16px; border: 1px solid var(--ng-line); border-radius: 14px; background: var(--ng-subtle); color: var(--ng-ink); font-size: 15px; }
-.ng-advisor-form input:focus { outline: none; border-color: var(--ng-emerald); background: var(--ng-surface); }
-.ng-advisor-intro { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0 0; color: var(--ng-muted); font-size: 13.5px; line-height: 1.55; }
-.ng-advisor-intro svg { flex-shrink: 0; margin-top: 2px; color: var(--ng-emerald); }
-.ng-advisor-loading { display: flex; align-items: center; gap: 12px; padding: 28px 0; color: var(--ng-muted); font-size: 14px; }
-.ng-advisor-loading p { margin: 0; }
 .ng-spinner { width: 22px; height: 22px; border: 3px solid var(--ng-line); border-top-color: var(--ng-emerald); border-radius: 50%; animation: ng-spin 0.8s linear infinite; }
 @keyframes ng-spin { to { transform: rotate(360deg); } }
-.ng-advisor-result { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; animation: ng-fade 0.4s; }
-.ng-advisor-diag { padding: 16px; border-radius: var(--ng-r-md); background: var(--ng-emerald-50); }
-.ng-advisor-diag b, .ng-advisor-tips b { display: flex; align-items: center; gap: 8px; color: var(--ng-emerald); font-size: 14px; }
-.ng-advisor-diag p { margin: 8px 0 0; color: var(--ng-text); font-size: 14.5px; line-height: 1.6; }
-.ng-advisor-routines { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.ng-advisor-routines > div { padding: 16px; border-radius: var(--ng-r-md); border: 1px solid var(--ng-line); }
-.ng-advisor-routines h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--ng-ink); font-size: 15px; }
-.ng-advisor-routines h3 svg { color: var(--ng-gold-text); }
-.ng-advisor-routines ol, .ng-advisor-tips ul { margin: 0; padding-left: 18px; color: var(--ng-text); font-size: 14px; line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
-.ng-advisor-tips { padding: 16px; border-radius: var(--ng-r-md); background: var(--ng-gold-50); }
-.ng-advisor-tips b { color: var(--ng-gold-text); margin-bottom: 8px; }
-.ng-advisor-products h3 { margin: 4px 0 10px; color: var(--ng-ink); font-size: 16px; }
-.ng-advisor-products ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.ng-advisor-products li { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 14px; border: 1px solid var(--ng-line); }
-.ng-advisor-products li > div { flex: 1; min-width: 0; }
-.ng-advisor-products li b { display: block; color: var(--ng-ink); font-size: 14px; }
-.ng-advisor-products li small { color: var(--ng-muted); font-size: 12.5px; }
-.ng-advisor-thumb { width: 52px; height: 52px; flex-shrink: 0; border-radius: 10px; overflow: hidden; }
-.ng-advisor-add { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--ng-emerald); border-radius: 10px; background: transparent; color: var(--ng-emerald); font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; }
-.ng-advisor-add:hover, .ng-advisor-add.added { background: var(--ng-emerald); color: #fff; }
-html.dark .ng-advisor-add:hover, html.dark .ng-advisor-add.added { color: #06140e; }
-.ng-advisor-na { white-space: nowrap; }
-.ng-advisor-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-.ng-advisor-actions .ng-btn { flex: 1 1 220px; justify-content: center; }
-.ng-advisor-disclaimer { margin: 4px 0 0; color: var(--ng-muted); font-size: 12.5px; line-height: 1.5; }
 
 /* =====================================================================
    PAGES : livraison, légal, 404
@@ -201,17 +152,11 @@ html.dark .ng-advisor-add:hover, html.dark .ng-advisor-add.added { color: #06140
   .ng-how-steps li { display: grid; grid-template-columns: 46px 1fr; column-gap: 14px; padding: 16px; }
   .ng-how-ico { grid-row: span 2; margin: 0; }
   .ng-how-steps b { margin: 2px 0 2px; }
-  .ng-floating { display: none; }
   /* En haut sur téléphone : ne masque ni la barre d'onglets ni les boutons du panier */
   .ng-toast { top: calc(12px + env(safe-area-inset-top)); bottom: auto; animation-name: ng-toast-top; }
 }
 @media (max-width: 560px) {
   .ng-cart-head, .ng-cart-body, .ng-cart-foot { padding-left: 16px; padding-right: 16px; }
-  .ng-advisor-overlay { padding: 0; align-items: end; }
-  .ng-advisor { max-height: 92vh; border-radius: var(--ng-r-lg) var(--ng-r-lg) 0 0; }
-  .ng-advisor-head, .ng-advisor-body { padding-left: 16px; padding-right: 16px; }
-  .ng-advisor-routines { grid-template-columns: 1fr; }
-  .ng-advisor-form .ng-btn { padding: 0 14px; }
   .ng-zone-table > div { grid-template-columns: 1.4fr 1fr 0.9fr; padding: 11px 12px; font-size: 13.5px; }
   .ng-newsletter > a.ng-btn { width: 100%; justify-content: center; }
 }

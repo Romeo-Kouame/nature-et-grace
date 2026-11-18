@@ -53,8 +53,12 @@ interface AppContextType {
   user: ApiCustomer | null
   /** true une fois la session vérifiée auprès du serveur */
   authReady: boolean
-  login: (identifier: string, password: string) => Promise<void>
-  register: (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string }) => Promise<void>
+  login: (identifier: string, password: string, captchaToken?: string) => Promise<void>
+  /** Nouveau client Google : numéro de téléphone et acceptation des conditions */
+  completeGoogle: (data: { name?: string; phone: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => Promise<void>
+  /** Retour de Google sur un compte déjà lié : session ouverte par l'API, on recharge le client */
+  finishGoogleLogin: () => Promise<void>
+  register: (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => Promise<void>
   logout: () => Promise<void>
   /** Supprime définitivement le compte (mot de passe demandé) */
   deleteAccount: (password: string) => Promise<void>
@@ -335,12 +339,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(welcome)
   }
 
-  const login = async (identifier: string, password: string) => {
-    const customer = await api<ApiCustomer>('/customer/login', { method: 'POST', body: JSON.stringify({ identifier, password }) })
+  const login = async (identifier: string, password: string, captchaToken?: string) => {
+    const customer = await api<ApiCustomer>('/customer/login', { method: 'POST', body: JSON.stringify({ identifier, password, captchaToken }) })
     afterAuth(customer, `Bonjour ${customer.name.split(' ')[0]} !`)
   }
 
-  const register = async (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string }) => {
+  const completeGoogle = async (data: { name?: string; phone: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => {
+    const customer = await api<ApiCustomer>('/customer/google/complete', { method: 'POST', body: JSON.stringify(data) })
+    afterAuth(customer, `Bienvenue ${customer.name.split(' ')[0]}, votre compte est créé !`)
+  }
+
+  const finishGoogleLogin = async () => {
+    const customer = await api<ApiCustomer>('/customer/me')
+    afterAuth(customer, `Bonjour ${customer.name.split(' ')[0]} !`)
+  }
+
+  const register = async (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => {
     const customer = await api<ApiCustomer>('/customer/register', { method: 'POST', body: JSON.stringify(data) })
     afterAuth(customer, `Bienvenue ${customer.name.split(' ')[0]}, votre compte est créé !`)
   }
@@ -407,6 +421,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user,
         authReady,
         login,
+        completeGoogle,
+        finishGoogleLogin,
         register,
         logout,
         deleteAccount,

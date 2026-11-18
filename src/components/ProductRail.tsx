@@ -15,6 +15,9 @@ interface ProductRailProps {
   autoplay?: number
 }
 
+/** En dessous de ce nombre, les cartes tiennent sur une ligne : on les montre en grille pleine largeur */
+export const RAIL_MIN_PRODUCTS = 5
+
 /**
  * Rangée de produits qui défile horizontalement, à la manière des grands sites marchands :
  * flèches sur ordinateur, glissé au doigt sur téléphone, et défilement automatique
@@ -27,6 +30,8 @@ export const ProductRail: React.FC<ProductRailProps> = ({
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)
   const paused = useRef(false)
+  // Peu de produits : une grille qui occupe toute la largeur plutôt qu'une rangée à moitié vide
+  const asGrid = !loading && products.length < RAIL_MIN_PRODUCTS
 
   const updateArrows = useCallback(() => {
     const el = trackRef.current
@@ -58,7 +63,7 @@ export const ProductRail: React.FC<ProductRailProps> = ({
   }, [])
 
   useEffect(() => {
-    if (!autoplay || loading || products.length < 2) return
+    if (!autoplay || loading || asGrid || products.length < 2) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const id = window.setInterval(() => {
       const el = trackRef.current
@@ -70,7 +75,7 @@ export const ProductRail: React.FC<ProductRailProps> = ({
       else scrollByPage(1)
     }, autoplay)
     return () => window.clearInterval(id)
-  }, [autoplay, loading, products.length, scrollByPage])
+  }, [autoplay, loading, asGrid, products.length, scrollByPage])
 
   const pause = () => { paused.current = true }
   const resume = () => { paused.current = false }
@@ -89,6 +94,11 @@ export const ProductRail: React.FC<ProductRailProps> = ({
         )}
       </div>
 
+      {asGrid ? (
+        <div className="ng-grid ng-grid--fill" style={{ '--n': products.length } as React.CSSProperties}>
+          {products.map((product, i) => <ProductCard product={product} key={product.id} index={i} />)}
+        </div>
+      ) : (
       <div className="ng-rail-wrap">
         <div
           className="ng-scroller ng-rail-track"
@@ -115,6 +125,7 @@ export const ProductRail: React.FC<ProductRailProps> = ({
           </button>
         )}
       </div>
+      )}
     </section>
   )
 }

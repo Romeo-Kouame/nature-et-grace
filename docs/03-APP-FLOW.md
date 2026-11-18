@@ -48,6 +48,7 @@ En attente de confirmation ──► Paiement en vérification ──► Confirm
 
 - « Se connecter » (menu compte, menu mobile, panier, pages réservées) → page `/connexion` autonome : la marque à gauche, le formulaire à droite ; bouton « Retour à la boutique ».
 - « Créer un nouveau compte » bascule sur le formulaire d'inscription sur la même page (`/connexion?inscription`) ; « J'ai déjà un compte » revient à la connexion.
+- « Continuer avec Google » (si configuré) → Google → retour sur `/connexion` : compte connu → connecté et renvoyé à la page demandée ; nouveau client → « Dernière étape » (nom prérempli, téléphone, conditions) → compte créé ; e-mail déjà utilisé par un compte à mot de passe → message invitant à se connecter avec le mot de passe ; annulation ou erreur → message sur la page.
 - « Mot de passe oublié ? » ouvre WhatsApp (pas encore de service d'envoi de SMS ou d'e-mails).
 
 - Inscription réussie → toast de bienvenue, retour à la page demandée (ou au panier).
@@ -59,9 +60,13 @@ En attente de confirmation ──► Paiement en vérification ──► Confirm
 
 « Donner mon avis » → formulaire (note, prénom, ville, produit, texte, accord de publication) → message « publié après vérification ». Échec → lien pour envoyer l'avis sur WhatsApp.
 
-## Conseiller IA
+## Conseillère IA (chat)
 
-Bouton dans le menu ou sur l'accueil → fenêtre : préoccupation + message → rituel matin/soir → « Ajouter au panier » ou « Envoyer sur WhatsApp ».
+Bulle « Une question ? » en bas à droite (ordinateur), icône étoiles de l'en-tête (téléphone), « Mon rituel IA » (accueil), « Rituel sur-mesure IA » (boutique), « Demander au conseiller IA » (fiche produit) → fenêtre de chat.
+- Message d'accueil et questions suggérées (adaptées à la fiche produit ouverte) → réponse en quelques secondes, avec les produits cités (voir la fiche, ajouter au panier).
+- La conversation suit le fil (12 derniers messages) et reste le temps de l'onglet. « Nouvelle conversation » l'efface.
+- Échec réseau → message dans le fil et bouton « Réessayer ». IA indisponible ou plafond atteint → réponses simples à partir des mêmes données.
+- Icône WhatsApp dans l'en-tête du chat pour parler à la boutique. Échap ou la croix ferment la fenêtre.
 
 ## Administration
 

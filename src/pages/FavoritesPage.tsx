@@ -8,7 +8,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 export const FavoritesPage: React.FC = () => {
   const { products, favorites, navigate } = useApp()
   const favoriteProducts = products.filter((p) => favorites.includes(p.id))
-  usePageMeta('Mes favoris', 'Les soins NATURE & GRÂCE que vous avez mis de côté.')
+  usePageMeta('Mes favoris', 'Les soins Nature & Grâce que vous avez mis de côté.')
 
   return (
     <div className="ng-container ng-subpage">

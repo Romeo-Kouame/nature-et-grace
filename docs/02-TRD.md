@@ -34,16 +34,18 @@ Versions minimales : Node 20.19 (recommandé 22+), TypeScript 5.6.
 | --- | --- | --- |
 | WhatsApp (liens `wa.me`) | Commande et contact | Ce que le client choisit d'envoyer |
 | Wave | Paiement (hors site) | Aucune par le site |
-| Google Gemini | Conseiller IA, rédaction des fiches | Texte saisi dans le conseiller ; plafond `GEMINI_DAILY_LIMIT` par jour |
+| Google Gemini | Chat de la conseillère IA (`POST /api/ai/chat`), rédaction des fiches | Messages du chat (12 derniers au plus) ; plafond `GEMINI_DAILY_LIMIT` par jour, puis réponses par mots-clés |
+| Google (OAuth 2.0 / OpenID Connect) | « Continuer avec Google » : flux code + PKCE, sans script Google sur le site | Nom, e-mail vérifié et identifiant Google, reçus par l'API |
+| Cloudflare Turnstile | Captcha des formulaires connexion, inscription, finalisation Google, avis ; vérifié par l'API (`siteverify`) | Signaux techniques du navigateur, adresse IP |
 | Google Fonts | Polices Fraunces et Plus Jakarta Sans (licence SIL OFL) | Requête de police |
 | Google Maps (facultatif) | Carte de la page Contact, chargée seulement au clic | Adresse de la boutique |
 | Google Analytics 4 (facultatif) | Mesure d'audience, chargée seulement après accord | Pages vues |
 
 ## Variables d'environnement
 
-Site (`.env`) : `VITE_API_URL`, `VITE_SITE_URL`, `VITE_GA_ID` (facultatif).
+Site (`.env`) : `VITE_API_URL`, `VITE_SITE_URL`, `VITE_GA_ID` (facultatif), `VITE_TURNSTILE_SITEKEY` (facultatif, clé publique du captcha).
 
-API (`api/.env`) : `DATABASE_URL`, `JWT_SECRET` (32 caractères minimum), `WEB_ORIGIN`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `TRUST_PROXY`, `NODE_ENV`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_DAILY_LIMIT`.
+API (`api/.env`) : `DATABASE_URL`, `JWT_SECRET` (32 caractères minimum), `WEB_ORIGIN`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `TRUST_PROXY`, `NODE_ENV`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_DAILY_LIMIT`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (connexion Google, facultatif), `TURNSTILE_SECRET`, `TURNSTILE_HOSTNAMES` (captcha, facultatif).
 
 Les fichiers `.env` sont exclus de git ; seuls les `.env.example` sont publiés.
 

@@ -1,0 +1,146 @@
+/* =====================================================================
+   Nature & Grâce — Chat de la conseillère IA
+   ===================================================================== */
+
+/* Bulle d'ouverture, en bas à droite */
+.ng-chat-launcher {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 20px 0 16px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--ng-emerald);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 700;
+  box-shadow: 0 14px 34px -14px color-mix(in srgb, var(--ng-emerald) 80%, transparent), var(--ng-shadow-md);
+  cursor: pointer;
+  transition: transform 0.25s var(--ng-ease), box-shadow 0.25s;
+  animation: ng-fade-up 0.5s var(--ng-ease) both;
+}
+html.dark .ng-chat-launcher { color: #06140e; }
+.ng-chat-launcher svg { color: #f2cf86; }
+html.dark .ng-chat-launcher svg { color: #4a2f1d; }
+.ng-chat-launcher:hover { transform: translateY(-3px); }
+.ng-chat-launcher:focus-visible { outline: 3px solid color-mix(in srgb, var(--ng-emerald) 40%, transparent); outline-offset: 3px; }
+
+/* Fenêtre */
+.ng-chat {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 70;
+  width: min(400px, calc(100vw - 32px));
+  height: min(640px, calc(100vh - 120px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--ng-surface);
+  border: 1px solid var(--ng-line);
+  box-shadow: 0 30px 70px -30px rgba(10, 25, 18, 0.55), var(--ng-shadow-lg);
+  animation: ng-chat-in 0.3s var(--ng-ease) both;
+}
+@keyframes ng-chat-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+.ng-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px 14px 16px;
+  background: linear-gradient(135deg, var(--ng-emerald), color-mix(in srgb, var(--ng-emerald) 78%, #000));
+  color: #fff;
+}
+html.dark .ng-chat-head { color: #06140e; }
+.ng-chat-avatar { width: 38px; height: 38px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.16); color: #f2cf86; }
+.ng-chat-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ng-chat-title b { font-size: 15px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ng-chat-title small { display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.85; }
+.ng-chat-title small i { width: 7px; height: 7px; border-radius: 50%; background: #58d68d; box-shadow: 0 0 0 3px rgba(88, 214, 141, 0.25); }
+.ng-chat-icon { width: 34px; height: 34px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; transition: background 0.2s; }
+.ng-chat-icon:hover { background: rgba(255, 255, 255, 0.16); }
+.ng-chat-icon:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* Fil de discussion */
+.ng-chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 14px; background: var(--ng-subtle); overscroll-behavior: contain; }
+.ng-chat-msg { display: flex; flex-direction: column; gap: 8px; max-width: 88%; animation: ng-fade-up 0.3s var(--ng-ease) both; }
+.ng-chat-msg--user { align-self: flex-end; align-items: flex-end; }
+.ng-chat-msg--assistant { align-self: flex-start; }
+.ng-chat-bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.ng-chat-bubble p { margin: 0; }
+.ng-chat-bubble p + p, .ng-chat-bubble ul + p, .ng-chat-bubble p + ul { margin-top: 6px; }
+.ng-chat-bubble ul { margin: 0; padding-left: 18px; }
+.ng-chat-bubble li + li { margin-top: 3px; }
+.ng-chat-msg--assistant .ng-chat-bubble { background: var(--ng-surface); color: var(--ng-text); border: 1px solid var(--ng-line); border-bottom-left-radius: 6px; }
+.ng-chat-msg--user .ng-chat-bubble { background: var(--ng-emerald); color: #fff; border-bottom-right-radius: 6px; white-space: pre-wrap; }
+html.dark .ng-chat-msg--user .ng-chat-bubble { color: #06140e; }
+.ng-chat-msg.is-error .ng-chat-bubble { border-color: color-mix(in srgb, var(--ng-red) 40%, transparent); background: color-mix(in srgb, var(--ng-red) 6%, var(--ng-surface)); }
+.ng-chat-retry { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 12px; border: 1px solid var(--ng-line); border-radius: 99px; background: var(--ng-surface); color: var(--ng-ink); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+
+/* « La conseillère écrit… » */
+.ng-chat-typing { display: inline-flex; gap: 5px; padding: 14px 16px; }
+.ng-chat-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--ng-muted); animation: ng-chat-dot 1.2s infinite ease-in-out; }
+.ng-chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.ng-chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ng-chat-dot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+
+/* Produits cités par la conseillère */
+.ng-chat-products { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.ng-chat-product { display: flex; align-items: center; gap: 6px; padding: 6px; border: 1px solid var(--ng-line); border-radius: 14px; background: var(--ng-surface); }
+.ng-chat-product-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+.ng-chat-product-img { width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; overflow: hidden; background: var(--ng-subtle); }
+.ng-chat-product-img > * { width: 100%; height: 100%; object-fit: cover; }
+.ng-chat-product-main b { display: block; font-size: 13.5px; color: var(--ng-ink); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ng-chat-product-main small { font-size: 12.5px; font-weight: 700; color: var(--ng-emerald); }
+.ng-chat-product-main:hover b { color: var(--ng-emerald); }
+.ng-chat-add { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 10px; background: var(--ng-emerald-50); color: var(--ng-emerald); cursor: pointer; }
+.ng-chat-add:hover { background: var(--ng-emerald); color: #fff; }
+
+/* Questions suggérées */
+.ng-chat-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.ng-chat-suggest button { padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--ng-emerald) 30%, var(--ng-line)); border-radius: 99px; background: var(--ng-surface); color: var(--ng-emerald); font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; transition: background 0.2s; }
+.ng-chat-suggest button:hover { background: var(--ng-emerald-50); }
+
+/* Saisie */
+.ng-chat-form { display: flex; align-items: flex-end; gap: 8px; padding: 10px 10px 6px 14px; border-top: 1px solid var(--ng-line); background: var(--ng-surface); }
+.ng-chat-form textarea {
+  flex: 1;
+  min-height: 42px;
+  max-height: 120px;
+  padding: 10px 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--ng-ink);
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.45;
+  field-sizing: content;
+}
+.ng-chat-form button { width: 40px; height: 40px; flex-shrink: 0; margin-bottom: 1px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--ng-emerald); color: #fff; cursor: pointer; transition: opacity 0.2s, transform 0.2s; }
+html.dark .ng-chat-form button { color: #06140e; }
+.ng-chat-form button:disabled { opacity: 0.35; cursor: default; }
+.ng-chat-form button:not(:disabled):hover { transform: translateY(-1px); }
+.ng-chat-note { margin: 0; padding: 0 14px 10px; background: var(--ng-surface); font-size: 11px; line-height: 1.4; color: var(--ng-muted); }
+
+/* Téléphone : bulle ronde au-dessus de la barre d'onglets, fenêtre plein écran */
+@media (max-width: 860px) {
+  /* Pas de bulle flottante sur téléphone (elle masquait les boutons) : l'icône étoiles de l'en-tête ouvre le chat */
+  .ng-chat-launcher { display: none; }
+  .ng-chat { inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+  .ng-chat-form textarea { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ng-chat, .ng-chat-launcher, .ng-chat-msg { animation: none; }
+  .ng-chat-typing span { animation: none; }
+}
+
+/* Icône de la conseillère dans l'en-tête (téléphone) */
+.ng-header .ng-ai-btn { color: var(--ng-gold-text); background: var(--ng-gold-50); }

@@ -291,3 +291,113 @@ html.dark .ng-badge-tag--bestseller { color: #1b130c; }
   .ng-rail-track { grid-auto-columns: 46%; }
   .ng-rail-side { display: none; }
 }
+
+/* ===== Petit catalogue : grille pleine largeur au lieu d'une rangée à moitié vide ===== */
+.ng-grid.ng-grid--fill { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); max-width: calc(var(--n, 4) * 380px); }
+/* Téléphone : une sélection de 3 cartes laisserait une carte seule ; on garde le glissé horizontal */
+@media (max-width: 860px) {
+  .ng-grid.ng-grid--fill {
+    max-width: none;
+    grid-template-columns: none !important;
+    grid-auto-flow: column;
+    grid-auto-columns: 46%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin: 0 calc(-1 * var(--ng-gutter));
+    padding: 2px var(--ng-gutter) 8px;
+    scroll-padding: 0 var(--ng-gutter);
+  }
+  .ng-grid.ng-grid--fill::-webkit-scrollbar { display: none; }
+  .ng-grid.ng-grid--fill > * { scroll-snap-align: start; }
+}
+
+/* ===== Photos produits : traitement commun pour harmoniser des clichés pris dans des conditions différentes ===== */
+.ng-card-media img, .ng-pdp-media img, .ng-pdp-thumbs img { filter: saturate(0.9) contrast(1.04) brightness(1.02) sepia(0.05); }
+.ng-card-media::after, .ng-pdp-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(180deg, transparent 55%, rgba(74, 47, 29, 0.1));
+  box-shadow: inset 0 0 0 1px rgba(15, 29, 23, 0.06);
+}
+.ng-card-media .ng-badge-tag, .ng-pdp-media .ng-badge-tag { z-index: 2; }
+.ng-pdp-media-actions { z-index: 3; }
+
+/* ===== Fiche produit : promesses de la boutique ===== */
+/* Ordinateur : trois cartes sous la photo ; téléphone : liste compacte sous les boutons */
+.ng-pdp-trust--side { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; border-top: 0; }
+.ng-pdp-trust--side li { flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border: 1px solid var(--ng-line); border-radius: 14px; background: var(--ng-subtle); font-size: 12.5px; line-height: 1.45; color: var(--ng-muted); }
+.ng-pdp-trust--side li b { display: block; margin-bottom: 2px; font-size: 13.5px; color: var(--ng-ink); }
+.ng-pdp-trust--inline { display: none; }
+.ng-pdp-trust--inline li b { font-weight: 600; color: var(--ng-ink); }
+.ng-pdp-cta { display: flex; flex-direction: column; gap: 14px; }
+
+/* Barre d'achat collante (téléphone uniquement) */
+.ng-buybar { display: none; }
+
+@media (max-width: 860px) {
+  .ng-pdp-trust--side { display: none; }
+  .ng-pdp-trust--inline { display: flex; flex-direction: column; gap: 10px; }
+  .ng-pdp-trust--inline li { align-items: flex-start; }
+
+  .ng-buybar {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    z-index: 44;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px 8px 10px;
+    border: 1px solid var(--ng-line);
+    border-radius: 16px;
+    background: var(--ng-surface);
+    box-shadow: var(--ng-shadow-lg);
+    transform: translateY(24px);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s var(--ng-ease), opacity 0.3s var(--ng-ease), visibility 0.3s;
+  }
+  .ng-buybar.show { transform: none; opacity: 1; visibility: visible; }
+  .ng-buybar img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+  .ng-buybar-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .ng-buybar-info b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13.5px; color: var(--ng-ink); }
+  .ng-buybar-info span { font-size: 15px; font-weight: 800; color: var(--ng-ink); }
+  .ng-buybar .ng-btn { flex-shrink: 0; height: 44px; padding: 0 18px; }
+  .has-buybar .app-shell { padding-bottom: calc(66px + 80px + env(safe-area-inset-bottom)); }
+
+  /* Accueil : les pastilles de rayons en haut suffisent, pas de seconde section « Nos rayons » */
+  .ng-home-rayons { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ng-buybar { transition: none; } }
+
+/* ===== Accueil : « Nos rayons » en grandes tuiles photo (remplace les cartes et les bannières) ===== */
+.ng-cat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.ng-cat-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ng-r-lg);
+  overflow: hidden;
+  background: var(--ng-subtle);
+  cursor: pointer;
+  text-align: left;
+  isolation: isolate;
+}
+.ng-cat-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ng-ease); }
+.ng-cat-tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(12, 22, 17, 0.78)); }
+.ng-cat-tile:hover img { transform: scale(1.05); }
+.ng-cat-tile:focus-visible { outline: 3px solid var(--ng-emerald); outline-offset: 3px; }
+.ng-cat-tile-ico { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ng-emerald); }
+.ng-cat-tile-text { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: 2px; padding: 20px 22px; color: #fff; }
+.ng-cat-tile-text small { font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #ecd7a6; }
+.ng-cat-tile-text b { font-family: var(--ng-font-display, inherit); font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.ng-cat-tile-text em { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-style: normal; font-size: 13px; opacity: 0.9; transition: gap 0.3s var(--ng-ease); }
+.ng-cat-tile:hover .ng-cat-tile-text em { gap: 10px; }

@@ -43,7 +43,7 @@ export const AccountPage: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [pwError, setPwError] = useState('')
-  usePageMeta('Votre compte', 'Votre espace client NATURE & GRÂCE : informations, adresse de livraison et mot de passe.')
+  usePageMeta('Votre compte', 'Votre espace client Nature & Grâce : informations, adresse de livraison et mot de passe.')
 
   if (!ready || !user) return <div className="ng-container ng-subpage"><p className="ng-form-hint">Chargement…</p></div>
 
@@ -147,6 +147,16 @@ export const AccountPage: React.FC = () => {
             <p className="ng-form-hint">Pour changer de numéro de téléphone, écrivez à la boutique sur WhatsApp.</p>
           </form>
 
+          {user.hasPassword === false ? (
+            <section className="ng-form-card ng-form">
+              <h2 className="ng-h2">
+                <KeyRound size={20} /> Connexion
+              </h2>
+              <p className="ng-form-hint">
+                Vous vous connectez avec votre compte Google{user.email ? ` (${user.email})` : ''} : pas de mot de passe à gérer ici.
+              </p>
+            </section>
+          ) : (
           <form className="ng-form-card ng-form" onSubmit={changePassword}>
             <h2 className="ng-h2">
               <KeyRound size={20} /> Mot de passe
@@ -170,6 +180,7 @@ export const AccountPage: React.FC = () => {
               Changer le mot de passe
             </button>
           </form>
+          )}
 
           <DeleteAccountCard />
         </div>
@@ -180,7 +191,8 @@ export const AccountPage: React.FC = () => {
 
 /** Droit à l'effacement : le client supprime lui-même son compte et ses données personnelles. */
 const DeleteAccountCard: React.FC = () => {
-  const { deleteAccount } = useApp()
+  const { deleteAccount, user } = useApp()
+  const withPassword = user?.hasPassword !== false
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -213,10 +225,17 @@ const DeleteAccountCard: React.FC = () => {
         </button>
       ) : (
         <form className="ng-form" onSubmit={submit}>
-          <label>
-            Confirmez avec votre mot de passe
-            <input name="password" type="password" autoComplete="current-password" required autoFocus />
-          </label>
+          {withPassword ? (
+            <label>
+              Confirmez avec votre mot de passe
+              <input name="password" type="password" autoComplete="current-password" required autoFocus />
+            </label>
+          ) : (
+            <label>
+              Tapez SUPPRIMER pour confirmer
+              <input name="password" autoComplete="off" required autoFocus pattern="[Ss][Uu][Pp][Pp][Rr][Ii][Mm][Ee][Rr]" placeholder="SUPPRIMER" />
+            </label>
+          )}
           {error && <p className="ng-form-error" role="alert">{error}</p>}
           <div className="ng-form-actions">
             <button type="button" className="ng-btn ng-btn--ghost" onClick={() => { setOpen(false); setError('') }} disabled={busy}>
@@ -316,7 +335,7 @@ const OrderCard: React.FC<{ order: CustomerOrder; onProofSent: () => void }> = (
             </button>
           </>
         )}
-        <a className="ng-btn ng-btn--ghost ng-btn--sm" href={waLink(`Bonjour NATURE & GRÂCE, je vous écris au sujet de ma commande ${order.reference}.`)} target="_blank" rel="noreferrer">
+        <a className="ng-btn ng-btn--ghost ng-btn--sm" href={waLink(`Bonjour Nature & Grâce, je vous écris au sujet de ma commande ${order.reference}.`)} target="_blank" rel="noreferrer">
           <MessageCircle size={16} /> Une question ?
         </a>
       </footer>
@@ -331,7 +350,7 @@ export const OrdersPage: React.FC = () => {
   const { navigate } = useApp()
   const [orders, setOrders] = useState<CustomerOrder[] | null>(null)
   const [error, setError] = useState('')
-  usePageMeta('Vos commandes', 'Suivez vos commandes NATURE & GRÂCE et envoyez votre preuve de paiement Wave.')
+  usePageMeta('Vos commandes', 'Suivez vos commandes Nature & Grâce et envoyez votre preuve de paiement Wave.')
 
   const load = () =>
     api<CustomerOrder[]>('/customer/orders')

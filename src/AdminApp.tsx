@@ -3,6 +3,7 @@ import {
   AlertTriangle, ArrowLeft, Bell, Check, ExternalLink, Eye, EyeOff, ImageUp, KeyRound, LogOut, MessageCircle, Package,
   Phone, Plus, RefreshCw, Save, Search, ShoppingBag, Sparkles, Star, Store, Trash2, X,
 } from 'lucide-react'
+import { Stars } from './components/ProductCard'
 import {
   api, API_BASE, ApiOrder, ApiProduct, ApiReview, ApiStoreSettings, DeliveryZone, imageFileToDataUrl, OrderStatus, resolveImageUrl,
 } from './api'
@@ -55,7 +56,7 @@ export default function AdminApp() {
   const [allOrders, setAllOrders] = useState(false)
 
   useEffect(() => {
-    document.title = 'Administration · NATURE & GRÂCE'
+    document.title = 'Administration · Nature & Grâce'
   }, [])
 
   const notify = (msg: string) => {
@@ -108,7 +109,7 @@ export default function AdminApp() {
   }, [orders, seenAt])
   const newOrders = seenAt ? orders.filter((o) => o.createdAt > seenAt) : []
   useEffect(() => {
-    document.title = newOrders.length ? `(${newOrders.length}) Nouvelle commande · Administration` : 'Administration · NATURE & GRÂCE'
+    document.title = newOrders.length ? `(${newOrders.length}) Nouvelle commande · Administration` : 'Administration · Nature & Grâce'
   }, [newOrders.length])
   const markSeen = () => {
     const latest = orders[0]?.createdAt ?? new Date().toISOString()
@@ -156,7 +157,7 @@ export default function AdminApp() {
       <main className="adm-login">
         <a href="/" className="adm-back"><ArrowLeft size={15} /> Retour à la boutique</a>
         <div className="adm-login-card">
-          <img src="/logo.jpeg" alt="NATURE & GRÂCE" />
+          <img src="/logo.jpeg" alt="Nature & Grâce" />
           <span className="adm-kicker">ESPACE BOUTIQUE</span>
           <h1>Bienvenue</h1>
           <p>Connectez-vous pour gérer vos produits et vos commandes.</p>
@@ -318,7 +319,7 @@ function OrdersPanel({ orders, newIds, reload, notify, fail, showingAll, onShowA
         <div className="adm-orders">
           {filtered.map((order) => {
             const fee = order.deliveryFeeXof
-            const waText = `Bonjour ${order.customerName.split(' ')[0]}, c’est NATURE & GRÂCE. Merci pour votre commande ${order.reference} (${formatXof(order.totalXof)} de produits${fee !== null ? ` + ${formatXof(fee)} de livraison` : ''}). `
+            const waText = `Bonjour ${order.customerName.split(' ')[0]}, c’est Nature & Grâce. Merci pour votre commande ${order.reference} (${formatXof(order.totalXof)} de produits${fee !== null ? ` + ${formatXof(fee)} de livraison` : ''}). `
             return (
               <article className={`adm-order status-${order.status} ${newIds.has(order.id) ? 'is-new' : ''}`} key={order.id}>
                 <header>
@@ -707,7 +708,7 @@ function ReviewsPanel({ reviews, products, reload, notify, fail }: PanelProps & 
           {sorted.map((r) => (
             <article key={r.id} className={`adm-review ${r.published ? '' : 'is-pending'}`}>
               <header>
-                <span className="adm-stars" aria-label={`${r.rating} sur 5`}>{'★'.repeat(r.rating)}<i>{'★'.repeat(5 - r.rating)}</i></span>
+                <Stars rating={r.rating} size={15} />
                 {!r.published && <span className="adm-new">À valider</span>}
                 <small>{fmtDate(r.createdAt)}</small>
               </header>

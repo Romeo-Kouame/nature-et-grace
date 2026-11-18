@@ -1,5 +1,5 @@
 import React from 'react'
-import { ArrowUpRight, Leaf, MapPin, MessageCircle, Phone, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowUpRight, Leaf, MapPin, MessageCircle, Phone, ShieldCheck, Truck, Wallet } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { ALL_CATEGORIES } from '../types'
 
@@ -12,7 +12,9 @@ const LEGAL_LINKS = [
 ]
 
 export const Footer: React.FC = () => {
-  const { navigate, setSelectedCategory, setSearchTerm, categories, settings, waLink, waDisplay } = useApp()
+  const { navigate, setSelectedCategory, setSearchTerm, categories, settings, waLink, waDisplay, currentPath } = useApp()
+  // L'accueil (sous le héros) et la fiche produit (à côté de la photo) affichent déjà ces promesses : pas de doublon
+  const showPromises = currentPath !== '/' && !currentPath.startsWith('/produit/')
 
   const openCategory = (cat: string) => {
     setSearchTerm('')
@@ -41,6 +43,7 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="ng-footer">
+      {showPromises && (
       <div className="ng-container">
         <ul className="ng-promises">
           {promises.map(({ icon: Icon, title, text }) => (
@@ -56,6 +59,7 @@ export const Footer: React.FC = () => {
           ))}
         </ul>
       </div>
+      )}
 
       <div className="ng-footer-main">
         <div className="ng-container">
@@ -123,7 +127,7 @@ export const Footer: React.FC = () => {
               <div className="ng-pay">
                 <span>Paiement accepté</span>
                 <b>
-                  <i>W</i> Wave
+                  <i aria-hidden="true"><Wallet size={13} /></i> Wave
                 </b>
               </div>
             </div>

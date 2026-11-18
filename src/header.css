@@ -1,0 +1,141 @@
+/* =====================================================================
+   Nature & Grâce — En-tête moderne (une seule ligne, recherche en panneau)
+   Chargé après les autres feuilles : il remplace les anciens réglages de l'en-tête.
+   ===================================================================== */
+:root { --ng-header-h: 68px; }
+
+.ng-header {
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+}
+.ng-header.is-scrolled,
+.ng-header.is-searching {
+  border-bottom-color: var(--ng-line);
+  box-shadow: 0 10px 30px -22px rgba(15, 29, 23, 0.45);
+}
+
+.ng-header-main { height: var(--ng-header-h); gap: 16px; }
+
+/* Pages au centre, en pastilles */
+.ng-header-main > .ng-nav {
+  flex: 1;
+  justify-content: center;
+  gap: 2px;
+  height: auto;
+  min-width: 0;
+}
+.ng-header-main .ng-nav-link {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ng-text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+.ng-header-main .ng-nav-link::after { display: none; }
+.ng-header-main .ng-nav-link:hover { background: var(--ng-subtle); color: var(--ng-ink); }
+.ng-header-main .ng-nav-link.active { background: var(--ng-emerald-50); color: var(--ng-emerald); font-weight: 600; }
+.ng-header-main .ng-nav-link:focus-visible { outline: 2px solid var(--ng-emerald); outline-offset: 2px; }
+
+/* Actions à droite : icônes rondes */
+.ng-header .ng-actions { gap: 6px; }
+.ng-header .ng-icon-btn { width: 40px; height: 40px; border-radius: 99px; }
+.ng-header .ng-icon-btn.is-on { background: var(--ng-emerald-50); color: var(--ng-emerald); }
+.ng-header .ng-icon-btn:focus-visible { outline: 2px solid var(--ng-emerald); outline-offset: 2px; }
+.ng-avatar.ng-avatar--sm { width: 30px; height: 30px; font-size: 13px; }
+.ng-account-btn { padding: 0; }
+
+.ng-cart-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--ng-emerald);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s var(--ng-ease);
+}
+html.dark .ng-cart-pill { color: #06140e; }
+.ng-cart-pill:hover { background: var(--ng-emerald-600); }
+.ng-cart-pill:active { transform: scale(0.97); }
+.ng-cart-pill:focus-visible { outline: 2px solid var(--ng-emerald); outline-offset: 3px; }
+.ng-cart-pill-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--ng-gold);
+  color: #1d1406;
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  animation: ng-pop 0.4s var(--ng-ease);
+}
+
+/* Menu du compte, aligné à droite */
+.ng-dd-menu.ng-dd-menu--right { left: auto; right: 0; width: 300px; }
+.ng-dd-label { margin: 6px 12px 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ng-muted); }
+
+/* Panneau de recherche sous l'en-tête */
+.ng-search-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  padding: 18px 0 22px;
+  background: var(--ng-surface);
+  border-bottom: 1px solid var(--ng-line);
+  box-shadow: 0 24px 40px -30px rgba(15, 29, 23, 0.5);
+  animation: ng-dd-in 0.22s var(--ng-ease);
+}
+.ng-search.ng-search--panel { max-width: 720px; height: 54px; margin: 0 auto; }
+.ng-search.ng-search--panel input { font-size: 15.5px; }
+.ng-search-hint { max-width: 720px; margin: 10px auto 0; font-size: 12px; color: var(--ng-muted); }
+.ng-search-hint kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  border: 1px solid var(--ng-line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--ng-subtle);
+  font-family: inherit;
+  font-size: 11px;
+  text-align: center;
+  color: var(--ng-ink);
+}
+
+/* Éléments collants sous l'en-tête */
+.ng-toolbar { top: var(--ng-header-h); }
+.ng-pdp-media, .ng-pdp-gallery, .ng-form-card { top: calc(var(--ng-header-h) + 20px); }
+.ng-account-nav { top: calc(var(--ng-header-h) + 28px); }
+
+/* Écrans moyens : on resserre */
+@media (max-width: 1180px) {
+  .ng-header-main { gap: 10px; }
+  .ng-header-main .ng-nav-link { padding: 0 10px; font-size: 13.5px; }
+  .ng-logo small { display: none; }
+}
+@media (max-width: 1000px) and (min-width: 861px) {
+  .ng-header-main .ng-nav-link { padding: 0 8px; font-size: 13px; }
+}
+
+/* Téléphone : menu, logo, WhatsApp, panier ; recherche en dessous ; pas de panneau */
+@media (max-width: 860px) {
+  :root { --ng-header-h: 62px; }
+  .ng-header-main { height: 62px; }
+  .ng-search-panel { display: none; }
+  .ng-cart-pill { width: 42px; height: 42px; padding: 0; justify-content: center; }
+  .ng-cart-pill-count { position: absolute; top: -4px; right: -4px; border: 2px solid var(--ng-surface); }
+}

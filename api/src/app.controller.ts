@@ -15,14 +15,10 @@ import { PrismaService } from './prisma.service'
 import { GeminiService } from './gemini.service'
 import { RateLimit, accountLimiter } from './rate-limit'
 import { assertConsent, assertHuman, decodeImage, orderReference, sessionCookieBase } from './images'
+import { assertCaptcha } from './captcha'
 import { normalizePhone } from './customer.controller'
 
 const MINUTE = 60_000
-
-class BeautyAdviceDto {
-  @IsString() @MinLength(2) @MaxLength(600) message!: string
-  @IsOptional() @IsString() @MaxLength(200) skinType?: string
-}
 
 class GenerateDescriptionDto {
   @IsString() @MinLength(2) @MaxLength(120) name!: string
@@ -104,6 +100,8 @@ class CreateReviewDto {
   @IsOptional() @IsBoolean() consent?: boolean
   /** Champ piège anti-robots */
   @IsOptional() @IsString() @MaxLength(200) website?: string
+  /** Jeton du captcha Cloudflare Turnstile */
+  @IsOptional() @IsString() @MaxLength(2048) captchaToken?: string
 }
 class ClientErrorDto {
   @IsString() @MaxLength(300) message!: string
@@ -132,12 +130,6 @@ export class AppController {
   ) {}
 
   // ───────────── IA ─────────────
-
-  @Post('ai/advisor')
-  @RateLimit('advisor', 15, 10 * MINUTE)
-  getBeautyAdvice(@Body() dto: BeautyAdviceDto) {
-    return this.gemini.getBeautyAdvice(dto)
-  }
 
   @Post('ai/generate-description')
   @UseGuards(AdminGuard)
@@ -191,8 +183,9 @@ export class AppController {
 
   @Post('reviews')
   @RateLimit('review', 5, 60 * MINUTE)
-  async createReview(@Body() dto: CreateReviewDto) {
+  async createReview(@Req() request: Request, @Body() dto: CreateReviewDto) {
     assertHuman(dto.website)
+    await assertCaptcha(dto.captchaToken, request, 'review')
     assertConsent(dto.consent, 'Cochez la case pour accepter la publication de votre prénom, de votre ville et de votre avis.')
     const product = dto.productSlug ? await this.db.product.findUnique({ where: { slug: dto.productSlug } }) : null
     await this.db.review.create({

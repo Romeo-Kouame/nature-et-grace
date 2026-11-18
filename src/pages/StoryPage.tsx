@@ -30,7 +30,7 @@ const VALUES = [
 
 export const StoryPage: React.FC = () => {
   const { navigate, setAdvisorOpen } = useApp()
-  usePageMeta('Notre histoire', 'NATURE & GRÂCE, des soins naturels au cacao de Côte d’Ivoire : notre histoire et nos valeurs.')
+  usePageMeta('Notre histoire', 'Nature & Grâce, des soins naturels au cacao de Côte d’Ivoire : notre histoire et nos valeurs.')
 
   return (
     <div className="ng-container ng-subpage">

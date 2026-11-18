@@ -109,16 +109,6 @@ export type ApiReview = {
   rating: number; comment: string; published: boolean; createdAt: string
 }
 
-export type BeautyAdvice = {
-  diagnosis: string
-  recommendedProductIds: string[]
-  routineMorning: string[]
-  routineEvening: string[]
-  naturalTips: string[]
-  whatsappSummary: string
-  isDemo?: boolean
-}
-
 export type ProductDescriptionResult = {
   description: string
   suggestedTags?: string[]
@@ -128,6 +118,9 @@ export type ProductDescriptionResult = {
 export type ApiCustomer = {
   id: string; name: string; phone: string; email: string | null
   commune: string | null; address: string | null; deliveryZone: string | null
+  /** Faux pour un compte créé avec Google (pas de mot de passe) */
+  hasPassword?: boolean
+  google?: boolean
 }
 
 export type CustomerOrder = {

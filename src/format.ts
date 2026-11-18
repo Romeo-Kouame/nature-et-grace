@@ -5,7 +5,7 @@
  */
 export const formatXof = (val: number | null | undefined) =>
   val === null || val === undefined
-    ? 'Prix à confirmer'
+    ? 'Prix sur demande'
     : `${Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')}\u00a0FCFA`
 
 /** Texte sans accents ni majuscules, pour comparer « Karité » et « karite ». */
@@ -18,3 +18,10 @@ export const matchesQuery = (text: string, query: string) => {
   const haystack = normalizeText(text)
   return words.every((w) => haystack.includes(w))
 }
+
+/** Contenance affichable : rien tant que la boutique ne l'a pas fixée (« À confirmer »). */
+export const knownSize = (size: string | null | undefined) => (size && !/confirmer/i.test(size) ? size : '')
+
+/** « Rayon · 100 g », ou seulement le rayon si la contenance n'est pas encore connue. */
+export const categoryAndSize = (category: string, size: string | null | undefined) =>
+  knownSize(size) ? `${category} · ${knownSize(size)}` : category

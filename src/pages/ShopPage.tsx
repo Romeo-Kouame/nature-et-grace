@@ -2,11 +2,14 @@ import React, { useMemo, useState } from 'react'
 import { ArrowUpDown, Sparkles, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import ProductCard, { BADGE_ORDER, ProductCardSkeleton } from '../components/ProductCard'
-import ProductRail from '../components/ProductRail'
+import ProductRail, { RAIL_MIN_PRODUCTS } from '../components/ProductRail'
 import { ALL_CATEGORIES } from '../types'
 import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { matchesQuery } from '../format'
+
+/** En dessous de ce nombre de produits, la vue « Tout » est une grille unique : des rangées presque vides font paraître la boutique vide */
+const RAILS_MIN_CATALOG = 9
 
 export const ShopPage: React.FC = () => {
   const { products, categories, selectedCategory, setSelectedCategory, searchTerm, setSearchTerm, setAdvisorOpen, catalogLoading } = useApp()
@@ -14,8 +17,8 @@ export const ShopPage: React.FC = () => {
   usePageMeta(
     selectedCategory === ALL_CATEGORIES ? 'Boutique' : selectedCategory,
     selectedCategory === ALL_CATEGORIES
-      ? 'Tous les soins naturels NATURE & GRÂCE : beurre de cacao, karité, savon noir, huiles végétales et coffrets. Commande en ligne ou sur WhatsApp.'
-      : `${selectedCategory} NATURE & GRÂCE : soins naturels de Côte d’Ivoire, prix en FCFA, commande en ligne ou sur WhatsApp, paiement Wave.`,
+      ? 'Tous les soins naturels Nature & Grâce : beurre de cacao, karité, savon noir, huiles végétales et coffrets. Commande en ligne ou sur WhatsApp.'
+      : `${selectedCategory} Nature & Grâce : soins naturels de Côte d’Ivoire, prix en FCFA, commande en ligne ou sur WhatsApp, paiement Wave.`,
   )
 
   const filteredProducts = useMemo(() => {
@@ -34,7 +37,8 @@ export const ShopPage: React.FC = () => {
 
   const chips = [ALL_CATEGORIES, ...categories]
 
-  const showRails = selectedCategory === ALL_CATEGORIES && !searchTerm.trim() && sortBy === 'featured'
+  const showRails =
+    selectedCategory === ALL_CATEGORIES && !searchTerm.trim() && sortBy === 'featured' && filteredProducts.length >= RAILS_MIN_CATALOG
   const rails = useMemo(
     () => categories.map((cat) => ({ cat, list: filteredProducts.filter((p) => p.category === cat) })).filter((r) => r.list.length > 0),
     [categories, filteredProducts],
@@ -111,7 +115,7 @@ export const ShopPage: React.FC = () => {
         // Vue « Tout » sans recherche : une rangée qui défile par rayon
         <div className="ng-shop-rails">
           {rails.map(({ cat, list }) => (
-            <ProductRail key={cat} title={cat} subtitle={`${list.length} produit${list.length > 1 ? 's' : ''}`} products={list} onSeeAll={() => setSelectedCategory(cat)} autoplay={0} />
+            <ProductRail key={cat} title={cat} subtitle={`${list.length} produit${list.length > 1 ? 's' : ''}`} products={list} onSeeAll={list.length >= RAIL_MIN_PRODUCTS ? () => setSelectedCategory(cat) : undefined} autoplay={0} />
           ))}
         </div>
       ) : (

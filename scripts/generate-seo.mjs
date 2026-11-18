@@ -78,7 +78,7 @@ ${urls
 </urlset>
 `
 
-const robots = `# NATURE & GRÂCE
+const robots = `# Nature & Grâce
 User-agent: *
 Allow: /
 # Espaces privés : inutile de les indexer

@@ -10,7 +10,7 @@ Compte de la propriétaire.
 
 ### `Customer`
 Compte client.
-`id`, `name`, `phone` (unique, format `225` + 10 chiffres), `email` (unique, facultatif), `passwordHash`, `commune`, `address`, `deliveryZone`, `termsAcceptedAt` (date d'acceptation des CGV et de la confidentialité), `createdAt`, `updatedAt`.
+`id`, `name`, `phone` (unique, format `225` + 10 chiffres), `email` (unique, facultatif), `passwordHash` (vide pour un compte créé avec Google), `googleId` (unique, facultatif : identifiant Google), `commune`, `address`, `deliveryZone`, `termsAcceptedAt` (date d'acceptation des CGV et de la confidentialité), `createdAt`, `updatedAt`.
 
 ### `Product`
 `id`, `name`, `slug` (unique, utilisé dans les adresses), `category`, `description`, `size`, `priceXof` (vide = « prix à confirmer »), `imageUrl`, `gallery` (liste, 6 max), `badge` (`bestseller` | `new`), `stock`, `active`, dates.
@@ -59,6 +59,8 @@ Review, Image, StoreSettings, Admin : indépendantes
 2. Connexion par téléphone ou e-mail ; message d'erreur unique, quel que soit le champ faux ; 10 essais par 15 minutes.
 3. Session : jeton JWT signé (`JWT_SECRET`) dans le cookie `ng_customer`, `httpOnly`, 30 jours. Le jeton contient une empreinte du mot de passe : en changer déconnecte les autres appareils.
 4. Chaque route client (`/customer/*`, `/orders`) passe par `CustomerGuard`, qui recharge le client en base.
+5. Connexion avec Google (`/customer/google/start` → Google → `/customer/google/callback`) : état anti-CSRF et PKCE dans un cookie signé de 10 minutes ; l'e-mail doit être vérifié par Google. Compte déjà lié → session. E-mail déjà utilisé par un compte à mot de passe → refus (pas de liaison automatique : ces e-mails ne sont pas vérifiés). Nouveau client → cookie signé de 20 minutes, puis `/customer/google/complete` (téléphone, acceptation des conditions, captcha). Sans mot de passe, l'empreinte de session repose sur l'identifiant Google ; la suppression du compte se confirme en tapant « SUPPRIMER ».
+6. Captcha Cloudflare Turnstile sur l'inscription, la connexion, la finalisation Google et les avis : jeton vérifié par l'API (action et domaine contrôlés, refus si Cloudflare ne répond pas). Désactivé tant que `TURNSTILE_SECRET` est vide.
 
 ### Administration
 - Cookie `ng_admin`, 8 heures, invalidé au changement de mot de passe (version = date de mise à jour du compte).

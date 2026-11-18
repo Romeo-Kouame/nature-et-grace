@@ -1,5 +1,5 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Copy, ImageUp, MessageCircle, Minus, Package, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Copy, ImageUp, MessageCircle, Minus, Package, Plus, ShoppingBag, Trash2, Wallet, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api, CreatedOrder, imageFileToDataUrl } from '../api'
 import { formatXof } from '../format'
@@ -72,7 +72,7 @@ export const CartDrawer: React.FC = () => {
     const who = details?.customerName
       ? `\nNom : ${details.customerName}\nTéléphone : ${details.phone}\nLivraison : ${[details.deliveryZone, details.commune].filter(Boolean).join(' — ')}\nAdresse : ${details.address}\n`
       : ''
-    return `Bonjour NATURE & GRÂCE, je souhaite commander :\n\n${lines}\n\nTotal produits : ${formatXof(cartTotal)}${who}\nMerci de me confirmer les frais et le délai de livraison.`
+    return `Bonjour Nature & Grâce, je souhaite commander :\n\n${lines}\n\nTotal produits : ${formatXof(cartTotal)}${who}\nMerci de me confirmer les frais et le délai de livraison.`
   }
 
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
@@ -216,7 +216,7 @@ export const CartDrawer: React.FC = () => {
 
             <section className="ng-wave-box">
               <div className="ng-wave-head">
-                <span className="ng-wave-logo">W</span>
+                <span className="ng-wave-logo" aria-hidden="true"><Wallet size={15} /></span>
                 <b>Paiement Wave</b>
               </div>
               <p>{settings.waveInstructions}</p>
@@ -252,7 +252,7 @@ export const CartDrawer: React.FC = () => {
               )}
               <a
                 className="ng-btn ng-btn--wa"
-                href={waLink(`Bonjour NATURE & GRÂCE, je vous écris au sujet de ma commande ${lastOrder.reference}.`)}
+                href={waLink(`Bonjour Nature & Grâce, je vous écris au sujet de ma commande ${lastOrder.reference}.`)}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -372,7 +372,7 @@ export const CartDrawer: React.FC = () => {
                 <MessageCircle size={17} /> Envoyer mon panier sur WhatsApp
               </a>
               <div className="ng-wave-note">
-                <span className="ng-wave-logo">W</span>
+                <span className="ng-wave-logo" aria-hidden="true"><Wallet size={15} /></span>
                 <span>Paiement par Wave après confirmation de la boutique.</span>
               </div>
             </footer>
