@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react'
-import { Check, MessageCircle } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { AppProvider, useApp } from './context/AppContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import MobileTabBar from './components/MobileTabBar'
 import CartDrawer from './components/CartDrawer'
-import BeautyAdvisorModal from './components/BeautyAdvisorModal'
+import ChatWidget from './components/ChatWidget'
 import HomePage from './pages/HomePage'
 import ShopPage from './pages/ShopPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -27,6 +27,8 @@ import './checkout.css'
 import './account.css'
 import './visual.css'
 import './login.css'
+import './header.css'
+import './chat.css'
 
 function renderPage(path: string) {
   const clean = path.replace(/\/+$/, '') || '/'
@@ -66,7 +68,7 @@ function renderPage(path: string) {
 }
 
 function AppContent() {
-  const { currentPath, toastMessage, waLink, settings } = useApp()
+  const { currentPath, toastMessage, settings } = useApp()
   useReveal()
   useEffect(() => initAnalytics(), [])
   // Une page vue par changement de page (uniquement si le visiteur a accepté la mesure d'audience)
@@ -76,7 +78,7 @@ function AppContent() {
   useJsonLd('business', {
     '@context': 'https://schema.org',
     '@type': 'Store',
-    name: 'NATURE & GRÂCE',
+    name: 'Nature & Grâce',
     slogan: 'Prenez soin de vous naturellement',
     description: 'Soins naturels au beurre de cacao, karité, savon noir et huiles végétales de Côte d’Ivoire.',
     url: SITE_URL,
@@ -132,16 +134,10 @@ function AppContent() {
         </div>
       )}
 
-      {/* Bouton WhatsApp flottant (ordinateur) : sur téléphone, la barre du bas le remplace */}
-      <div className="ng-floating">
-        <a className="ng-floating-wa" href={waLink()} target="_blank" rel="noreferrer" aria-label="Écrire à la boutique sur WhatsApp">
-          <MessageCircle size={22} />
-        </a>
-      </div>
-
       <CookieBanner />
       <CartDrawer />
-      <BeautyAdvisorModal />
+      {/* Conseillère IA : bulle « Une question ? » en bas à droite, et fenêtre de chat */}
+      <ChatWidget />
     </div>
   )
 }

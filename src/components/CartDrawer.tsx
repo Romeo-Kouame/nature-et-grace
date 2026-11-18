@@ -1,5 +1,6 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Copy, ImageUp, MessageCircle, Minus, Package, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Copy, ImageUp, MessageCircle, Minus, Package, Plus, Trash2, Wallet, X } from 'lucide-react'
+import CartIcon from './CartIcon'
 import { useApp } from '../context/AppContext'
 import { api, CreatedOrder, imageFileToDataUrl } from '../api'
 import { formatXof } from '../format'
@@ -45,10 +46,10 @@ export const CartDrawer: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartOpen])
 
-  // Le panier est réservé aux clients connectés (sécurité si on l'ouvre autrement que par le bouton)
+  // Déconnexion pendant l'étape « Livraison » : retour au panier (le formulaire de livraison exige un compte)
   useEffect(() => {
-    if (cartOpen && !user) goToLogin({ openCart: true })
-  }, [cartOpen, user, goToLogin])
+    if (!user && step === 'details') setStep('cart')
+  }, [user, step])
 
   useEffect(() => {
     if (!cartOpen) return
@@ -61,7 +62,17 @@ export const CartDrawer: React.FC = () => {
     }
   }, [cartOpen, setCartOpen])
 
-  if (!cartOpen || !user) return null
+  if (!cartOpen) return null
+
+  // Frais connus des zones de livraison, pour annoncer une fourchette dès le panier (avant toute connexion)
+  // Zone choisie dans le panier : frais exacts (null = à confirmer)
+  const cartFee = zone && zone !== OTHER_ZONE ? zones.find((z) => z.name === zone)?.feeXof ?? null : null
+  const knownFees = zones.map((z) => z.feeXof).filter((f): f is number => typeof f === 'number')
+  const feeHint = knownFees.length
+    ? Math.min(...knownFees) === Math.max(...knownFees)
+      ? `Livraison : ${Math.min(...knownFees) === 0 ? 'offerte' : formatXof(Math.min(...knownFees))} selon votre zone, confirmée par la boutique avant paiement.`
+      : `Livraison : de ${formatXof(Math.min(...knownFees))} à ${formatXof(Math.max(...knownFees))} selon votre zone, confirmée par la boutique avant paiement.`
+    : 'Frais de livraison indiqués à l’étape suivante et confirmés par la boutique avant paiement.'
 
   const close = () => setCartOpen(false)
 
@@ -72,7 +83,7 @@ export const CartDrawer: React.FC = () => {
     const who = details?.customerName
       ? `\nNom : ${details.customerName}\nTéléphone : ${details.phone}\nLivraison : ${[details.deliveryZone, details.commune].filter(Boolean).join(' — ')}\nAdresse : ${details.address}\n`
       : ''
-    return `Bonjour NATURE & GRÂCE, je souhaite commander :\n\n${lines}\n\nTotal produits : ${formatXof(cartTotal)}${who}\nMerci de me confirmer les frais et le délai de livraison.`
+    return `Bonjour Nature & Grâce, je souhaite commander :\n\n${lines}\n\nTotal produits : ${formatXof(cartTotal)}${who}\nMerci de me confirmer les frais et le délai de livraison.`
   }
 
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
@@ -92,6 +103,7 @@ export const CartDrawer: React.FC = () => {
       setError('Cochez la case pour accepter les conditions générales de vente.')
       return
     }
+    if (!user) return
     if (!orderKey.current) orderKey.current = newOrderKey()
 
     if (!catalogLive || items.some((p) => !p.apiId)) {
@@ -172,11 +184,11 @@ export const CartDrawer: React.FC = () => {
             </button>
           ) : null}
           <div>
-            <span className="ng-eyebrow">{step === 'done' ? 'COMMANDE ENVOYÉE' : step === 'details' ? 'ÉTAPE 2 SUR 2' : 'VOTRE SÉLECTION'}</span>
             <h2>
               {step === 'done' ? 'Merci !' : step === 'details' ? 'Livraison' : 'Mon panier'}
               {step === 'cart' && cartCount > 0 && <small> ({cartCount})</small>}
             </h2>
+            {step === 'details' && <p className="ng-cart-step">Étape 2 sur 2</p>}
           </div>
           <button type="button" className="ng-icon-btn" onClick={close} aria-label="Fermer le panier">
             <X size={20} />
@@ -216,7 +228,7 @@ export const CartDrawer: React.FC = () => {
 
             <section className="ng-wave-box">
               <div className="ng-wave-head">
-                <span className="ng-wave-logo">W</span>
+                <span className="ng-wave-logo" aria-hidden="true"><Wallet size={15} /></span>
                 <b>Paiement Wave</b>
               </div>
               <p>{settings.waveInstructions}</p>
@@ -252,7 +264,7 @@ export const CartDrawer: React.FC = () => {
               )}
               <a
                 className="ng-btn ng-btn--wa"
-                href={waLink(`Bonjour NATURE & GRÂCE, je vous écris au sujet de ma commande ${lastOrder.reference}.`)}
+                href={waLink(`Bonjour Nature & Grâce, je vous écris au sujet de ma commande ${lastOrder.reference}.`)}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -299,7 +311,7 @@ export const CartDrawer: React.FC = () => {
         {step !== 'done' && items.length === 0 && (
           <div className="ng-cart-body ng-cart-empty">
             <span className="ng-empty-ico">
-              <ShoppingBag size={28} />
+              <CartIcon size={28} />
             </span>
             <h3>Votre panier est vide</h3>
             <p>Ajoutez vos soins préférés pour commander sur le site ou par WhatsApp.</p>
@@ -364,15 +376,45 @@ export const CartDrawer: React.FC = () => {
                 <span>Sous-total produits</span>
                 <b>{formatXof(cartTotal)}</b>
               </p>
-              <p className="ng-form-hint">Frais de livraison indiqués à l’étape suivante et confirmés par la boutique avant paiement.</p>
-              <button type="button" className="ng-btn ng-btn--primary ng-btn--block" onClick={() => setStep('details')}>
-                Commander sur le site <ArrowRight size={17} />
-              </button>
+              {zones.length > 0 ? (
+                <>
+                  <label className="ng-cart-zone">
+                    <span>Livraison</span>
+                    <select value={zone} onChange={(e) => setZone(e.target.value)} aria-label="Zone de livraison">
+                      {zones.map((z) => (
+                        <option key={z.name} value={z.name}>
+                          {z.name} — {z.feeXof === null ? 'frais à confirmer' : z.feeXof === 0 ? 'offerte' : formatXof(z.feeXof)}
+                        </option>
+                      ))}
+                      <option value={OTHER_ZONE}>Autre ville ou commune — frais à confirmer</option>
+                    </select>
+                  </label>
+                  <p className="ng-cart-subtotal ng-cart-estimate">
+                    <span>{cartFee === null ? 'Total hors livraison' : 'Total estimé'}</span>
+                    <b>{formatXof(cartTotal + (cartFee ?? 0))}</b>
+                  </p>
+                  <p className="ng-form-hint">Le total est confirmé par la boutique avant le paiement Wave.</p>
+                </>
+              ) : (
+                <p className="ng-form-hint">{feeHint}</p>
+              )}
+              {user ? (
+                <button type="button" className="ng-btn ng-btn--primary ng-btn--block" onClick={() => setStep('details')}>
+                  Commander sur le site <ArrowRight size={17} />
+                </button>
+              ) : (
+                <>
+                  <button type="button" className="ng-btn ng-btn--primary ng-btn--block" onClick={() => goToLogin({ openCart: true })}>
+                    Commander sur le site <ArrowRight size={17} />
+                  </button>
+                  <p className="ng-form-hint ng-cart-account-hint">Un compte gratuit est demandé à l’étape suivante : votre panier est gardé.</p>
+                </>
+              )}
               <a className="ng-btn ng-btn--wa ng-btn--block" href={waLink(whatsappOrderText())} target="_blank" rel="noreferrer">
                 <MessageCircle size={17} /> Envoyer mon panier sur WhatsApp
               </a>
               <div className="ng-wave-note">
-                <span className="ng-wave-logo">W</span>
+                <span className="ng-wave-logo" aria-hidden="true"><Wallet size={15} /></span>
                 <span>Paiement par Wave après confirmation de la boutique.</span>
               </div>
             </footer>
@@ -380,7 +422,7 @@ export const CartDrawer: React.FC = () => {
         )}
 
         {/* ÉTAPE 2 : COORDONNÉES */}
-        {step === 'details' && items.length > 0 && (
+        {step === 'details' && user && items.length > 0 && (
           <form className="ng-cart-form" onSubmit={submitOrder}>
             <div className="ng-cart-body ng-form">
               <label>

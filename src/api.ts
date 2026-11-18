@@ -74,6 +74,7 @@ export type ApiProduct = {
   id: string; slug: string; name: string; category: string; description: string; size: string
   priceXof: number | null; imageUrl: string | null; stock: number; active: boolean
   gallery?: string[]; badge?: 'bestseller' | 'new' | null
+  benefits?: string[]; howToUse?: string[]; ingredients?: string; origin?: string
 }
 
 export type OrderStatus = 'pending' | 'payment_review' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled'
@@ -102,21 +103,13 @@ export type ApiStoreSettings = {
   legalInfo: string
   /** Adresse de la boutique ou du point de retrait (carte de la page Contact) */
   storeAddress: string
+  /** E-mail d'alerte des nouvelles commandes : renvoyé seulement à l'espace boutique */
+  alertEmail?: string
 }
 
 export type ApiReview = {
   id: string; authorName: string; city: string; productSlug: string | null; productName: string | null
   rating: number; comment: string; published: boolean; createdAt: string
-}
-
-export type BeautyAdvice = {
-  diagnosis: string
-  recommendedProductIds: string[]
-  routineMorning: string[]
-  routineEvening: string[]
-  naturalTips: string[]
-  whatsappSummary: string
-  isDemo?: boolean
 }
 
 export type ProductDescriptionResult = {
@@ -128,6 +121,9 @@ export type ProductDescriptionResult = {
 export type ApiCustomer = {
   id: string; name: string; phone: string; email: string | null
   commune: string | null; address: string | null; deliveryZone: string | null
+  /** Faux pour un compte créé avec Google (pas de mot de passe) */
+  hasPassword?: boolean
+  google?: boolean
 }
 
 export type CustomerOrder = {

@@ -8,6 +8,7 @@ import { CustomerGuard, checkPassword, customerSessionVersion } from './auth'
 import { PrismaService } from './prisma.service'
 import { RateLimit, accountLimiter } from './rate-limit'
 import { assertConsent, assertHuman, orderReference, sessionCookieBase } from './images'
+import { assertCaptcha } from './captcha'
 
 const MINUTE = 60_000
 const COOKIE = 'ng_customer'
@@ -22,6 +23,7 @@ class RegisterDto {
   @IsOptional() @IsBoolean() acceptTerms?: boolean
   /** Champ piège anti-robots, toujours vide pour un humain */
   @IsOptional() @IsString() @MaxLength(200) website?: string
+  @IsOptional() @IsString() @MaxLength(2048) captchaToken?: string
 }
 class DeleteAccountDto {
   @IsString() @MinLength(1) @MaxLength(200) password!: string
@@ -30,6 +32,7 @@ class LoginDto {
   /** Numéro de téléphone ou adresse e-mail */
   @IsString() @MinLength(3) @MaxLength(120) identifier!: string
   @IsString() @MinLength(1) @MaxLength(200) password!: string
+  @IsOptional() @IsString() @MaxLength(2048) captchaToken?: string
 }
 class ProfileDto {
   @IsString() @MinLength(2) @MaxLength(80) name!: string
@@ -52,9 +55,23 @@ export function normalizePhone(raw: string): string {
   return d
 }
 
-const publicCustomer = (c: Customer) => ({
+export const publicCustomer = (c: Customer) => ({
   id: c.id, name: c.name, phone: c.phone, email: c.email, commune: c.commune, address: c.address, deliveryZone: c.deliveryZone,
+  /** Faux pour un compte créé avec Google : pas de mot de passe à changer */
+  hasPassword: Boolean(c.passwordHash),
+  google: Boolean(c.googleId),
 })
+
+/** Ouvre la session client (cookie `ng_customer`, 30 jours). */
+export async function startCustomerSession(jwt: JwtService, customer: Customer, response: Response) {
+  const token = await jwt.signAsync({ sub: customer.id, kind: 'customer', version: customerSessionVersion(customer) }, { expiresIn: '30d' })
+  response.cookie(COOKIE, token, customerCookieOptions())
+}
+
+export const customerCookieOptions = () => ({ ...sessionCookieBase(), maxAge: 30 * 24 * 60 * 60 * 1000 })
+
+/** Mot à taper pour supprimer un compte Google (qui n'a pas de mot de passe) */
+export const DELETE_CONFIRMATION = 'SUPPRIMER'
 
 type CustomerRequest = Request & { customerId: string }
 
@@ -64,8 +81,9 @@ export class CustomerController {
 
   @Post('register')
   @RateLimit('register', 5, 60 * MINUTE)
-  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: Response) {
+  async register(@Req() request: Request, @Body() dto: RegisterDto, @Res({ passthrough: true }) response: Response) {
     assertHuman(dto.website)
+    await assertCaptcha(dto.captchaToken, request, 'signup')
     assertConsent(dto.acceptTerms)
     const phone = normalizePhone(dto.phone)
     const email = dto.email?.trim().toLowerCase() || null
@@ -81,7 +99,8 @@ export class CustomerController {
   @Post('login')
   @HttpCode(200)
   @RateLimit('customer-login', 10, 15 * MINUTE)
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
+  async login(@Req() request: Request, @Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
+    await assertCaptcha(dto.captchaToken, request, 'login')
     const id = dto.identifier.trim()
     let customer: Customer | null = null
     let accountKey = id.toLowerCase()
@@ -142,6 +161,7 @@ export class CustomerController {
   @RateLimit('customer-password', 8, 15 * MINUTE)
   async changePassword(@Req() request: CustomerRequest, @Body() dto: PasswordDto, @Res({ passthrough: true }) response: Response) {
     const customer = await this.db.customer.findUniqueOrThrow({ where: { id: request.customerId } })
+    if (!customer.passwordHash) throw new BadRequestException('Votre compte utilise la connexion Google : il n’a pas de mot de passe à modifier.')
     if (!(await bcrypt.compare(dto.currentPassword, customer.passwordHash))) throw new UnauthorizedException('Mot de passe actuel incorrect.')
     const updated = await this.db.customer.update({ where: { id: customer.id }, data: { passwordHash: await bcrypt.hash(dto.newPassword, 12) } })
     await this.startSession(updated, response)
@@ -159,7 +179,11 @@ export class CustomerController {
   @RateLimit('customer-delete', 5, 15 * MINUTE)
   async deleteMe(@Req() request: CustomerRequest, @Body() dto: DeleteAccountDto, @Res({ passthrough: true }) response: Response) {
     const customer = await this.db.customer.findUniqueOrThrow({ where: { id: request.customerId } })
-    if (!(await bcrypt.compare(dto.password, customer.passwordHash))) throw new UnauthorizedException('Mot de passe incorrect.')
+    // Compte Google : pas de mot de passe, le client tape « SUPPRIMER » pour confirmer
+    const confirmed = customer.passwordHash
+      ? await bcrypt.compare(dto.password, customer.passwordHash)
+      : dto.password.trim().toUpperCase() === DELETE_CONFIRMATION
+    if (!confirmed) throw new UnauthorizedException(customer.passwordHash ? 'Mot de passe incorrect.' : `Tapez ${DELETE_CONFIRMATION} pour confirmer.`)
     const inProgress = await this.db.order.count({
       where: { customerId: customer.id, status: { in: ['pending', 'payment_review', 'confirmed', 'preparing', 'shipped'] } },
     })
@@ -191,12 +215,11 @@ export class CustomerController {
     return orders.map(({ paymentProofUrl, customerId: _c, ...order }) => ({ ...order, reference: orderReference(order.id), proofSent: Boolean(paymentProofUrl) }))
   }
 
-  private async startSession(customer: Customer, response: Response) {
-    const token = await this.jwt.signAsync({ sub: customer.id, kind: 'customer', version: customerSessionVersion(customer.passwordHash) }, { expiresIn: '30d' })
-    response.cookie(COOKIE, token, this.cookieOptions())
+  private startSession(customer: Customer, response: Response) {
+    return startCustomerSession(this.jwt, customer, response)
   }
 
   private cookieOptions() {
-    return { ...sessionCookieBase(), maxAge: 30 * 24 * 60 * 60 * 1000 }
+    return customerCookieOptions()
   }
 }

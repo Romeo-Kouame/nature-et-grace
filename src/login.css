@@ -171,3 +171,35 @@ html.dark .ng-login-primary { color: #06140e; }
 @media (prefers-reduced-motion: reduce) {
   .ng-lc-chip { animation: none; }
 }
+
+/* Connexion avec Google */
+.ng-login-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  border: 1px solid var(--ng-line-strong, var(--ng-line));
+  border-radius: 99px;
+  background: var(--ng-surface);
+  color: var(--ng-ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.ng-login-google:hover { background: var(--ng-subtle); box-shadow: var(--ng-shadow-sm); }
+.ng-login-google:focus-visible { outline: 3px solid color-mix(in srgb, var(--ng-emerald) 35%, transparent); outline-offset: 2px; }
+.ng-login-or { display: flex; align-items: center; gap: 12px; margin: 4px 0; color: var(--ng-muted); font-size: 12.5px; }
+.ng-login-or::before, .ng-login-or::after { content: ''; flex: 1; height: 1px; background: var(--ng-line); }
+.ng-login-google-as { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ng-subtle); font-size: 14px; color: var(--ng-text); }
+.ng-login-google-as b { color: var(--ng-ink); word-break: break-all; }
+
+/* Captcha Turnstile : prend la largeur du formulaire */
+.ng-captcha { min-height: 0; }
+.ng-captcha iframe { max-width: 100%; }
+
+/* « Mot de passe oublié ? » est un bouton (il ouvre l'écran de réinitialisation) */
+button.ng-login-forgot { border: 0; background: none; font: inherit; cursor: pointer; }
+.ng-login-back-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 0; background: none; color: var(--ng-ink); font: inherit; font-weight: 600; cursor: pointer; }
+.ng-login-back-link:hover { color: var(--ng-emerald); }

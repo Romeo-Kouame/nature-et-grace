@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, Heart, ImageUp, KeyRound, LogOut, MessageCircle, Package, Save, ShoppingBag, Trash2, User as UserIcon } from 'lucide-react'
+import { ArrowRight, Check, Heart, ImageUp, KeyRound, LogOut, MessageCircle, Package, Save, Trash2, User as UserIcon } from 'lucide-react'
+import CartIcon from '../components/CartIcon'
 import { useApp, formatPhone } from '../context/AppContext'
 import { api, ApiCustomer, CustomerOrder, imageFileToDataUrl, ORDER_STATUS_LABELS, OrderStatus } from '../api'
 import { formatXof } from '../format'
@@ -43,7 +44,7 @@ export const AccountPage: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [pwError, setPwError] = useState('')
-  usePageMeta('Votre compte', 'Votre espace client NATURE & GRÂCE : informations, adresse de livraison et mot de passe.')
+  usePageMeta('Votre compte', 'Votre espace client Nature & Grâce : informations, adresse de livraison et mot de passe.')
 
   if (!ready || !user) return <div className="ng-container ng-subpage"><p className="ng-form-hint">Chargement…</p></div>
 
@@ -91,7 +92,6 @@ export const AccountPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Votre compte' }]} />
       <header className="ng-page-head ng-page-head--left">
-        <span className="ng-eyebrow">MON ESPACE</span>
         <h1>Bonjour, {user.name.split(' ')[0]}</h1>
       </header>
 
@@ -147,6 +147,16 @@ export const AccountPage: React.FC = () => {
             <p className="ng-form-hint">Pour changer de numéro de téléphone, écrivez à la boutique sur WhatsApp.</p>
           </form>
 
+          {user.hasPassword === false ? (
+            <section className="ng-form-card ng-form">
+              <h2 className="ng-h2">
+                <KeyRound size={20} /> Connexion
+              </h2>
+              <p className="ng-form-hint">
+                Vous vous connectez avec votre compte Google{user.email ? ` (${user.email})` : ''} : pas de mot de passe à gérer ici.
+              </p>
+            </section>
+          ) : (
           <form className="ng-form-card ng-form" onSubmit={changePassword}>
             <h2 className="ng-h2">
               <KeyRound size={20} /> Mot de passe
@@ -170,6 +180,7 @@ export const AccountPage: React.FC = () => {
               Changer le mot de passe
             </button>
           </form>
+          )}
 
           <DeleteAccountCard />
         </div>
@@ -180,7 +191,8 @@ export const AccountPage: React.FC = () => {
 
 /** Droit à l'effacement : le client supprime lui-même son compte et ses données personnelles. */
 const DeleteAccountCard: React.FC = () => {
-  const { deleteAccount } = useApp()
+  const { deleteAccount, user } = useApp()
+  const withPassword = user?.hasPassword !== false
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -213,10 +225,17 @@ const DeleteAccountCard: React.FC = () => {
         </button>
       ) : (
         <form className="ng-form" onSubmit={submit}>
-          <label>
-            Confirmez avec votre mot de passe
-            <input name="password" type="password" autoComplete="current-password" required autoFocus />
-          </label>
+          {withPassword ? (
+            <label>
+              Confirmez avec votre mot de passe
+              <input name="password" type="password" autoComplete="current-password" required autoFocus />
+            </label>
+          ) : (
+            <label>
+              Tapez SUPPRIMER pour confirmer
+              <input name="password" autoComplete="off" required autoFocus pattern="[Ss][Uu][Pp][Pp][Rr][Ii][Mm][Ee][Rr]" placeholder="SUPPRIMER" />
+            </label>
+          )}
           {error && <p className="ng-form-error" role="alert">{error}</p>}
           <div className="ng-form-actions">
             <button type="button" className="ng-btn ng-btn--ghost" onClick={() => { setOpen(false); setError('') }} disabled={busy}>
@@ -244,6 +263,7 @@ const OrderCard: React.FC<{ order: CustomerOrder; onProofSent: () => void }> = (
   const input = useRef<HTMLInputElement>(null)
   const fee = order.deliveryFeeXof
   const canSendProof = !order.proofSent && (order.status === 'pending' || order.status === 'payment_review')
+  const { navigate } = useApp()
   const current = stepIndex(order.status)
 
   const upload = async (file?: File) => {
@@ -303,6 +323,11 @@ const OrderCard: React.FC<{ order: CustomerOrder; onProofSent: () => void }> = (
       </ul>
 
       <footer>
+        {order.status === 'delivered' && (
+          <button type="button" className="ng-btn ng-btn--ghost ng-btn--sm" onClick={() => navigate('/temoignages?avis')}>
+            Donner mon avis
+          </button>
+        )}
         {order.proofSent && (
           <span className="ng-proof-ok">
             <Check size={15} /> Preuve Wave envoyée
@@ -316,7 +341,7 @@ const OrderCard: React.FC<{ order: CustomerOrder; onProofSent: () => void }> = (
             </button>
           </>
         )}
-        <a className="ng-btn ng-btn--ghost ng-btn--sm" href={waLink(`Bonjour NATURE & GRÂCE, je vous écris au sujet de ma commande ${order.reference}.`)} target="_blank" rel="noreferrer">
+        <a className="ng-btn ng-btn--ghost ng-btn--sm" href={waLink(`Bonjour Nature & Grâce, je vous écris au sujet de ma commande ${order.reference}.`)} target="_blank" rel="noreferrer">
           <MessageCircle size={16} /> Une question ?
         </a>
       </footer>
@@ -331,7 +356,7 @@ export const OrdersPage: React.FC = () => {
   const { navigate } = useApp()
   const [orders, setOrders] = useState<CustomerOrder[] | null>(null)
   const [error, setError] = useState('')
-  usePageMeta('Vos commandes', 'Suivez vos commandes NATURE & GRÂCE et envoyez votre preuve de paiement Wave.')
+  usePageMeta('Vos commandes', 'Suivez vos commandes Nature & Grâce et envoyez votre preuve de paiement Wave.')
 
   const load = () =>
     api<CustomerOrder[]>('/customer/orders')
@@ -346,7 +371,6 @@ export const OrdersPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Vos commandes' }]} />
       <header className="ng-page-head ng-page-head--left">
-        <span className="ng-eyebrow">MON ESPACE</span>
         <h1>Vos commandes</h1>
       </header>
       <div className="ng-account-layout">
@@ -357,7 +381,7 @@ export const OrdersPage: React.FC = () => {
           {orders?.length === 0 && (
             <div className="ng-empty ng-empty--icon">
               <span className="ng-empty-ico">
-                <ShoppingBag size={28} />
+                <CartIcon size={28} />
               </span>
               <h3>Aucune commande pour le moment</h3>
               <p>Vos commandes passées sur le site apparaîtront ici, avec leur suivi.</p>

@@ -14,7 +14,9 @@
     "prisma:remove-demo": "tsx prisma/remove-demo.ts",
     "db:backup": "node scripts/backup.mjs backup",
     "db:restore-check": "node scripts/backup.mjs restore-check",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "prisma:seed-details": "tsx prisma/seed-details.ts",
+    "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",

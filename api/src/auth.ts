@@ -38,7 +38,7 @@ export class CustomerGuard implements CanActivate {
       const payload = await this.jwt.verifyAsync<{ sub: string; kind: string; version: string }>(token)
       if (payload.kind !== 'customer') throw new Error('wrong kind')
       const customer = await this.prisma.customer.findUnique({ where: { id: payload.sub } })
-      if (!customer || customerSessionVersion(customer.passwordHash) !== payload.version) throw new Error('invalid session')
+      if (!customer || customerSessionVersion(customer) !== payload.version) throw new Error('invalid session')
       ;(request as Request & { customerId: string }).customerId = payload.sub
       return true
     } catch {
@@ -51,8 +51,12 @@ export class CustomerGuard implements CanActivate {
  * Empreinte du mot de passe glissée dans la session : changer de mot de passe déconnecte les autres appareils.
  * C'est un HMAC du hachage (clé `JWT_SECRET`) : la session ne révèle rien du mot de passe haché.
  */
-export const customerSessionVersion = (passwordHash: string) =>
-  createHmac('sha256', process.env.JWT_SECRET ?? '').update(passwordHash).digest('base64url').slice(0, 22)
+export const customerSessionVersion = (customer: { passwordHash: string | null; googleId: string | null }) =>
+  createHmac('sha256', process.env.JWT_SECRET ?? '')
+    // Compte Google sans mot de passe : la session dépend de l'identifiant Google
+    .update(customer.passwordHash ?? `google:${customer.googleId ?? ''}`)
+    .digest('base64url')
+    .slice(0, 22)
 
 /** Hachage factice : la vérification prend le même temps, que le compte existe ou non. */
 const DUMMY_HASH = bcrypt.hashSync('compte-inexistant-pour-egaliser-le-temps', 12)

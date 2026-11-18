@@ -22,14 +22,14 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
     if (!this.state.failed) return this.props.children
     return (
       <div className="ng-crash" role="alert">
-        <img src="/logo.jpeg" alt="NATURE & GRÂCE" width={72} height={72} />
+        <img src="/logo.jpeg" alt="Nature & Grâce" width={72} height={72} />
         <h1>Oups, un problème d’affichage est survenu.</h1>
         <p>Rechargez la page. Si le problème continue, vous pouvez commander directement sur WhatsApp.</p>
         <div className="ng-crash-actions">
           <button type="button" onClick={() => window.location.reload()}>
             Recharger la page
           </button>
-          <a href="https://wa.me/2250717684751" target="_blank" rel="noreferrer">
+          <a href="https://wa.me/2250798419730" target="_blank" rel="noreferrer">
             Écrire sur WhatsApp
           </a>
         </div>

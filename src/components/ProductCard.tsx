@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react'
-import { Check, Heart, MessageCircle, ShoppingCart, Star } from 'lucide-react'
+import { Check, Heart, MessageCircle, Star } from 'lucide-react'
+import CartIcon from './CartIcon'
 import { Product } from '../types'
 import { useApp } from '../context/AppContext'
-import { formatXof } from '../format'
+import { categoryAndSize, formatXof } from '../format'
 import ProductVisual from './ProductVisual'
 import { flyToCart } from '../flyToCart'
 
@@ -40,7 +41,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'gr
   const handleBuy = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (priceUnknown) {
-      window.open(waLink(`Bonjour NATURE & GRÂCE, quel est le prix de « ${product.name} » ?`), '_blank', 'noopener,noreferrer')
+      window.open(waLink(`Bonjour Nature & Grâce, quel est le prix de « ${product.name} » ?`), '_blank', 'noopener,noreferrer')
       return
     }
     if (addToCart(product.id, 1)) {
@@ -84,9 +85,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'gr
       </div>
 
       <div className="ng-card-body">
-        <span className="ng-card-cat">
-          {product.category} · {product.size}
-        </span>
+        <span className="ng-card-cat">{categoryAndSize(product.category, product.size)}</span>
         <h3 className="ng-card-title">
           <a
             href={`/produit/${product.id}`}
@@ -112,7 +111,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'gr
             title={priceUnknown ? 'Demander le prix sur WhatsApp' : 'Ajouter au panier'}
             disabled={outOfStock}
           >
-            {added ? <Check size={18} /> : priceUnknown ? <MessageCircle size={18} /> : <ShoppingCart size={18} />}
+            {added ? <Check size={18} /> : priceUnknown ? <MessageCircle size={18} /> : <CartIcon size={18} />}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ArrowRight, Check, Heart, Leaf, MessageCircle, Minus, Plus, Share2, ShieldCheck, Sparkles, Truck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import ProductRail from '../components/ProductRail'
@@ -6,12 +7,13 @@ import { BADGE_LABELS, Stars } from '../components/ProductCard'
 import { flyToCart } from '../flyToCart'
 import ProductVisual from '../components/ProductVisual'
 import { PRODUCT_DETAILS, ProductDetails } from '../data/productDetails'
-import { formatXof } from '../format'
+import { categoryAndSize, formatXof, knownSize } from '../format'
 import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { SITE_URL, useJsonLd } from '../hooks/useJsonLd'
 
 const DEFAULT_DETAILS: ProductDetails = {
-  benefits: ['Soin d’origine naturelle sélectionné par NATURE & GRÂCE', 'Pour nourrir et protéger la peau au quotidien'],
+  benefits: ['Soin d’origine naturelle sélectionné par Nature & Grâce', 'Pour nourrir et protéger la peau au quotidien'],
   howToUse: ['Appliquer sur peau propre et légèrement humide en massant délicatement.'],
   ingredients: 'Composition détaillée communiquée par la boutique sur demande.',
   origin: 'Côte d’Ivoire.',
@@ -34,14 +36,63 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   const [activeTab, setActiveTab] = useState<TabKey>('benefits')
   const [photoIndex, setPhotoIndex] = useState(0)
   const mediaRef = useRef<HTMLDivElement>(null)
+  const [showBuyBar, setShowBuyBar] = useState(false)
   const product = products.find((p) => p.id === productId)
-  usePageMeta(product?.name ?? 'Produit introuvable', product ? `${product.name} (${product.size}) — ${product.description}` : undefined)
+  usePageMeta(
+    product?.name ?? 'Produit introuvable',
+    product ? `${product.name}${knownSize(product.size) ? ` (${knownSize(product.size)})` : ''} — ${product.description}` : undefined,
+  )
+
+  // Données structurées « Produit » pour Google : prix en FCFA, disponibilité, note (seulement s'il y a de vrais avis)
+  const productRating = product ? ratingFor(product.id) : null
+  const absolute = (url?: string | null) => (url ? (url.startsWith('http') ? url : `${SITE_URL}${url}`) : undefined)
+  useJsonLd(
+    'product',
+    product
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          sku: product.id,
+          category: product.category,
+          image: [product.imageUrl, ...(product.gallery ?? [])].map(absolute).filter(Boolean),
+          brand: { '@type': 'Brand', name: 'Nature & Grâce' },
+          url: `${SITE_URL}/produit/${product.id}`,
+          ...(product.price !== null
+            ? {
+                offers: {
+                  '@type': 'Offer',
+                  price: product.price,
+                  priceCurrency: 'XOF',
+                  availability: !catalogLive || product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                  url: `${SITE_URL}/produit/${product.id}`,
+                },
+              }
+            : {}),
+          ...(productRating
+            ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: productRating.average, reviewCount: productRating.count } }
+            : {}),
+        }
+      : null,
+  )
 
   useEffect(() => {
     setQuantity(1)
     setActiveTab('benefits')
     setPhotoIndex(0)
   }, [productId])
+
+  // Téléphone : la barre d'achat est visible dès l'arrivée sur la fiche (elle remplace la barre d'onglets)
+  useEffect(() => {
+    setShowBuyBar(product !== undefined)
+    return () => setShowBuyBar(false)
+  }, [productId, product !== undefined])
+
+  useEffect(() => {
+    document.body.classList.toggle('has-buybar', showBuyBar)
+    return () => document.body.classList.remove('has-buybar')
+  }, [showBuyBar])
 
   if (!product) {
     return (
@@ -60,7 +111,15 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   const max = maxQuantity(product)
   const inStock = max > 0
   const priceKnown = product.price !== null
-  const details = PRODUCT_DETAILS[product.id] ?? DEFAULT_DETAILS
+  // Fiche rédigée dans l'espace boutique ; à défaut (catalogue de secours), textes intégrés au site
+  const fallback = PRODUCT_DETAILS[product.id] ?? DEFAULT_DETAILS
+  const sheet = product.details
+  const details: ProductDetails = {
+    benefits: sheet?.benefits.length ? sheet.benefits : fallback.benefits,
+    howToUse: sheet?.howToUse.length ? sheet.howToUse : fallback.howToUse,
+    ingredients: sheet?.ingredients || fallback.ingredients,
+    origin: sheet?.origin || fallback.origin,
+  }
   const total = product.price !== null ? product.price * quantity : null
   const rating = ratingFor(product.id)
   const photos = product.imageUrl ? [product.imageUrl, ...(product.gallery ?? [])] : []
@@ -79,10 +138,10 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   }
 
   const whatsappText = !priceKnown
-    ? `Bonjour NATURE & GRÂCE,\n\nJe suis intéressée par « ${product.name} ». Pouvez-vous m’indiquer son prix et sa contenance ? Merci !`
+    ? `Bonjour Nature & Grâce,\n\nJe suis intéressée par « ${product.name} ». Pouvez-vous m’indiquer son prix et sa contenance ? Merci !`
     : inStock
-      ? `Bonjour NATURE & GRÂCE,\n\nJe souhaite commander :\n• ${product.name} (${product.size}) x${quantity} — ${formatXof(total)}\n\nPouvez-vous me préciser la livraison et le paiement Wave ? Merci !`
-      : `Bonjour NATURE & GRÂCE,\n\n« ${product.name} » est en rupture sur le site. Pouvez-vous me prévenir dès son retour ? Merci !`
+      ? `Bonjour Nature & Grâce,\n\nJe souhaite commander :\n• ${product.name}${knownSize(product.size) ? ` (${knownSize(product.size)})` : ''} x${quantity} — ${formatXof(total)}\n\nPouvez-vous me préciser la livraison et le paiement Wave ? Merci !`
+      : `Bonjour Nature & Grâce,\n\n« ${product.name} » est en rupture sur le site. Pouvez-vous me prévenir dès son retour ? Merci !`
 
   const handleShare = async () => {
     const url = window.location.href
@@ -97,11 +156,34 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
     }
   }
 
+  const trustItems = (
+    <>
+      <li>
+        <Truck size={18} />
+        <span>
+          <b>Livraison</b> {settings.deliveryCommunes}
+        </span>
+      </li>
+      <li>
+        <ShieldCheck size={18} />
+        <span>
+          <b>Paiement Wave</b> Après confirmation de la boutique
+        </span>
+      </li>
+      <li>
+        <Leaf size={18} />
+        <span>
+          <b>Soin naturel</b> Sélectionné auprès de productrices ivoiriennes
+        </span>
+      </li>
+    </>
+  )
+
   const add = () => {
-    // Client connecté : on montre le panier. Visiteur : il continue ses achats (le panier lui demandera de se connecter)
+    // Le panier s'ouvre pour tout le monde ; la connexion n'est demandée qu'au moment de valider
     if (!addToCart(product.id, quantity)) return
     flyToCart(mediaRef.current)
-    if (user) window.setTimeout(() => setCartOpen(true), 650)
+    window.setTimeout(() => setCartOpen(true), 650)
   }
 
   return (
@@ -151,13 +233,13 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
             ))}
           </div>
         )}
+        {/* Ordinateur : les promesses de la boutique remplissent l'espace sous la photo */}
+        <ul className="ng-pdp-trust ng-pdp-trust--side">{trustItems}</ul>
         </div>
 
         <div className="ng-pdp-info">
-          <span className="ng-eyebrow">
-            {product.category} · {product.size}
-          </span>
           <h1>{product.name}</h1>
+          <p className="ng-pdp-cat">{categoryAndSize(product.category, product.size)}</p>
 
           <div className="ng-pdp-meta">
             {rating && (
@@ -181,6 +263,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
 
           <p className="ng-pdp-desc">{product.description}</p>
 
+          <div className="ng-pdp-cta">
           {priceKnown && inStock ? (
             <div className="ng-pdp-buy">
               <div className="ng-qty" role="group" aria-label="Quantité">
@@ -204,28 +287,19 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
             </p>
           )}
 
-          <a className="ng-btn ng-btn--wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer">
+          <a className={`ng-btn ${priceKnown && inStock ? 'ng-btn--wa-outline' : 'ng-btn--wa'}`} href={waLink(whatsappText)} target="_blank" rel="noreferrer">
             <MessageCircle size={18} /> {!priceKnown ? 'Demander le prix sur WhatsApp' : inStock ? 'Commander sur WhatsApp' : 'Me prévenir sur WhatsApp'}
           </a>
+          </div>
 
           <button type="button" className="ng-pdp-ai" onClick={() => setAdvisorOpen(true)}>
             <Sparkles size={16} />
             <span>
-              Ce soin convient-il à ma peau ? <b>Demander au conseiller IA</b>
+              Ce soin convient-il à ma peau ? <b>Demander à la conseillère</b>
             </span>
           </button>
 
-          <ul className="ng-pdp-trust">
-            <li>
-              <Truck size={18} /> {settings.deliveryCommunes}
-            </li>
-            <li>
-              <ShieldCheck size={18} /> Paiement Wave après confirmation
-            </li>
-            <li>
-              <Leaf size={18} /> Soin d’origine naturelle
-            </li>
-          </ul>
+          <ul className="ng-pdp-trust ng-pdp-trust--inline">{trustItems}</ul>
 
           <div className="ng-pdp-details">
             <div className="ng-segmented" role="tablist" aria-label="Informations produit">
@@ -279,7 +353,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
                   </div>
                   <div>
                     <dt>Contenance</dt>
-                    <dd>{product.size}</dd>
+                    <dd>{knownSize(product.size) || 'Communiquée par la boutique sur demande'}</dd>
                   </div>
                 </dl>
               )}
@@ -320,6 +394,33 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
 
       {similarProducts.length > 0 && (
         <ProductRail title="Vous aimerez aussi" products={similarProducts} onSeeAll={() => navigate('/boutique')} />
+      )}
+
+      {/* Téléphone : barre d'achat collante en bas de l'écran, à la place de la barre d'onglets.
+          Rendue hors de <main> : l'animation de la page (transform) empêcherait sinon le position: fixed. */}
+      {createPortal(
+      <div className={`ng-buybar ${showBuyBar ? 'show' : ''}`} aria-hidden={!showBuyBar}>
+        {currentPhoto && <img src={currentPhoto} alt="" />}
+        <div className="ng-buybar-info">
+          <b>{product.name}</b>
+          <span>{formatXof(product.price)}</span>
+        </div>
+        {priceKnown && inStock ? (
+          <>
+            <a className="ng-buybar-wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer" aria-label="Commander sur WhatsApp">
+              <MessageCircle size={19} />
+            </a>
+            <button type="button" className="ng-btn ng-btn--primary" onClick={add}>
+              Ajouter au panier
+            </button>
+          </>
+        ) : (
+          <a className="ng-btn ng-btn--wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer">
+            <MessageCircle size={17} /> {!priceKnown ? 'Prix' : 'Me prévenir'}
+          </a>
+        )}
+      </div>,
+      document.querySelector('.app-shell') ?? document.body,
       )}
     </div>
   )

@@ -7,7 +7,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 
 export const ContactPage: React.FC = () => {
   const { showToast, settings, waLink, waDisplay } = useApp()
-  usePageMeta('Contact & livraison', 'Contactez NATURE & GRÂCE sur WhatsApp : commandes, conseils, zones et frais de livraison, paiement Wave.')
+  usePageMeta('Contact & livraison', 'Contactez Nature & Grâce sur WhatsApp : commandes, conseils, zones et frais de livraison, paiement Wave.')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [showMap, setShowMap] = useState(false)
   const address = settings.storeAddress?.trim() ?? ''
@@ -39,7 +39,7 @@ export const ContactPage: React.FC = () => {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
-    const text = `Bonjour NATURE & GRÂCE,\n\nJe vous contacte depuis votre site.\nNom : ${name}\nTéléphone : ${phone}\nMessage : ${message}`
+    const text = `Bonjour Nature & Grâce,\n\nJe vous contacte depuis votre site.\nNom : ${name}\nTéléphone : ${phone}\nMessage : ${message}`
     window.open(waLink(text), '_blank', 'noopener,noreferrer')
     setMessage('')
     showToast('WhatsApp s’ouvre avec votre message')
@@ -49,7 +49,6 @@ export const ContactPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Contact & livraison' }]} />
       <header className="ng-page-head">
-        <span className="ng-eyebrow">CONTACT & LIVRAISON</span>
         <h1>Une question ? On vous répond.</h1>
         <p>Sur un produit, votre commande ou la livraison : écrivez-nous, nous vous répondons sur WhatsApp.</p>
       </header>

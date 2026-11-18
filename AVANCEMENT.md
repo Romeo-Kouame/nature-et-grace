@@ -7,7 +7,7 @@ Boutique en ligne de soins naturels : présentation des produits, commande sur l
 - Site : React + TypeScript (Vite).
 - API : NestJS + Prisma + PostgreSQL.
 - IA : Google Gemini, appelée uniquement depuis le serveur.
-- WhatsApp de la boutique : +225 07 17 68 47 51 (modifiable dans l'administration).
+- WhatsApp de la boutique : +225 07 98 41 97 30 (modifiable dans l'administration).
 
 ## Fonctionnalités terminées
 

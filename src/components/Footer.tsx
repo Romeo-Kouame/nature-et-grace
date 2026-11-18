@@ -1,5 +1,5 @@
 import React from 'react'
-import { ArrowUpRight, Leaf, MapPin, MessageCircle, Phone, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowUpRight, Leaf, MapPin, MessageCircle, Phone, ShieldCheck, Truck, Wallet } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { ALL_CATEGORIES } from '../types'
 
@@ -12,7 +12,10 @@ const LEGAL_LINKS = [
 ]
 
 export const Footer: React.FC = () => {
-  const { navigate, setSelectedCategory, setSearchTerm, categories, settings, waLink, waDisplay } = useApp()
+  const { navigate, setSelectedCategory, setSearchTerm, categories, settings, waLink, waDisplay, currentPath } = useApp()
+  // L'accueil (étapes de commande) et la fiche produit (à côté de la photo) affichent déjà ces promesses : pas de doublon
+  // La page Contact les détaille déjà dans ses cartes d'information
+  const showPromises = currentPath !== '/' && currentPath !== '/contact' && !currentPath.startsWith('/produit/')
 
   const openCategory = (cat: string) => {
     setSearchTerm('')
@@ -35,12 +38,13 @@ export const Footer: React.FC = () => {
   const promises = [
     { icon: Truck, title: 'Livraison', text: settings.deliveryCommunes },
     { icon: ShieldCheck, title: 'Paiement Wave', text: 'Après confirmation de la boutique' },
-    { icon: Leaf, title: 'Soins naturels', text: 'Cacao et végétaux de Côte d’Ivoire' },
+    { icon: Leaf, title: 'Soins naturels', text: 'Sélectionnés auprès de productrices ivoiriennes' },
     { icon: MessageCircle, title: 'Conseils WhatsApp', text: waDisplay },
   ]
 
   return (
     <footer className="ng-footer">
+      {showPromises && (
       <div className="ng-container">
         <ul className="ng-promises">
           {promises.map(({ icon: Icon, title, text }) => (
@@ -56,6 +60,7 @@ export const Footer: React.FC = () => {
           ))}
         </ul>
       </div>
+      )}
 
       <div className="ng-footer-main">
         <div className="ng-container">
@@ -68,7 +73,7 @@ export const Footer: React.FC = () => {
                   <small>Prenez soin de vous naturellement</small>
                 </span>
               </button>
-              <p>Des soins au beurre de cacao de Côte d’Ivoire, préparés de façon artisanale pour la peau et les cheveux.</p>
+              <p>Des soins naturels de Côte d’Ivoire, sélectionnés auprès de productrices ivoiriennes, pour la peau et les cheveux.</p>
               <a className="ng-footer-cta" href={waLink()} target="_blank" rel="noreferrer">
                 <MessageCircle size={18} /> Commander sur WhatsApp
               </a>
@@ -123,7 +128,7 @@ export const Footer: React.FC = () => {
               <div className="ng-pay">
                 <span>Paiement accepté</span>
                 <b>
-                  <i>W</i> Wave
+                  <i aria-hidden="true"><Wallet size={13} /></i> Wave
                 </b>
               </div>
             </div>

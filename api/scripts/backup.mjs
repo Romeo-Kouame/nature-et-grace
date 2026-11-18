@@ -29,7 +29,18 @@ const dbUrl = url.toString()
 
 const dir = path.resolve(process.env.BACKUP_DIR ?? 'backups')
 const keep = Math.max(1, Number(process.env.BACKUP_KEEP ?? 14))
-const bin = (name) => (process.env.PG_BIN ? path.join(process.env.PG_BIN, name) : name)
+// Sous Windows, les outils PostgreSQL ne sont souvent pas dans le PATH : on prend la version installée la plus récente
+function findPgBin() {
+  if (process.env.PG_BIN) return process.env.PG_BIN
+  if (process.platform !== 'win32') return ''
+  const root = 'C:/Program Files/PostgreSQL'
+  if (!fs.existsSync(root)) return ''
+  const versions = fs.readdirSync(root).filter((v) => /^\d+$/.test(v)).sort((a, b) => Number(b) - Number(a))
+  const found = versions.map((v) => path.join(root, v, 'bin')).find((d) => fs.existsSync(path.join(d, 'pg_dump.exe')))
+  return found ?? ''
+}
+const pgBin = findPgBin()
+const bin = (name) => (pgBin ? path.join(pgBin, name) : name)
 const run = (cmd, args) => execFileSync(bin(cmd), args, { stdio: ['ignore', 'pipe', 'pipe'] }).toString()
 
 const TABLES = ['Admin', 'StoreSettings', 'Image', 'Review', 'Product', 'Customer', '"Order"', 'OrderItem']

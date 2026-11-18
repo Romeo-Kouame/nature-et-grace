@@ -53,8 +53,14 @@ interface AppContextType {
   user: ApiCustomer | null
   /** true une fois la session vérifiée auprès du serveur */
   authReady: boolean
-  login: (identifier: string, password: string) => Promise<void>
-  register: (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string }) => Promise<void>
+  login: (identifier: string, password: string, captchaToken?: string) => Promise<void>
+  /** Nouveau client Google : numéro de téléphone et acceptation des conditions */
+  /** « Mot de passe oublié » : code reçu + nouveau mot de passe → connectée */
+  resetPassword: (identifier: string, code: string, newPassword: string) => Promise<void>
+  completeGoogle: (data: { name?: string; phone: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => Promise<void>
+  /** Retour de Google sur un compte déjà lié : session ouverte par l'API, on recharge le client */
+  finishGoogleLogin: () => Promise<void>
+  register: (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => Promise<void>
   logout: () => Promise<void>
   /** Supprime définitivement le compte (mot de passe demandé) */
   deleteAccount: (password: string) => Promise<void>
@@ -91,7 +97,7 @@ function writeLocal(key: string, value: unknown) {
   }
 }
 
-/** « 2250717684751 » → « +225 07 17 68 47 51 » */
+/** « 2250798419730 » → « +225 07 98 41 97 30 » */
 export function formatPhone(digits: string) {
   const d = digits.replace(/\D/g, '')
   if (d.startsWith('225') && d.length === 13) return `+225 ${d.slice(3).replace(/(\d{2})(?=\d)/g, '$1 ')}`
@@ -112,6 +118,10 @@ function fromApi(row: ApiProduct): Product {
     gallery: (row.gallery ?? []).map((url) => resolveImageUrl(url)).filter((url): url is string => Boolean(url)),
     badge: row.badge ?? null,
     tone: productLook({ category: row.category, name: row.name, id: row.slug }).tone,
+    details:
+      row.benefits?.length || row.howToUse?.length || row.ingredients || row.origin
+        ? { benefits: row.benefits ?? [], howToUse: row.howToUse ?? [], ingredients: row.ingredients ?? '', origin: row.origin ?? '' }
+        : null,
   }
 }
 
@@ -335,12 +345,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(welcome)
   }
 
-  const login = async (identifier: string, password: string) => {
-    const customer = await api<ApiCustomer>('/customer/login', { method: 'POST', body: JSON.stringify({ identifier, password }) })
+  const login = async (identifier: string, password: string, captchaToken?: string) => {
+    const customer = await api<ApiCustomer>('/customer/login', { method: 'POST', body: JSON.stringify({ identifier, password, captchaToken }) })
     afterAuth(customer, `Bonjour ${customer.name.split(' ')[0]} !`)
   }
 
-  const register = async (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string }) => {
+  const resetPassword = async (identifier: string, code: string, newPassword: string) => {
+    const customer = await api<ApiCustomer>('/customer/password/reset', { method: 'POST', body: JSON.stringify({ identifier, code, newPassword }) })
+    afterAuth(customer, `Mot de passe changé. Bonjour ${customer.name.split(' ')[0]} !`)
+  }
+
+  const completeGoogle = async (data: { name?: string; phone: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => {
+    const customer = await api<ApiCustomer>('/customer/google/complete', { method: 'POST', body: JSON.stringify(data) })
+    afterAuth(customer, `Bienvenue ${customer.name.split(' ')[0]}, votre compte est créé !`)
+  }
+
+  const finishGoogleLogin = async () => {
+    const customer = await api<ApiCustomer>('/customer/me')
+    afterAuth(customer, `Bonjour ${customer.name.split(' ')[0]} !`)
+  }
+
+  const register = async (data: { name: string; phone: string; email?: string; password: string; acceptTerms: boolean; website?: string; captchaToken?: string }) => {
     const customer = await api<ApiCustomer>('/customer/register', { method: 'POST', body: JSON.stringify(data) })
     afterAuth(customer, `Bienvenue ${customer.name.split(' ')[0]}, votre compte est créé !`)
   }
@@ -362,10 +387,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     navigate('/')
   }
 
-  const openCart = () => {
-    if (user) setCartOpen(true)
-    else goToLogin({ openCart: true })
-  }
+  /** Le panier s'ouvre pour tout le monde ; la connexion n'est demandée qu'au moment de valider la commande */
+  const openCart = () => setCartOpen(true)
 
   const [advisorOpen, setAdvisorOpen] = useState(false)
 
@@ -407,6 +430,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user,
         authReady,
         login,
+        completeGoogle,
+        resetPassword,
+        finishGoogleLogin,
         register,
         logout,
         deleteAccount,

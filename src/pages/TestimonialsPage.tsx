@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { MessageSquarePlus, Send, Star, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { Stars } from '../components/ProductCard'
 import { api } from '../api'
 import Honeypot from '../components/Honeypot'
+import Captcha, { CaptchaHandle, requireCaptcha } from '../components/Captcha'
 import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
 
@@ -11,9 +12,10 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { 
 
 export const TestimonialsPage: React.FC = () => {
   const { products, reviews, reviewsLoaded, showToast, waLink } = useApp()
-  usePageMeta('Avis clients', 'Les avis des clientes et clients de NATURE & GRÂCE sur nos soins au cacao, savons et huiles.')
+  usePageMeta('Avis clients', 'Les avis des clientes et clients de Nature & Grâce sur nos soins au cacao, savons et huiles.')
   const [filter, setFilter] = useState<number | 'all'>('all')
-  const [showForm, setShowForm] = useState(false)
+  // Lien « Donner mon avis » (commande livrée, message de suivi) : le formulaire s'ouvre directement
+  const [showForm, setShowForm] = useState(() => new URLSearchParams(window.location.search).has('avis'))
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [authorName, setAuthorName] = useState('')
@@ -36,14 +38,17 @@ export const TestimonialsPage: React.FC = () => {
 
   const filtered = filter === 'all' ? reviews : reviews.filter((r) => r.rating === filter)
 
+  const captcha = useRef<CaptchaHandle>(null)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (sending) return
     setSending(true)
     setError('')
     try {
       const res = await api<{ message: string }>('/reviews', {
         method: 'POST',
-        body: JSON.stringify({ authorName, city, rating, comment, productSlug: productSlug || undefined, consent, website }),
+        body: JSON.stringify({ authorName, city, rating, comment, productSlug: productSlug || undefined, consent, website, captchaToken: requireCaptcha(captcha.current) }),
       })
       showToast(res.message)
       setShowForm(false)
@@ -51,6 +56,7 @@ export const TestimonialsPage: React.FC = () => {
       setConsent(false)
     } catch (err) {
       const offline = err instanceof TypeError
+      captcha.current?.reset()
       setError(offline ? 'Le site ne parvient pas à joindre la boutique. Vous pouvez envoyer votre avis sur WhatsApp.' : (err as Error).message)
     } finally {
       setSending(false)
@@ -58,13 +64,12 @@ export const TestimonialsPage: React.FC = () => {
   }
 
   const productName = products.find((p) => p.id === productSlug)?.name
-  const whatsappReview = `Bonjour NATURE & GRÂCE,\n\nVoici mon avis :\nPrénom : ${authorName}\nVille : ${city}\nProduit : ${productName ?? 'Non précisé'}\nNote : ${rating}/5\n\n${comment}`
+  const whatsappReview = `Bonjour Nature & Grâce,\n\nVoici mon avis :\nPrénom : ${authorName}\nVille : ${city}\nProduit : ${productName ?? 'Non précisé'}\nNote : ${rating}/5\n\n${comment}`
 
   return (
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Avis clients' }]} />
       <header className="ng-page-head">
-        <span className="ng-eyebrow">AVIS CLIENTS</span>
         <h1>Vos retours sur nos soins.</h1>
         <p>Chaque avis est lu par la boutique avant d’être publié.</p>
       </header>
@@ -209,6 +214,7 @@ export const TestimonialsPage: React.FC = () => {
                 </span>
               </label>
               <Honeypot value={website} onChange={setWebsite} />
+              <Captcha ref={captcha} action="review" />
               {error && (
                 <p className="ng-form-error" role="alert">
                   {error}{' '}

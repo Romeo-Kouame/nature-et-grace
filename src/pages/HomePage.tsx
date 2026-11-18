@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Gift, Leaf, MessageCircle, MoreHorizontal, ShieldCheck, ShoppingBag, Sparkles, Truck, Wallet } from 'lucide-react'
+import { ArrowRight, Leaf, MessageCircle, Sparkles, Wallet } from 'lucide-react'
+import CartIcon from '../components/CartIcon'
 import { useApp } from '../context/AppContext'
 import { BADGE_ORDER } from '../components/ProductCard'
 import ProductRail from '../components/ProductRail'
@@ -48,7 +49,7 @@ export const HomePage: React.FC = () => {
   const review = homeReviews[reviewIndex % Math.max(1, homeReviews.length)]
 
   const steps = [
-    { icon: ShoppingBag, title: 'Choisissez vos soins', text: 'Ajoutez les produits et les quantités souhaitées à votre panier.' },
+    { icon: CartIcon, title: 'Choisissez vos soins', text: 'Ajoutez les produits et les quantités souhaitées à votre panier.' },
     {
       icon: MessageCircle,
       title: 'Commandez',
@@ -57,51 +58,30 @@ export const HomePage: React.FC = () => {
     {
       icon: Wallet,
       title: 'Payez par Wave et recevez',
-      text: 'La boutique vous confirme le total avec la livraison, puis vous payez par Wave.',
+      text: `La boutique vous confirme le total avec la livraison, puis vous payez par Wave. Livraison : ${settings.deliveryCommunes}.`,
     },
   ]
 
   return (
     <div className="ng-container ng-home">
-      {/* RAYONS EN PASTILLES */}
-      <nav className="ng-cats" aria-label="Rayons">
-        {categories.map((cat) => (
-          <button key={cat} type="button" className="ng-cat" onClick={() => openCategory(cat)}>
-            <span className="ng-cat-img">
-              {CATEGORY_INFO[cat] ? <img src={CATEGORY_INFO[cat].image} alt="" loading="lazy" /> : <Leaf size={22} />}
-            </span>
-            {CATEGORY_INFO[cat]?.short ?? cat}
-          </button>
-        ))}
-        <button type="button" className="ng-cat" onClick={() => openCategory(ALL_CATEGORIES)}>
-          <span className="ng-cat-img">
-            <MoreHorizontal size={24} />
-          </span>
-          Tout
-        </button>
-      </nav>
-
       {/* HERO */}
       <section className="ng-hero">
         <div className="ng-hero-copy">
-          <span className="ng-eyebrow">
-            <Leaf size={13} /> SOINS NATURELS · CÔTE D’IVOIRE
-          </span>
           <h1>
             Prenez soin de vous
             <br />
             <span>naturellement.</span>
           </h1>
           <p>
-            Beurre de cacao brut, chantilly de cacao, savon noir de cabosse et huiles végétales : des soins simples et
-            naturels pour la peau et les cheveux.
+            Beurre de cacao brut, chantilly de cacao, savon noir de cabosse et huiles végétales, sélectionnés auprès de
+            productrices ivoiriennes pour la peau et les cheveux.
           </p>
           <div className="ng-hero-actions">
             <button type="button" className="ng-btn ng-btn--primary" onClick={() => navigate('/boutique')}>
               Découvrir la boutique <ArrowRight size={17} />
             </button>
             <button type="button" className="ng-btn ng-btn--ghost" onClick={() => setAdvisorOpen(true)}>
-              <Sparkles size={16} color="var(--ng-gold-600)" /> Mon rituel IA
+              <Sparkles size={16} color="var(--ng-gold-600)" /> Demander à la conseillère
             </button>
           </div>
         </div>
@@ -115,38 +95,8 @@ export const HomePage: React.FC = () => {
             <b>Cacao</b>
             <small>IVOIRIEN</small>
           </div>
-          <div className="ng-hero-chip">
-            <span className="ng-chip-ico">
-              <Wallet size={17} />
-            </span>
-            <span>
-              <b>Paiement Wave</b>
-              Commande site ou WhatsApp
-            </span>
-          </div>
         </div>
 
-        <div className="ng-hero-trust">
-          <div className="ng-trust">
-            <Truck size={20} />
-            <span>
-              <b>Livraison</b>
-              {settings.deliveryCommunes}
-            </span>
-          </div>
-          <div className="ng-trust">
-            <ShieldCheck size={20} />
-            <span>
-              <b>Paiement Wave</b>Frais annoncés avant de payer
-            </span>
-          </div>
-          <div className="ng-trust">
-            <Leaf size={20} />
-            <span>
-              <b>Soins naturels</b>Cacao et végétaux ivoiriens
-            </span>
-          </div>
-        </div>
       </section>
 
       {/* COMMENT COMMANDER */}
@@ -169,14 +119,14 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* NOS RAYONS */}
-      <section>
+      <section className="ng-home-rayons">
         <div className="ng-section-head">
           <h2>Nos rayons</h2>
           <button type="button" className="ng-link" onClick={() => openCategory(ALL_CATEGORIES)}>
             Tout voir <ArrowRight size={15} />
           </button>
         </div>
-        <div className="ng-cat-cards">
+        <div className="ng-cat-tiles">
           {categories.map((cat, i) => {
             const count = products.filter((p) => p.category === cat).length
             const info = CATEGORY_INFO[cat]
@@ -184,18 +134,18 @@ export const HomePage: React.FC = () => {
               <button
                 key={cat}
                 type="button"
-                className="ng-cat-card"
+                className="ng-cat-tile"
                 onClick={() => openCategory(cat)}
                 data-reveal
                 style={{ '--i': i } as React.CSSProperties}
               >
-                {info ? <img src={info.image} alt="" loading="lazy" /> : <span className="ng-cat-card-ico"><Leaf size={26} /></span>}
-                <span>
+                {info ? <img src={info.image} alt="" loading="lazy" /> : <span className="ng-cat-tile-ico"><Leaf size={30} /></span>}
+                <span className="ng-cat-tile-text">
+                  <small>{info?.tag ?? 'Soins naturels'}</small>
                   <b>{cat}</b>
-                  <small>
-                    {count} produit{count > 1 ? 's' : ''}
-                    {info ? ` · ${info.tag}` : ''}
-                  </small>
+                  <em>
+                    {count} produit{count > 1 ? 's' : ''} <ArrowRight size={15} />
+                  </em>
                 </span>
               </button>
             )
@@ -217,9 +167,8 @@ export const HomePage: React.FC = () => {
       {/* DU CACAO À VOTRE PEAU */}
       <section className="ng-journey ng-band ng-band--cream">
         <div className="ng-section-head ng-section-head--center">
-          <span className="ng-eyebrow"><Leaf size={13} /> DE LA TERRE IVOIRIENNE À VOTRE PEAU</span>
           <h2>Du cacao à votre soin</h2>
-          <p>Des ingrédients simples, une transformation artisanale, rien de superflu.</p>
+          <p>Des ingrédients simples, préparés par des productrices ivoiriennes.</p>
         </div>
         <ol className="ng-journey-steps">
           {JOURNEY.map((step, i) => (
@@ -245,7 +194,6 @@ export const HomePage: React.FC = () => {
             <img src={giftBox.imageUrl ?? ''} alt={giftBox.name} loading="lazy" />
           </div>
           <div className="ng-gift-copy">
-            <span className="ng-eyebrow ng-eyebrow--gold"><Gift size={13} /> IDÉE CADEAU</span>
             <h2>{giftBox.name}</h2>
             <p>{giftBox.description}</p>
             <div className="ng-gift-price">
@@ -258,7 +206,7 @@ export const HomePage: React.FC = () => {
                 className="ng-btn ng-btn--primary"
                 onClick={(e) => { if (addToCart(giftBox.id, 1)) flyToCart(e.currentTarget.closest('.ng-gift')) }}
               >
-                <ShoppingBag size={17} /> Ajouter au panier
+                <CartIcon size={17} /> Ajouter au panier
               </button>
               <button type="button" className="ng-btn ng-btn--ghost" onClick={() => openCategory('Rituels & Coffrets')}>
                 Tous les coffrets <ArrowRight size={16} />
@@ -267,32 +215,6 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* BANNIÈRES THÉMATIQUES */}
-      <section className="ng-promos">
-        <div className="ng-promo-card ng-promo-card--gold" data-reveal>
-          <img src={PHOTOS.cacaoPanier} alt="" loading="lazy" />
-          <h3>Rituel cacao</h3>
-          <p>
-            <b>Beurre brut & chantilly</b>
-            Pour nourrir le corps, les zones sèches et les cheveux.
-          </p>
-          <button type="button" className="ng-btn ng-btn--dark ng-btn--sm" onClick={() => openCategory('Beurre de cacao')}>
-            Découvrir <ArrowRight size={15} />
-          </button>
-        </div>
-        <div className="ng-promo-card ng-promo-card--green" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
-          <img src={PHOTOS.savonNoir} alt="" loading="lazy" />
-          <h3>Peau nette</h3>
-          <p>
-            <b>Savon noir de cabosse</b>
-            Un savon traditionnel pour le visage et le corps.
-          </p>
-          <button type="button" className="ng-btn ng-btn--primary ng-btn--sm" onClick={() => openCategory('Savons naturels')}>
-            Découvrir <ArrowRight size={15} />
-          </button>
-        </div>
-      </section>
 
       {/* TOUS LES SOINS */}
       {products.length > 4 && (
@@ -343,7 +265,7 @@ export const HomePage: React.FC = () => {
         </div>
         <a
           className="ng-btn ng-btn--primary"
-          href={waLink('Bonjour NATURE & GRÂCE, je souhaite être prévenue de vos nouveautés et retours en stock.')}
+          href={waLink('Bonjour Nature & Grâce, je souhaite être prévenue de vos nouveautés et retours en stock.')}
           target="_blank"
           rel="noreferrer"
         >

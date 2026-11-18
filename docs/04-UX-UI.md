@@ -27,22 +27,32 @@ Tous les textes respectent un contraste d'au moins 4,5:1 (vérifié avec axe, no
 
 ## Composants
 
-- **En-tête** : bandeau slogan, logo, recherche en direct, compte, aide, thème, panier ; menu de pages en dessous.
-- **Barre d'onglets mobile** (fixe en bas) : Accueil, Boutique, Favoris, Panier, Compte. Elle tient lieu d'appel à l'action collant sur mobile.
+- **Bandeau** (au-dessus de l'en-tête, non collant) : commande site ou WhatsApp, paiement Wave.
+- **En-tête** (collant, une seule ligne, ombre légère au défilement) : logo · pages en pastilles (page active sur fond vert clair) · loupe, compte (avatar si connecté ; menu avec l'aide), thème, bouton « Panier » vert plein avec compteur doré. Recherche : panneau sous l'en-tête (loupe, touche `/` ou Ctrl+K, Échap pour fermer). Téléphone : menu, logo, conseillère IA, panier, recherche en dessous.
+- **Barre d'onglets mobile** (fixe en bas) : Accueil, Boutique, Favoris, Panier, Compte. Seul accès au panier sur téléphone (pas de second panier dans l'en-tête) ; remplacée par la barre d'achat sur les fiches produit.
+- **Icône panier** : panier tressé (`ShoppingBasket`, lucide) partout : en-tête, onglets, cartes, chat, tiroir.
+- **Pas d'étiquette au-dessus des titres** (règle Impeccable) ; sections en frise plutôt qu'en cartes à icône identiques ; un seul bouton plein par décision (WhatsApp en contour à côté d'« Ajouter au panier »).
+- **Nom de l'assistante** : « la conseillère » partout (« Demander à la conseillère »).
 - **Carte produit** : photo (2e photo au survol), pastille « Meilleure vente » ou « Nouveau », favori, rayon et contenance, nom, note, prix, bouton panier.
-- **Rangée de produits** : défilement horizontal, flèches rondes au survol (ordinateur), glissé (téléphone), défilement automatique qui s'arrête au survol ou au toucher.
+- **Rangée de produits** : défilement horizontal, flèches rondes au survol (ordinateur), glissé (téléphone), défilement automatique qui s'arrête au survol ou au toucher. Moins de 5 produits : grille pleine largeur sur ordinateur (cartes jusqu'à 380 px), glissé horizontal sur téléphone.
+- **Carte produit (prix inconnu)** : « Prix sur demande », contenance masquée tant qu'elle vaut « À confirmer », bouton WhatsApp à la place du panier.
+- **Photos produits** : traitement commun (légère désaturation, voile cacao en bas, filet fin) pour harmoniser des clichés pris dans des conditions différentes. À terme : photos refaites sur un même fond.
+- **Nom de la marque** : toujours « Nature & Grâce » dans les textes (les majuscules restent réservées au logo).
 - **Fil d'Ariane** : liens réels, sous l'en-tête.
 - **Boutons** : principal (vert plein), secondaire (contour), WhatsApp (vert WhatsApp), danger (rouge).
 - **Formulaires** : libellés visibles, champs facultatifs signalés, erreurs sous le formulaire (`role="alert"`), boutons désactivés pendant l'envoi.
 - **Toast** : message bref en bas de l'écran après une action.
-- **Bouton WhatsApp flottant** (ordinateur).
+- **Chat de la conseillère IA** : bulle « Une question ? » en bas à droite (ordinateur) ; fenêtre de 400 × 640 px (plein écran sur téléphone), en-tête vert, bulles de la cliente en vert à droite, réponses en blanc à gauche, mini-cartes produits, questions suggérées, indicateur « écrit… ».
+- **Bouton Google** (connexion) : contour, logo « G » officiel, séparateur « ou avec votre numéro ». **Captcha** Turnstile sous les champs.
+- **Bandeau de promesses** (au-dessus du pied de page) : absent de l'accueil et des fiches produit, qui les affichent déjà.
+- **Barre d'achat collante** (téléphone, fiche produit) : visible dès l'arrivée, à la place de la barre d'onglets ; photo, nom, prix, icône WhatsApp en contour et « Ajouter au panier » (ou WhatsApp seul si prix inconnu ou rupture).
 - **Bandeau cookies** : seulement si la mesure d'audience est configurée ; « Refuser » et « Accepter » identiques.
 
 ## Écrans clés
 
-- **Accueil** : pastilles de rayons, héros (slogan, « Découvrir la boutique », « Mon rituel IA »), « Commander, c'est simple » en 3 étapes, rayons, meilleures ventes (rangée), « Du cacao à votre soin », coffret mis en avant, bannières, tous les soins (rangée), avis, alerte nouveautés WhatsApp.
-- **Boutique** : titre et nombre de produits, puces de rayons, tri. Vue « Tout » sans recherche : une rangée par rayon. Rayon, recherche ou tri : grille.
-- **Fiche produit** : galerie, prix, stock, quantité, ajout au panier, WhatsApp, partage, bienfaits, utilisation, composition, avis, « Vous aimerez aussi ».
+- **Accueil** : pastilles de rayons (téléphone uniquement ; la section « Nos rayons » est alors masquée), héros (slogan, « Découvrir la boutique », « Mon rituel IA »), « Commander, c'est simple » en 3 étapes (la 3e reprend la livraison), « Nos rayons » en grandes tuiles photo, meilleures ventes, « Du cacao à votre soin », coffret mis en avant, tous les soins (rangée), avis, alerte nouveautés WhatsApp. Retirés car répétitifs : puce « Paiement Wave » sur la photo, rangée de garanties sous le héros, bannières « Rituel cacao / Peau nette ».
+- **Boutique** : titre et nombre de produits, puces de rayons, tri. Vue « Tout » sans recherche : grille unique tant que le catalogue a moins de 9 produits, puis une rangée par rayon (« Tout voir » seulement si le rayon a 5 produits ou plus). Rayon, recherche ou tri : grille.
+- **Fiche produit** : galerie (vignettes si plusieurs photos ; sur ordinateur, trois cartes livraison / Wave / naturel sous la photo), prix, stock, quantité, ajout au panier, WhatsApp, partage, bienfaits, utilisation, composition, avis, « Vous aimerez aussi ».
 - **Panier** : tiroir latéral en 3 étapes (panier, coordonnées, confirmation).
 - **Connexion** (`/connexion`) : page autonome sur deux colonnes séparées par un filet. À gauche : retour à la boutique, logo, grand titre « Prenez soin de vous naturellement. » et montage de photos du terroir. À droite : champs arrondis, bouton vert plein « Se connecter », « Mot de passe oublié ? », séparateur, bouton contour « Créer un nouveau compte », rappel des conditions, aide WhatsApp. Sur téléphone, le titre passe au-dessus du formulaire et les photos sont masquées.
 - **Compte / Commandes** : cartes de formulaires ; suivi visuel en 5 étapes.

@@ -23,4 +23,9 @@ export type Product = {
   gallery?: string[]
   /** Pastille « Meilleure vente » ou « Nouveau » choisie dans l'administration */
   badge?: 'bestseller' | 'new' | null
+  /** Fiche détaillée rédigée dans l'espace boutique (null tant qu'elle est vide) */
+  details?: ProductSheet | null
 }
+
+/** Fiche détaillée d'un produit : bienfaits et utilisation (une ligne = un point), composition, origine */
+export type ProductSheet = { benefits: string[]; howToUse: string[]; ingredients: string; origin: string }

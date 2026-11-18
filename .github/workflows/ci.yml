@@ -1,0 +1,60 @@
+# Vérification automatique à chaque modification : le site et l'API compilent, les tests passent.
+# Une pull request en échec ne doit pas être fusionnée.
+name: Vérification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: Site (compilation et build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  api:
+    name: API (compilation et tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  design:
+    name: Design (détecteur Impeccable, indicatif)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Indicatif : les remarques s'affichent dans la pull request sans bloquer la fusion
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes impeccable@4.9.2 detect --github src/

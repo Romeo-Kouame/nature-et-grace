@@ -34,16 +34,18 @@ Versions minimales : Node 20.19 (recommandé 22+), TypeScript 5.6.
 | --- | --- | --- |
 | WhatsApp (liens `wa.me`) | Commande et contact | Ce que le client choisit d'envoyer |
 | Wave | Paiement (hors site) | Aucune par le site |
-| Google Gemini | Conseiller IA, rédaction des fiches | Texte saisi dans le conseiller ; plafond `GEMINI_DAILY_LIMIT` par jour |
+| Google Gemini | Chat de la conseillère IA (`POST /api/ai/chat`), rédaction des fiches | Messages du chat (12 derniers au plus) ; plafond `GEMINI_DAILY_LIMIT` par jour, puis réponses par mots-clés |
+| Google (OAuth 2.0 / OpenID Connect) | « Continuer avec Google » : flux code + PKCE, sans script Google sur le site | Nom, e-mail vérifié et identifiant Google, reçus par l'API |
+| Cloudflare Turnstile | Captcha des formulaires connexion, inscription, finalisation Google, avis ; vérifié par l'API (`siteverify`) | Signaux techniques du navigateur, adresse IP |
 | Google Fonts | Polices Fraunces et Plus Jakarta Sans (licence SIL OFL) | Requête de police |
 | Google Maps (facultatif) | Carte de la page Contact, chargée seulement au clic | Adresse de la boutique |
 | Google Analytics 4 (facultatif) | Mesure d'audience, chargée seulement après accord | Pages vues |
 
 ## Variables d'environnement
 
-Site (`.env`) : `VITE_API_URL`, `VITE_SITE_URL`, `VITE_GA_ID` (facultatif).
+Site (`.env`) : `VITE_API_URL`, `VITE_SITE_URL`, `VITE_GA_ID` (facultatif), `VITE_TURNSTILE_SITEKEY` (facultatif, clé publique du captcha).
 
-API (`api/.env`) : `DATABASE_URL`, `JWT_SECRET` (32 caractères minimum), `WEB_ORIGIN`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `TRUST_PROXY`, `NODE_ENV`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_DAILY_LIMIT`.
+API (`api/.env`) : `DATABASE_URL`, `JWT_SECRET` (32 caractères minimum), `WEB_ORIGIN`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `TRUST_PROXY`, `NODE_ENV`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `GEMINI_API_KEY`, `GEMINI_DAILY_LIMIT`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (connexion Google, facultatif), `TURNSTILE_SECRET`, `TURNSTILE_HOSTNAMES` (captcha, facultatif).
 
 Les fichiers `.env` sont exclus de git ; seuls les `.env.example` sont publiés.
 
@@ -75,6 +77,15 @@ L'API envoie ses propres en-têtes de sécurité, mais les pages du site sont se
 
 ## Surveillance et sauvegardes
 
-- `GET /api/health` : 200 si l'API et la base répondent (à brancher sur UptimeRobot ou équivalent).
+- `GET /api/health` : 200 si l'API et la base répondent. Surveillé toutes les 15 minutes par GitHub Actions (`.github/workflows/surveillance.yml`, secrets `HEALTH_URL` et `SITE_URL`) : un échec envoie un e-mail.
 - `POST /api/client-errors` : erreurs survenues dans le navigateur des visiteurs, journalisées.
-- `npm run db:backup` (dans `api/`) : sauvegarde `pg_dump`, 14 conservées ; `npm run db:restore-check` : test de restauration dans une base temporaire.
+- `npm run db:backup` (dans `api/`) : sauvegarde `pg_dump`, 14 conservées (outils PostgreSQL trouvés automatiquement sous Windows, ou `PG_BIN`) ; `npm run db:restore-check` : test de restauration dans une base temporaire.
+- Sauvegarde quotidienne locale : `api/scripts/planifier-sauvegarde.ps1` (tâche Windows à 21 h, à lancer une fois). En ligne : sauvegardes de l'hébergeur de la base.
+- Vérification automatique (`.github/workflows/ci.yml`) : build du site, build et tests de l'API (`npm test`, lanceur intégré de Node), détecteur Impeccable (indicatif).
+
+## Messages (e-mail, SMS, WhatsApp)
+
+`api/src/notify.ts`, appels HTTP directs, sans dépendance : Resend (e-mail : `RESEND_API_KEY`, `MAIL_FROM`), Twilio (SMS : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM` ; WhatsApp : `TWILIO_WHATSAPP_FROM`). Sans fournisseur, en développement, les messages s'affichent dans le terminal de l'API ; en production, rien n'est journalisé.
+- Code « mot de passe oublié » (e-mail ou SMS).
+- Alerte de chaque nouvelle commande au numéro WhatsApp de la boutique (WhatsApp ou SMS) et à l'e-mail d'alerte des réglages.
+- Suivi envoyé à la cliente à chaque changement de statut (confirmée, en préparation, expédiée, livrée, annulée).
