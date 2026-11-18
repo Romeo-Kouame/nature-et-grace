@@ -10,6 +10,7 @@ import { PRODUCT_DETAILS, ProductDetails } from '../data/productDetails'
 import { categoryAndSize, formatXof, knownSize } from '../format'
 import Breadcrumb from '../components/Breadcrumb'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { SITE_URL, useJsonLd } from '../hooks/useJsonLd'
 
 const DEFAULT_DETAILS: ProductDetails = {
   benefits: ['Soin d’origine naturelle sélectionné par Nature & Grâce', 'Pour nourrir et protéger la peau au quotidien'],
@@ -40,6 +41,40 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   usePageMeta(
     product?.name ?? 'Produit introuvable',
     product ? `${product.name}${knownSize(product.size) ? ` (${knownSize(product.size)})` : ''} — ${product.description}` : undefined,
+  )
+
+  // Données structurées « Produit » pour Google : prix en FCFA, disponibilité, note (seulement s'il y a de vrais avis)
+  const productRating = product ? ratingFor(product.id) : null
+  const absolute = (url?: string | null) => (url ? (url.startsWith('http') ? url : `${SITE_URL}${url}`) : undefined)
+  useJsonLd(
+    'product',
+    product
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description,
+          sku: product.id,
+          category: product.category,
+          image: [product.imageUrl, ...(product.gallery ?? [])].map(absolute).filter(Boolean),
+          brand: { '@type': 'Brand', name: 'Nature & Grâce' },
+          url: `${SITE_URL}/produit/${product.id}`,
+          ...(product.price !== null
+            ? {
+                offers: {
+                  '@type': 'Offer',
+                  price: product.price,
+                  priceCurrency: 'XOF',
+                  availability: !catalogLive || product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                  url: `${SITE_URL}/produit/${product.id}`,
+                },
+              }
+            : {}),
+          ...(productRating
+            ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: productRating.average, reviewCount: productRating.count } }
+            : {}),
+        }
+      : null,
   )
 
   useEffect(() => {
@@ -76,7 +111,15 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   const max = maxQuantity(product)
   const inStock = max > 0
   const priceKnown = product.price !== null
-  const details = PRODUCT_DETAILS[product.id] ?? DEFAULT_DETAILS
+  // Fiche rédigée dans l'espace boutique ; à défaut (catalogue de secours), textes intégrés au site
+  const fallback = PRODUCT_DETAILS[product.id] ?? DEFAULT_DETAILS
+  const sheet = product.details
+  const details: ProductDetails = {
+    benefits: sheet?.benefits.length ? sheet.benefits : fallback.benefits,
+    howToUse: sheet?.howToUse.length ? sheet.howToUse : fallback.howToUse,
+    ingredients: sheet?.ingredients || fallback.ingredients,
+    origin: sheet?.origin || fallback.origin,
+  }
   const total = product.price !== null ? product.price * quantity : null
   const rating = ratingFor(product.id)
   const photos = product.imageUrl ? [product.imageUrl, ...(product.gallery ?? [])] : []

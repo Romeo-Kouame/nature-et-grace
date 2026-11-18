@@ -211,3 +211,8 @@ html.dark .ng-cart-success-ico { color: #06140e; }
 .ng-crash-actions button, .ng-crash-actions a { padding: 12px 18px; border-radius: 12px; font: 600 14px system-ui, sans-serif; cursor: pointer; text-decoration: none; }
 .ng-crash-actions button { border: 0; background: #0e4a35; color: #fff; }
 .ng-crash-actions a { border: 1px solid #1f9d55; color: #1f7a45; background: #fff; }
+
+/* Panier : zone de livraison choisie dès le panier */
+.ng-cart-zone { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--ng-text); }
+.ng-cart-zone select { flex: 1; max-width: 70%; height: 40px; padding: 0 10px; border: 1px solid var(--ng-line); border-radius: 10px; background: var(--ng-surface); color: var(--ng-ink); font: inherit; font-size: 13.5px; }
+.ng-cart-estimate b { font-size: 18px; }

@@ -29,7 +29,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           <button type="button" onClick={() => window.location.reload()}>
             Recharger la page
           </button>
-          <a href="https://wa.me/2250717684751" target="_blank" rel="noreferrer">
+          <a href="https://wa.me/2250798419730" target="_blank" rel="noreferrer">
             Écrire sur WhatsApp
           </a>
         </div>

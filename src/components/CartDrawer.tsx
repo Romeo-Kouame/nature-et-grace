@@ -65,6 +65,8 @@ export const CartDrawer: React.FC = () => {
   if (!cartOpen) return null
 
   // Frais connus des zones de livraison, pour annoncer une fourchette dès le panier (avant toute connexion)
+  // Zone choisie dans le panier : frais exacts (null = à confirmer)
+  const cartFee = zone && zone !== OTHER_ZONE ? zones.find((z) => z.name === zone)?.feeXof ?? null : null
   const knownFees = zones.map((z) => z.feeXof).filter((f): f is number => typeof f === 'number')
   const feeHint = knownFees.length
     ? Math.min(...knownFees) === Math.max(...knownFees)
@@ -374,7 +376,28 @@ export const CartDrawer: React.FC = () => {
                 <span>Sous-total produits</span>
                 <b>{formatXof(cartTotal)}</b>
               </p>
-              <p className="ng-form-hint">{feeHint}</p>
+              {zones.length > 0 ? (
+                <>
+                  <label className="ng-cart-zone">
+                    <span>Livraison</span>
+                    <select value={zone} onChange={(e) => setZone(e.target.value)} aria-label="Zone de livraison">
+                      {zones.map((z) => (
+                        <option key={z.name} value={z.name}>
+                          {z.name} — {z.feeXof === null ? 'frais à confirmer' : z.feeXof === 0 ? 'offerte' : formatXof(z.feeXof)}
+                        </option>
+                      ))}
+                      <option value={OTHER_ZONE}>Autre ville ou commune — frais à confirmer</option>
+                    </select>
+                  </label>
+                  <p className="ng-cart-subtotal ng-cart-estimate">
+                    <span>{cartFee === null ? 'Total hors livraison' : 'Total estimé'}</span>
+                    <b>{formatXof(cartTotal + (cartFee ?? 0))}</b>
+                  </p>
+                  <p className="ng-form-hint">Le total est confirmé par la boutique avant le paiement Wave.</p>
+                </>
+              ) : (
+                <p className="ng-form-hint">{feeHint}</p>
+              )}
               {user ? (
                 <button type="button" className="ng-btn ng-btn--primary ng-btn--block" onClick={() => setStep('details')}>
                   Commander sur le site <ArrowRight size={17} />

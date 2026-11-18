@@ -30,7 +30,7 @@ model Admin {
 
 model StoreSettings {
   id                String   @id @default("store")
-  whatsappNumber    String   @default("2250717684751")
+  whatsappNumber    String   @default("2250798419730")
   deliveryCommunes  String   @default("Abidjan, Bouaké, Daloa et autres communes sur demande")
   deliveryInfo      String   @default("Frais et délais communiqués avant la validation définitive.")
   waveInstructions  String   @default("Les modalités de paiement Wave sont confirmées par la boutique.")
@@ -42,6 +42,8 @@ model StoreSettings {
   legalInfo         String   @default("")
   /// Adresse physique de la boutique ou du point de retrait (carte Google Maps de la page Contact ; vide = pas de carte)
   storeAddress      String   @default("")
+  /// Adresse e-mail qui reçoit l'alerte de chaque nouvelle commande (jamais affichée sur le site ; vide = pas d'e-mail)
+  alertEmail        String   @default("")
   updatedAt         DateTime @updatedAt
 }
 
@@ -85,6 +87,11 @@ model Product {
   badge       String?
   stock       Int         @default(0)
   active      Boolean     @default(true)
+  /// Fiche détaillée, modifiable depuis l'espace boutique (une ligne = un point)
+  benefits    String[]    @default([])
+  howToUse    String[]    @default([])
+  ingredients String      @default("")
+  origin      String      @default("")
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
@@ -111,6 +118,24 @@ model Customer {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   orders        Order[]
+  passwordResets PasswordReset[]
+}
+
+/// Code à 6 chiffres envoyé par e-mail ou SMS pour choisir un nouveau mot de passe (« Mot de passe oublié »)
+model PasswordReset {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  /// Empreinte HMAC du code : le code lui-même n'est jamais stocké
+  codeHash   String
+  /// Canal d'envoi : "email" ou "sms"
+  channel    String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId, createdAt])
 }
 
 model Order {

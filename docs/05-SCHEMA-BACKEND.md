@@ -13,7 +13,7 @@ Compte client.
 `id`, `name`, `phone` (unique, format `225` + 10 chiffres), `email` (unique, facultatif), `passwordHash` (vide pour un compte créé avec Google), `googleId` (unique, facultatif : identifiant Google), `commune`, `address`, `deliveryZone`, `termsAcceptedAt` (date d'acceptation des CGV et de la confidentialité), `createdAt`, `updatedAt`.
 
 ### `Product`
-`id`, `name`, `slug` (unique, utilisé dans les adresses), `category`, `description`, `size`, `priceXof` (vide = « prix à confirmer »), `imageUrl`, `gallery` (liste, 6 max), `badge` (`bestseller` | `new`), `stock`, `active`, dates.
+`id`, `name`, `slug` (unique, utilisé dans les adresses), `category`, `description`, `size`, `priceXof` (vide = « prix à confirmer »), `imageUrl`, `gallery` (liste, 6 max), `badge` (`bestseller` | `new`), `stock`, `active`, fiche détaillée modifiable dans l'espace boutique (`benefits` et `howToUse` : listes, une entrée par point ; `ingredients`, `origin`), dates.
 Index : `(active, category)`.
 
 ### `Order`
@@ -36,7 +36,10 @@ Photos produits et preuves de paiement, stockées en base.
 `id`, `mime`, `data` (octets), `private` (vrai = preuve Wave, visible seulement par l'admin), `createdAt`.
 
 ### `StoreSettings`
-Une seule ligne (`id = "store"`) : `whatsappNumber`, `deliveryCommunes`, `deliveryInfo`, `waveInstructions`, `waveNumber`, `deliveryZones` (JSON : `[{ name, feeXof, delay }]`), `legalInfo`, `storeAddress`, `updatedAt`.
+Une seule ligne (`id = "store"`) : `whatsappNumber`, `deliveryCommunes`, `deliveryInfo`, `waveInstructions`, `waveNumber`, `deliveryZones` (JSON : `[{ name, feeXof, delay }]`), `legalInfo`, `storeAddress`, `alertEmail` (e-mail des alertes de commande, jamais renvoyé par la route publique), `updatedAt`.
+
+### `PasswordReset`
+Codes « mot de passe oublié » : `customerId` → `Customer` (suppression en cascade), `codeHash` (HMAC du code, le code n'est jamais stocké), `channel` (`email` | `sms`), `expiresAt` (15 minutes), `attempts` (5 au plus), `usedAt`, `createdAt`. Index : `(customerId, createdAt)`.
 
 ## Relations
 

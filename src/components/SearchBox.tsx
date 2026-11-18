@@ -56,7 +56,7 @@ export const SearchBox: React.FC<{ className?: string; autoFocus?: boolean }> = 
   const query = value.trim()
   const matches = useMemo(() => {
     if (query.length < 2) return []
-    return products.filter((p) => matchesQuery(`${p.name} ${p.category} ${p.description} ${p.size}`, query))
+    return products.filter((p) => matchesQuery(`${p.name} ${p.category} ${p.description} ${p.size} ${(p.details?.benefits ?? []).join(' ')}`, query))
   }, [products, query])
   const suggestions = matches.slice(0, MAX_SUGGESTIONS)
 

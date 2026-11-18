@@ -213,3 +213,8 @@ html.dark .adm-btn--primary, html.dark .adm-btn--primary:hover { color: #06140e;
 .adm-gallery-add { width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--ng-line); border-radius: 12px; background: none; color: var(--ng-muted); font-size: 12px; font-weight: 600; cursor: pointer; }
 .adm-gallery-add:hover { border-color: var(--ng-emerald); color: var(--ng-emerald); }
 .adm-older { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; font-size: 13px; }
+
+/* Fiche détaillée d'un produit */
+.adm-sheet { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 12px 14px 14px; border: 1px solid var(--ng-line); border-radius: var(--ng-r-md); }
+.adm-sheet legend { padding: 0 6px; font-weight: 700; color: var(--ng-ink); }
+.adm-sheet .adm-row > label { flex: 1 1 220px; }

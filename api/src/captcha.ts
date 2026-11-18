@@ -12,7 +12,7 @@ import { Request } from 'express'
  * Chaque formulaire a son « action » : un jeton obtenu pour la connexion ne sert pas pour l'inscription.
  * Les jetons sont à usage unique : Cloudflare refuse un jeton déjà vérifié.
  */
-export type CaptchaAction = 'login' | 'signup' | 'google' | 'review'
+export type CaptchaAction = 'login' | 'signup' | 'google' | 'review' | 'reset'
 
 const production = () => process.env.NODE_ENV === 'production'
 const REFUSED = 'Vérification anti-robot échouée. Rechargez la page et réessayez.'

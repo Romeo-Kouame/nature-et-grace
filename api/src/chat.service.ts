@@ -1,12 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from './prisma.service'
 import { GeminiService, stripEmojis } from './gemini.service'
-import { PRODUCT_DETAILS, STATIC_FAQ } from './knowledge'
+import { STATIC_FAQ } from './knowledge'
 
 export type ChatTurn = { role: 'user' | 'assistant'; text: string }
 export type ChatReply = { reply: string; productIds: string[]; demo: boolean }
 
-type CatalogItem = { slug: string; name: string; category: string; size: string; priceXof: number | null; stock: number; description: string }
+type CatalogItem = {
+  slug: string; name: string; category: string; size: string; priceXof: number | null; stock: number; description: string
+  benefits: string[]; howToUse: string[]; ingredients: string; origin: string
+}
+
+/** Fiche détaillée d'un produit (rédigée dans l'espace boutique), ou null si elle est vide */
+const detailsOf = (p: CatalogItem) =>
+  p.benefits.length || p.howToUse.length || p.ingredients || p.origin ? p : null
 type StoreInfo = {
   whatsappNumber: string; deliveryCommunes: string; deliveryInfo: string; waveInstructions: string; storeAddress: string
   zones: { name: string; feeXof: number | null; delay?: string }[]
@@ -79,7 +86,10 @@ export class ChatService {
     try {
       catalog = await this.db.product.findMany({
         where: { active: true },
-        select: { slug: true, name: true, category: true, size: true, priceXof: true, stock: true, description: true },
+        select: {
+          slug: true, name: true, category: true, size: true, priceXof: true, stock: true, description: true,
+          benefits: true, howToUse: true, ingredients: true, origin: true,
+        },
         orderBy: { name: 'asc' },
       })
       const s = await this.db.storeSettings.findUnique({ where: { id: 'store' } })
@@ -123,9 +133,9 @@ export class ChatService {
     } else if (has('enceinte', 'grossesse', 'bebe', 'enfant', 'sensible', 'allerg')) {
       reply = STATIC_FAQ[3].a
     } else if (focus) {
-      const d = PRODUCT_DETAILS[focus.slug]
-      const usage = has('utilis', 'appliqu', 'comment') && d ? `\nUtilisation :\n${d.howToUse.map((h) => `- ${h}`).join('\n')}` : ''
-      const benefits = !usage && d ? `\nBienfaits :\n${d.benefits.slice(0, 3).map((b) => `- ${b}`).join('\n')}` : ''
+      const d = detailsOf(focus)
+      const usage = has('utilis', 'appliqu', 'comment') && d?.howToUse.length ? `\nUtilisation :\n${d.howToUse.map((h) => `- ${h}`).join('\n')}` : ''
+      const benefits = !usage && d?.benefits.length ? `\nBienfaits :\n${d.benefits.slice(0, 3).map((b) => `- ${b}`).join('\n')}` : ''
       reply = `${focus.name} (${sizeLabel(focus.size)}) : ${formatXof(focus.priceXof)}${focus.stock <= 0 ? ', momentanément en rupture' : ''}. ${focus.description}${usage}${benefits}`
       productIds = [focus.slug]
     } else if (has('prix', 'combien', 'cout', 'produit', 'catalogue', 'vendez')) {
@@ -167,16 +177,16 @@ function systemPrompt(catalog: CatalogItem[], store: StoreInfo | null, productSl
   const products = catalog.length
     ? catalog
         .map((p) => {
-          const d = PRODUCT_DETAILS[p.slug]
+          const d = detailsOf(p)
           const lines = [
             `### ${p.name} — id « ${p.slug} »`,
             `Rayon : ${p.category} · Contenance : ${sizeLabel(p.size)} · Prix : ${formatXof(p.priceXof)} · ${p.stock > 0 ? 'en stock' : 'en rupture de stock'}`,
             `Description : ${p.description}`,
           ]
           if (d) {
-            lines.push(`Bienfaits : ${d.benefits.join(' ; ')}`)
-            lines.push(`Utilisation : ${d.howToUse.join(' ; ')}`)
-            lines.push(`Composition : ${d.ingredients} Origine : ${d.origin}`)
+            if (d.benefits.length) lines.push(`Bienfaits : ${d.benefits.join(' ; ')}`)
+            if (d.howToUse.length) lines.push(`Utilisation : ${d.howToUse.join(' ; ')}`)
+            if (d.ingredients || d.origin) lines.push(`Composition : ${d.ingredients || 'non précisée'} Origine : ${d.origin || 'non précisée'}`)
           }
           return lines.join('\n')
         })
@@ -211,7 +221,7 @@ COMMANDE, LIVRAISON ET PAIEMENT
 ${zones}
 - Suivi : page « Vos commandes » une fois connecté(e).
 - Retours et remboursements : page « Retours et remboursements » du site.
-- WhatsApp de la boutique : +${store?.whatsappNumber ?? '2250717684751'}${store?.storeAddress ? `\n- Adresse : ${store.storeAddress}` : ''}
+- WhatsApp de la boutique : +${store?.whatsappNumber ?? '2250798419730'}${store?.storeAddress ? `\n- Adresse : ${store.storeAddress}` : ''}
 
 QUESTIONS FRÉQUENTES
 ${STATIC_FAQ.map((f) => `- ${f.q} ${f.a}`).join('\n')}`

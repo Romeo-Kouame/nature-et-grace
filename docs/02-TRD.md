@@ -77,6 +77,15 @@ L'API envoie ses propres en-têtes de sécurité, mais les pages du site sont se
 
 ## Surveillance et sauvegardes
 
-- `GET /api/health` : 200 si l'API et la base répondent (à brancher sur UptimeRobot ou équivalent).
+- `GET /api/health` : 200 si l'API et la base répondent. Surveillé toutes les 15 minutes par GitHub Actions (`.github/workflows/surveillance.yml`, secrets `HEALTH_URL` et `SITE_URL`) : un échec envoie un e-mail.
 - `POST /api/client-errors` : erreurs survenues dans le navigateur des visiteurs, journalisées.
-- `npm run db:backup` (dans `api/`) : sauvegarde `pg_dump`, 14 conservées ; `npm run db:restore-check` : test de restauration dans une base temporaire.
+- `npm run db:backup` (dans `api/`) : sauvegarde `pg_dump`, 14 conservées (outils PostgreSQL trouvés automatiquement sous Windows, ou `PG_BIN`) ; `npm run db:restore-check` : test de restauration dans une base temporaire.
+- Sauvegarde quotidienne locale : `api/scripts/planifier-sauvegarde.ps1` (tâche Windows à 21 h, à lancer une fois). En ligne : sauvegardes de l'hébergeur de la base.
+- Vérification automatique (`.github/workflows/ci.yml`) : build du site, build et tests de l'API (`npm test`, lanceur intégré de Node), détecteur Impeccable (indicatif).
+
+## Messages (e-mail, SMS, WhatsApp)
+
+`api/src/notify.ts`, appels HTTP directs, sans dépendance : Resend (e-mail : `RESEND_API_KEY`, `MAIL_FROM`), Twilio (SMS : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM` ; WhatsApp : `TWILIO_WHATSAPP_FROM`). Sans fournisseur, en développement, les messages s'affichent dans le terminal de l'API ; en production, rien n'est journalisé.
+- Code « mot de passe oublié » (e-mail ou SMS).
+- Alerte de chaque nouvelle commande au numéro WhatsApp de la boutique (WhatsApp ou SMS) et à l'e-mail d'alerte des réglages.
+- Suivi envoyé à la cliente à chaque changement de statut (confirmée, en préparation, expédiée, livrée, annulée).

@@ -16,6 +16,7 @@ import { GeminiService } from './gemini.service'
 import { RateLimit, accountLimiter } from './rate-limit'
 import { assertConsent, assertHuman, decodeImage, orderReference, sessionCookieBase } from './images'
 import { assertCaptcha } from './captcha'
+import { alertNewOrder, notifyOrderStatus } from './notify'
 import { normalizePhone } from './customer.controller'
 
 const MINUTE = 60_000
@@ -71,7 +72,15 @@ class ProductDto {
   @IsOptional() @IsIn(['bestseller', 'new']) badge?: string | null
   @IsInt() @Min(0) stock!: number
   @IsOptional() @IsBoolean() active?: boolean
+  /** Fiche détaillée : une entrée = un point (bienfait, étape d'utilisation) */
+  @IsOptional() @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(300, { each: true }) benefits?: string[]
+  @IsOptional() @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(300, { each: true }) howToUse?: string[]
+  @IsOptional() @IsString() @MaxLength(1000) ingredients?: string
+  @IsOptional() @IsString() @MaxLength(300) origin?: string
 }
+
+/** Lignes de fiche nettoyées : sans espaces superflus ni lignes vides */
+const cleanLines = (lines?: string[]) => (lines ?? []).map((l) => l.trim()).filter(Boolean)
 class OrderStatusDto {
   @IsEnum(OrderStatus) status!: OrderStatus
 }
@@ -88,6 +97,8 @@ class StoreSettingsDto {
   @IsOptional() @IsString() @MaxLength(120) waveNumber?: string
   @IsOptional() @IsString() @MaxLength(1500) legalInfo?: string
   @IsOptional() @IsString() @MaxLength(300) storeAddress?: string
+  /** E-mail qui reçoit l'alerte de chaque nouvelle commande (vide = pas d'e-mail) */
+  @IsOptional() @IsString() @MaxLength(120) alertEmail?: string
   @IsOptional() @IsArray() @ArrayMaxSize(60) @ValidateNested({ each: true }) @Type(() => DeliveryZoneDto) deliveryZones?: DeliveryZoneDto[]
 }
 class CreateReviewDto {
@@ -171,8 +182,12 @@ export class AppController {
   @Get('store-settings')
   @Header('Cache-Control', 'public, max-age=60')
   async storeSettings() {
-    const settings = await this.db.storeSettings.upsert({ where: { id: 'store' }, create: { id: 'store' }, update: {} })
+    const { alertEmail: _private, ...settings } = await this.loadSettings()
     return { ...settings, deliveryZones: parseZones(settings.deliveryZones) }
+  }
+
+  private loadSettings() {
+    return this.db.storeSettings.upsert({ where: { id: 'store' }, create: { id: 'store' }, update: {} })
   }
 
   @Get('reviews')
@@ -226,10 +241,12 @@ export class AppController {
     const phone = normalizePhone(dto.phone)
     const uniqueIds = [...new Set(dto.items.map((item) => item.productId))]
     if (uniqueIds.length !== dto.items.length) throw new BadRequestException('Regroupez les quantités d’un même produit.')
-    const settings = await this.storeSettings()
-    const zone = dto.deliveryZone ? settings.deliveryZones.find((z) => z.name === dto.deliveryZone) : undefined
+    const settings = await this.loadSettings()
+    const zones = parseZones(settings.deliveryZones)
+    const zone = dto.deliveryZone ? zones.find((z) => z.name === dto.deliveryZone) : undefined
+    let alertItems: { name: string; size: string; quantity: number }[] = []
     try {
-    return await this.db.$transaction(async (tx) => {
+    const created = await this.db.$transaction(async (tx) => {
       const products = await tx.product.findMany({ where: { id: { in: uniqueIds }, active: true } })
       if (products.length !== uniqueIds.length) throw new BadRequestException('Un produit n’est plus disponible.')
       const lines = dto.items.map((line) => {
@@ -239,6 +256,7 @@ export class AppController {
         return { product, quantity: line.quantity }
       })
       const totalXof = lines.reduce((sum, line) => sum + line.product.priceXof! * line.quantity, 0)
+      alertItems = lines.map(({ product, quantity }) => ({ name: product.name, size: product.size, quantity }))
       const order = await tx.order.create({
         data: {
           customerId, customerName: dto.customerName.trim(), phone, commune: dto.commune.trim(),
@@ -265,6 +283,13 @@ export class AppController {
         deliveryFeeXof: order.deliveryFeeXof, deliveryZone: order.deliveryZone,
       }
     })
+    // Alerte de la boutique (WhatsApp ou SMS, et e-mail si renseigné), sans retarder ni bloquer la commande
+    void alertNewOrder(
+      { reference: created.reference, customerName: dto.customerName.trim(), phone, commune: dto.commune.trim(), totalXof: created.totalXof, deliveryZone: created.deliveryZone, deliveryFeeXof: created.deliveryFeeXof },
+      alertItems,
+      { whatsappNumber: settings.whatsappNumber, alertEmail: settings.alertEmail },
+    ).catch(() => undefined)
+    return created
     } catch (error) {
       // Deux envois simultanés avec la même clé : le second récupère la commande créée par le premier
       if (dto.clientKey && error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -352,7 +377,7 @@ export class AppController {
   @Post('admin/products')
   @UseGuards(AdminGuard)
   async addProduct(@Body() dto: ProductDto) {
-    try { return await this.db.product.create({ data: { ...dto, slug: this.cleanSlug(dto.slug), priceXof: dto.priceXof ?? null, badge: dto.badge ?? null, active: dto.active ?? true } }) }
+    try { return await this.db.product.create({ data: { ...dto, ...this.cleanDetails(dto), slug: this.cleanSlug(dto.slug), priceXof: dto.priceXof ?? null, badge: dto.badge ?? null, active: dto.active ?? true } }) }
     catch (error) { this.rethrowUniqueSlug(error) }
   }
 
@@ -361,8 +386,15 @@ export class AppController {
   async updateProduct(@Param('id') id: string, @Body() dto: ProductDto) {
     const existing = await this.db.product.findUnique({ where: { id } })
     if (!existing) throw new NotFoundException('Produit introuvable.')
-    try { return await this.db.product.update({ where: { id }, data: { ...dto, slug: this.cleanSlug(dto.slug), priceXof: dto.priceXof ?? null, badge: dto.badge ?? null } }) }
+    try { return await this.db.product.update({ where: { id }, data: { ...dto, ...this.cleanDetails(dto), slug: this.cleanSlug(dto.slug), priceXof: dto.priceXof ?? null, badge: dto.badge ?? null } }) }
     catch (error) { this.rethrowUniqueSlug(error) }
+  }
+
+  private cleanDetails(dto: ProductDto) {
+    return {
+      benefits: cleanLines(dto.benefits), howToUse: cleanLines(dto.howToUse),
+      ingredients: dto.ingredients?.trim() ?? '', origin: dto.origin?.trim() ?? '',
+    }
   }
 
   /** Supprime un produit. S'il figure dans d'anciennes commandes, il est masqué pour garder l'historique intact. */
@@ -412,9 +444,11 @@ export class AppController {
   @Patch('admin/orders/:id/status')
   @UseGuards(AdminGuard)
   async setOrderStatus(@Param('id') id: string, @Body() dto: OrderStatusDto) {
+    let previousStatus: string | null = null
     return this.db.$transaction(async (tx) => {
       const order = await tx.order.findUnique({ where: { id }, include: { items: true } })
       if (!order) throw new NotFoundException('Commande introuvable.')
+      previousStatus = order.status
       const wasCancelled = order.status === 'cancelled'
       const willBeCancelled = dto.status === 'cancelled'
       if (!wasCancelled && willBeCancelled) {
@@ -427,7 +461,21 @@ export class AppController {
         }
       }
       return tx.order.update({ where: { id }, data: { status: dto.status } })
+    }).then((updated) => {
+      // Suivi envoyé à la cliente (WhatsApp ou SMS si configuré), seulement quand le statut change vraiment
+      if (updated.status !== previousStatus) {
+        void notifyOrderStatus({ reference: orderReference(updated.id), phone: updated.phone, customerName: updated.customerName }, updated.status).catch(() => undefined)
+      }
+      return updated
     })
+  }
+
+  /** Réglages complets, y compris l'e-mail d'alerte qui n'apparaît pas dans la version publique */
+  @Get('admin/store-settings')
+  @UseGuards(AdminGuard)
+  async adminStoreSettings() {
+    const settings = await this.loadSettings()
+    return { ...settings, deliveryZones: parseZones(settings.deliveryZones) }
   }
 
   @Patch('admin/store-settings')
@@ -438,8 +486,10 @@ export class AppController {
     const deliveryZones = (dto.deliveryZones ?? []).map((z) => ({ name: z.name.trim(), feeXof: z.feeXof ?? null, delay: z.delay?.trim() || undefined }))
     const names = deliveryZones.map((z) => z.name.toLowerCase())
     if (new Set(names).size !== names.length) throw new BadRequestException('Deux zones de livraison portent le même nom.')
+    const alertEmail = dto.alertEmail?.trim().toLowerCase() ?? ''
+    if (alertEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmail)) throw new BadRequestException('Adresse e-mail d’alerte invalide.')
     const data = {
-      whatsappNumber, deliveryCommunes: dto.deliveryCommunes, deliveryInfo: dto.deliveryInfo, waveInstructions: dto.waveInstructions,
+      alertEmail, whatsappNumber, deliveryCommunes: dto.deliveryCommunes, deliveryInfo: dto.deliveryInfo, waveInstructions: dto.waveInstructions,
       waveNumber: dto.waveNumber?.trim() ?? '', legalInfo: dto.legalInfo?.trim() ?? '', storeAddress: dto.storeAddress?.trim() ?? '', deliveryZones: deliveryZones as Prisma.InputJsonValue,
     }
     const saved = await this.db.storeSettings.upsert({ where: { id: 'store' }, create: { id: 'store', ...data }, update: data })

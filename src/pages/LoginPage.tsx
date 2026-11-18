@@ -7,6 +7,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { PHOTOS } from '../data/products'
 import { API_BASE, api } from '../api'
 import Captcha, { CaptchaHandle, requireCaptcha } from '../components/Captcha'
+import ForgotPassword from '../components/ForgotPassword'
 
 /** Messages affichés au retour de Google (`/connexion?google=…`) */
 const GOOGLE_MESSAGES: Record<string, string> = {
@@ -54,7 +55,7 @@ const PasswordInput: React.FC<{ name: string; autoComplete: string; minLength?: 
 export const LoginPage: React.FC = () => {
   const { login, register, completeGoogle, finishGoogleLogin, user, authReady, navigate, waLink, cartCount, settings } = useApp()
   const googleStatus = useMemo(() => new URLSearchParams(window.location.search).get('google') ?? '', [])
-  const [mode, setMode] = useState<'login' | 'register' | 'google'>(() => (window.location.search.includes('inscription') ? 'register' : 'login'))
+  const [mode, setMode] = useState<'login' | 'register' | 'google' | 'forgot'>(() => (window.location.search.includes('inscription') ? 'register' : 'login'))
   const [error, setError] = useState(() => GOOGLE_MESSAGES[googleStatus] ?? '')
   // Retour de Google sur un compte déjà lié : on attend la fin de la connexion avant toute redirection
   const [busy, setBusy] = useState(googleStatus === 'connecte')
@@ -62,7 +63,7 @@ export const LoginPage: React.FC = () => {
   const [googleProfile, setGoogleProfile] = useState<{ name: string; email: string } | null>(null)
   const captcha = useRef<CaptchaHandle>(null)
   const pending = useMemo(pendingAction, [])
-  usePageMeta(mode === 'login' ? 'Se connecter' : 'Créer un compte', 'Connectez-vous ou créez votre compte Nature & Grâce pour commander et suivre vos commandes.')
+  usePageMeta(mode === 'login' ? 'Se connecter' : mode === 'forgot' ? 'Mot de passe oublié' : 'Créer un compte', 'Connectez-vous ou créez votre compte Nature & Grâce pour commander et suivre vos commandes.')
 
   // Déjà connecté : inutile de rester ici
   useEffect(() => {
@@ -96,7 +97,7 @@ export const LoginPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const switchMode = (next: 'login' | 'register') => {
+  const switchMode = (next: 'login' | 'register' | 'forgot') => {
     setMode(next)
     setError('')
     window.history.replaceState(null, '', next === 'register' ? '/connexion?inscription' : '/connexion')
@@ -225,11 +226,15 @@ export const LoginPage: React.FC = () => {
       {/* ───── Colonne droite : le formulaire ───── */}
       <section className="ng-login-panel">
         <div className="ng-login-box">
-          <h2>{mode === 'login' ? 'Se connecter à Nature & Grâce' : mode === 'google' ? 'Dernière étape' : 'Créer un compte Nature & Grâce'}</h2>
+          <h2>
+            {mode === 'login' ? 'Se connecter à Nature & Grâce' : mode === 'google' ? 'Dernière étape' : mode === 'forgot' ? 'Mot de passe oublié' : 'Créer un compte Nature & Grâce'}
+          </h2>
           <p className="ng-login-sub">
             {mode === 'login'
               ? 'Avec Google, ou avec votre numéro de téléphone ou votre e-mail.'
-              : mode === 'google'
+              : mode === 'forgot'
+                ? 'Recevez un code à 6 chiffres par SMS ou par e-mail, puis choisissez un nouveau mot de passe.'
+                : mode === 'google'
                 ? 'Votre numéro sert à la livraison et au suivi de commande sur WhatsApp.'
                 : 'Commandez plus vite et suivez vos livraisons.'}
           </p>
@@ -252,7 +257,9 @@ export const LoginPage: React.FC = () => {
             </p>
           )}
 
-          {busy && googleStatus === 'connecte' && !error ? (
+          {mode === 'forgot' ? (
+            <ForgotPassword onBack={() => switchMode('login')} helpLink={forgotLink} />
+          ) : busy && googleStatus === 'connecte' && !error ? (
             <p className="ng-login-sub" role="status">Connexion avec Google…</p>
           ) : mode === 'google' && googleProfile ? (
             <form className="ng-login-form" onSubmit={submitGoogle} key="google">
@@ -292,9 +299,9 @@ export const LoginPage: React.FC = () => {
               <button type="submit" className="ng-login-primary" disabled={busy}>
                 {busy ? 'Connexion…' : 'Se connecter'}
               </button>
-              <a className="ng-login-forgot" href={forgotLink} target="_blank" rel="noreferrer">
+              <button type="button" className="ng-login-forgot" onClick={() => switchMode('forgot')}>
                 Mot de passe oublié ?
-              </a>
+              </button>
               <div className="ng-login-gap" />
               <button type="button" className="ng-login-secondary" onClick={() => switchMode('register')}>
                 Créer un nouveau compte

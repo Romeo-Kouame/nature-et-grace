@@ -49,7 +49,8 @@ En attente de confirmation ──► Paiement en vérification ──► Confirm
 - « Se connecter » (menu compte, menu mobile, panier, pages réservées) → page `/connexion` autonome : la marque à gauche, le formulaire à droite ; bouton « Retour à la boutique ».
 - « Créer un nouveau compte » bascule sur le formulaire d'inscription sur la même page (`/connexion?inscription`) ; « J'ai déjà un compte » revient à la connexion.
 - « Continuer avec Google » (si configuré) → Google → retour sur `/connexion` : compte connu → connecté et renvoyé à la page demandée ; nouveau client → « Dernière étape » (nom prérempli, téléphone, conditions) → compte créé ; e-mail déjà utilisé par un compte à mot de passe → message invitant à se connecter avec le mot de passe ; annulation ou erreur → message sur la page.
-- « Mot de passe oublié ? » ouvre WhatsApp (pas encore de service d'envoi de SMS ou d'e-mails).
+- « Mot de passe oublié ? » → téléphone ou e-mail (+ captcha) → « Si un compte correspond, un code vient d'être envoyé » (même réponse que le compte existe ou non ; 3 envois par heure au plus) → code à 6 chiffres + nouveau mot de passe → connectée, autres appareils déconnectés. Code faux ou expiré : message générique ; 5 essais au plus. Sans service d'envoi en production : invitation à écrire sur WhatsApp.
+- Commande livrée → bouton « Donner mon avis » dans « Vos commandes » (ouvre le formulaire d'avis).
 
 - Inscription réussie → toast de bienvenue, retour à la page demandée (ou au panier).
 - Mauvais identifiants → un seul message générique.

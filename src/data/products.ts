@@ -100,7 +100,7 @@ export const INITIAL_PRODUCTS: Product[] = [
 
 /** Valeurs par défaut tant que les réglages de la boutique ne sont pas chargés. */
 export const DEFAULT_SETTINGS: ApiStoreSettings = {
-  whatsappNumber: '2250717684751',
+  whatsappNumber: '2250798419730',
   deliveryCommunes: 'Abidjan, Bouaké, Daloa et autres communes sur demande',
   deliveryInfo: 'Frais et délais communiqués avant la validation définitive.',
   waveInstructions: 'Les modalités de paiement Wave sont confirmées par la boutique.',

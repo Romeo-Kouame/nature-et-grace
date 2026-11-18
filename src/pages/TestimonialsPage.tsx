@@ -14,7 +14,8 @@ export const TestimonialsPage: React.FC = () => {
   const { products, reviews, reviewsLoaded, showToast, waLink } = useApp()
   usePageMeta('Avis clients', 'Les avis des clientes et clients de Nature & Grâce sur nos soins au cacao, savons et huiles.')
   const [filter, setFilter] = useState<number | 'all'>('all')
-  const [showForm, setShowForm] = useState(false)
+  // Lien « Donner mon avis » (commande livrée, message de suivi) : le formulaire s'ouvre directement
+  const [showForm, setShowForm] = useState(() => new URLSearchParams(window.location.search).has('avis'))
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [authorName, setAuthorName] = useState('')

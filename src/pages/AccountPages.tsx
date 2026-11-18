@@ -263,6 +263,7 @@ const OrderCard: React.FC<{ order: CustomerOrder; onProofSent: () => void }> = (
   const input = useRef<HTMLInputElement>(null)
   const fee = order.deliveryFeeXof
   const canSendProof = !order.proofSent && (order.status === 'pending' || order.status === 'payment_review')
+  const { navigate } = useApp()
   const current = stepIndex(order.status)
 
   const upload = async (file?: File) => {
@@ -322,6 +323,11 @@ const OrderCard: React.FC<{ order: CustomerOrder; onProofSent: () => void }> = (
       </ul>
 
       <footer>
+        {order.status === 'delivered' && (
+          <button type="button" className="ng-btn ng-btn--ghost ng-btn--sm" onClick={() => navigate('/temoignages?avis')}>
+            Donner mon avis
+          </button>
+        )}
         {order.proofSent && (
           <span className="ng-proof-ok">
             <Check size={15} /> Preuve Wave envoyée

@@ -198,3 +198,8 @@ html.dark .ng-login-primary { color: #06140e; }
 /* Captcha Turnstile : prend la largeur du formulaire */
 .ng-captcha { min-height: 0; }
 .ng-captcha iframe { max-width: 100%; }
+
+/* « Mot de passe oublié ? » est un bouton (il ouvre l'écran de réinitialisation) */
+button.ng-login-forgot { border: 0; background: none; font: inherit; cursor: pointer; }
+.ng-login-back-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 0; background: none; color: var(--ng-ink); font: inherit; font-weight: 600; cursor: pointer; }
+.ng-login-back-link:hover { color: var(--ng-emerald); }

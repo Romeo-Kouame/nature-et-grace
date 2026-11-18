@@ -10,7 +10,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 const SITEKEY = (import.meta.env.VITE_TURNSTILE_SITEKEY as string | undefined)?.trim() ?? ''
 export const CAPTCHA_ENABLED = SITEKEY.length > 0
 
-export type CaptchaAction = 'login' | 'signup' | 'google' | 'review'
+export type CaptchaAction = 'login' | 'signup' | 'google' | 'review' | 'reset'
 
 export interface CaptchaHandle {
   /** Jeton actuel, ou null s'il n'est pas (encore) disponible */

@@ -25,7 +25,7 @@ export const ShopPage: React.FC = () => {
     let list = [...products]
     if (selectedCategory !== ALL_CATEGORIES) list = list.filter((p) => p.category === selectedCategory)
     if (searchTerm.trim()) {
-      list = list.filter((p) => matchesQuery(`${p.name} ${p.category} ${p.description}`, searchTerm))
+      list = list.filter((p) => matchesQuery(`${p.name} ${p.category} ${p.description} ${(p.details?.benefits ?? []).join(' ')}`, searchTerm))
     }
     // Les prix à confirmer passent après les prix connus
     const price = (v: number | null, dir: 1 | -1) => (v === null ? Number.POSITIVE_INFINITY : dir * v)

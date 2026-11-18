@@ -73,7 +73,7 @@ export default function AdminApp() {
     const [items, sales, store, revs] = await Promise.all([
       api<ApiProduct[]>('/admin/products'),
       api<ApiOrder[]>(allOrders ? '/admin/orders?all=1' : '/admin/orders'),
-      api<ApiStoreSettings>('/store-settings'),
+      api<ApiStoreSettings>('/admin/store-settings'),
       api<ApiReview[]>('/admin/reviews'),
     ])
     setProducts(items)
@@ -435,6 +435,9 @@ function ProductsPanel({ products, lowStock, reload, notify, fail }: PanelProps 
   )
 }
 
+/** Texte d'un champ « une ligne = un point » → liste nettoyée (12 points de 300 caractères au plus, comme l'API) */
+const toLines = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 12).map((l) => l.slice(0, 300))
+
 function ProductEditor({ product, categories, onClose, reload, notify, fail }: PanelProps & { product: ApiProduct | null; categories: string[]; onClose: () => void }) {
   const [name, setName] = useState(product?.name ?? '')
   const [slug, setSlug] = useState(product?.slug ?? '')
@@ -444,6 +447,11 @@ function ProductEditor({ product, categories, onClose, reload, notify, fail }: P
   const [price, setPrice] = useState(product?.priceXof?.toString() ?? '')
   const [stock, setStock] = useState(product?.stock?.toString() ?? '0')
   const [description, setDescription] = useState(product?.description ?? '')
+  // Fiche détaillée (affichée sur la fiche produit et connue de la conseillère IA) : une ligne = un point
+  const [benefits, setBenefits] = useState((product?.benefits ?? []).join('\n'))
+  const [howToUse, setHowToUse] = useState((product?.howToUse ?? []).join('\n'))
+  const [ingredients, setIngredients] = useState(product?.ingredients ?? '')
+  const [origin, setOrigin] = useState(product?.origin ?? '')
   const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? '')
   const [gallery, setGallery] = useState<string[]>(product?.gallery ?? [])
   const [badge, setBadge] = useState(product?.badge ?? '')
@@ -499,6 +507,7 @@ function ProductEditor({ product, categories, onClose, reload, notify, fail }: P
     const body = JSON.stringify({
       name: name.trim(), slug: slug.trim() || slugify(name), category: category.trim(), size: size.trim(), description: description.trim(),
       priceXof: price === '' ? null : Number(price), stock: Number(stock || 0), imageUrl: imageUrl || null, gallery, badge: badge || null, active,
+      benefits: toLines(benefits), howToUse: toLines(howToUse), ingredients: ingredients.trim(), origin: origin.trim(),
     })
     try {
       if (product) await api(`/admin/products/${product.id}`, { method: 'PATCH', body })
@@ -602,6 +611,24 @@ function ProductEditor({ product, categories, onClose, reload, notify, fail }: P
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} minLength={2} maxLength={2000} required />
           <small className="adm-muted">Relisez toujours le texte proposé par l’IA : il ne doit promettre aucun effet médical.</small>
         </label>
+        <fieldset className="adm-sheet">
+          <legend>Fiche détaillée</legend>
+          <small className="adm-muted">Affichée dans les onglets de la fiche produit et utilisée par la conseillère IA. Une ligne = un point. Pas de promesse médicale.</small>
+          <label>Bienfaits
+            <textarea value={benefits} onChange={(e) => setBenefits(e.target.value)} rows={4} maxLength={3600} placeholder={'Nourrit les peaux sèches\nLaisse la peau douce'} />
+          </label>
+          <label>Utilisation (étapes)
+            <textarea value={howToUse} onChange={(e) => setHowToUse(e.target.value)} rows={4} maxLength={3600} placeholder={'Prélevez une noisette\nMassez sur peau humide'} />
+          </label>
+          <div className="adm-row">
+            <label>Composition
+              <textarea value={ingredients} onChange={(e) => setIngredients(e.target.value)} rows={3} maxLength={1000} placeholder="Beurre de fèves de cacao brut" />
+            </label>
+            <label>Origine
+              <textarea value={origin} onChange={(e) => setOrigin(e.target.value)} rows={3} maxLength={300} placeholder="Préparé par des productrices en Côte d’Ivoire" />
+            </label>
+          </div>
+        </fieldset>
         <details className="adm-advanced">
           <summary>Réglage avancé</summary>
           <label>Adresse de la page (identifiant)
@@ -748,6 +775,7 @@ function StorePanel({ settings, setSettings, notify, fail }: Omit<PanelProps, 'r
         method: 'PATCH',
         body: JSON.stringify({
           whatsappNumber: data.get('whatsappNumber'),
+          alertEmail: data.get('alertEmail'),
           waveNumber: data.get('waveNumber'),
           waveInstructions: data.get('waveInstructions'),
           deliveryCommunes: data.get('deliveryCommunes'),
@@ -771,7 +799,8 @@ function StorePanel({ settings, setSettings, notify, fail }: Omit<PanelProps, 'r
       <section className="adm-card">
         <h2><MessageCircle size={18} /> Contact et paiement</h2>
         <div className="adm-grid-2">
-          <label>Numéro WhatsApp de la boutique<input name="whatsappNumber" type="tel" defaultValue={`+${settings.whatsappNumber}`} required /><small className="adm-muted">Format +225 suivi de 10 chiffres.</small></label>
+          <label>Numéro WhatsApp de la boutique<input name="whatsappNumber" type="tel" defaultValue={`+${settings.whatsappNumber}`} required /><small className="adm-muted">Format +225 suivi de 10 chiffres. Ce numéro reçoit aussi l’alerte de chaque nouvelle commande (WhatsApp ou SMS, une fois le service d’envoi configuré).</small></label>
+          <label>E-mail d’alerte des commandes (facultatif)<input name="alertEmail" type="email" defaultValue={settings.alertEmail ?? ''} maxLength={120} placeholder="vous@exemple.com" /><small className="adm-muted">Reçoit un e-mail à chaque nouvelle commande. Jamais affiché sur le site.</small></label>
           <label>Numéro ou lien Wave<input name="waveNumber" defaultValue={settings.waveNumber} placeholder="+225 07 … ou lien de paiement" maxLength={120} /><small className="adm-muted">Affiché au client après sa commande.</small></label>
         </div>
         <label>Instructions de paiement Wave<textarea name="waveInstructions" defaultValue={settings.waveInstructions} rows={3} required /></label>
