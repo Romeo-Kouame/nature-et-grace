@@ -16,7 +16,9 @@ const CODE_TTL_MS = 15 * MINUTE
 const MAX_ATTEMPTS = 5
 /** Envois de code par compte et par heure (au-delà, la demande est ignorée sans le dire) */
 const MAX_SENDS_PER_HOUR = 3
-const GENERIC_SENT = 'Si un compte correspond, un code à 6 chiffres vient d’être envoyé. Il est valable 15 minutes.'
+/** Même réponse dans tous les cas : elle ne révèle ni l'existence du compte ni la présence d'un e-mail */
+const GENERIC_SENT =
+  'Si un compte correspond et qu’une adresse e-mail y est enregistrée, un code à 6 chiffres vient d’y être envoyé (valable 15 minutes). Pensez à regarder dans les courriers indésirables. Sans e-mail enregistré, écrivez-nous sur WhatsApp.'
 const BAD_CODE = 'Code incorrect ou expiré. Demandez un nouveau code.'
 
 class ForgotDto {
@@ -66,8 +68,11 @@ export class PasswordResetController {
     const recent = await this.db.passwordReset.count({ where: { customerId: customer.id, createdAt: { gte: since } } })
     if (recent >= MAX_SENDS_PER_HOUR) return { message: GENERIC_SENT }
 
-    // E-mail si la cliente l'a utilisé (ou si le SMS n'est pas disponible), sinon SMS
-    const channel = customer.email && (byEmail || !smsEnabled()) && (emailEnabled() || !smsEnabled()) ? 'email' : 'sms'
+    // E-mail si la cliente en a un (envoi gratuit) ; SMS seulement si un service SMS est configuré
+    const canEmail = Boolean(customer.email) && (emailEnabled() || devConsoleDelivery())
+    const canSms = smsEnabled() || (devConsoleDelivery() && !customer.email)
+    if (!canEmail && !canSms) return { message: GENERIC_SENT }
+    const channel = canEmail && (byEmail || !smsEnabled()) ? 'email' : canSms ? 'sms' : 'email'
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0')
     await this.db.$transaction([
       // Un seul code valable à la fois

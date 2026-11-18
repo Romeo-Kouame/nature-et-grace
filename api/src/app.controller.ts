@@ -460,11 +460,11 @@ export class AppController {
           if (updated.count !== 1) throw new BadRequestException(`Stock insuffisant pour réactiver la commande (${item.productName}).`)
         }
       }
-      return tx.order.update({ where: { id }, data: { status: dto.status } })
+      return tx.order.update({ where: { id }, data: { status: dto.status }, include: { customer: { select: { email: true } } } })
     }).then((updated) => {
       // Suivi envoyé à la cliente (WhatsApp ou SMS si configuré), seulement quand le statut change vraiment
       if (updated.status !== previousStatus) {
-        void notifyOrderStatus({ reference: orderReference(updated.id), phone: updated.phone, customerName: updated.customerName }, updated.status).catch(() => undefined)
+        void notifyOrderStatus({ reference: orderReference(updated.id), phone: updated.phone, customerName: updated.customerName, email: updated.customer?.email }, updated.status).catch(() => undefined)
       }
       return updated
     })

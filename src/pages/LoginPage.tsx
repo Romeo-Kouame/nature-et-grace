@@ -233,7 +233,7 @@ export const LoginPage: React.FC = () => {
             {mode === 'login'
               ? 'Avec Google, ou avec votre numéro de téléphone ou votre e-mail.'
               : mode === 'forgot'
-                ? 'Recevez un code à 6 chiffres par SMS ou par e-mail, puis choisissez un nouveau mot de passe.'
+                ? 'Recevez un code à 6 chiffres sur l’adresse e-mail de votre compte, puis choisissez un nouveau mot de passe.'
                 : mode === 'google'
                 ? 'Votre numéro sert à la livraison et au suivi de commande sur WhatsApp.'
                 : 'Commandez plus vite et suivez vos livraisons.'}
@@ -312,7 +312,7 @@ export const LoginPage: React.FC = () => {
               {googleButton}
               <input name="name" aria-label="Nom et prénom(s)" autoComplete="name" placeholder="Nom et prénom(s)" required minLength={2} maxLength={80} autoFocus />
               <input name="phone" type="tel" aria-label="Téléphone (WhatsApp de préférence)" autoComplete="tel" placeholder="Téléphone (WhatsApp de préférence)" required minLength={8} maxLength={25} />
-              <input name="email" type="email" aria-label="Adresse e-mail (facultatif)" autoComplete="email" placeholder="Adresse e-mail (facultatif)" maxLength={120} />
+              <input name="email" type="email" aria-label="Adresse e-mail (conseillée : pour récupérer votre mot de passe)" autoComplete="email" placeholder="E-mail (conseillé, pour récupérer votre mot de passe)" maxLength={120} />
               <PasswordInput name="password" autoComplete="new-password" minLength={8} placeholder="Mot de passe (8 caractères minimum)" label="Mot de passe, 8 caractères minimum" />
               <PasswordInput name="confirm" autoComplete="new-password" minLength={8} placeholder="Confirmez le mot de passe" label="Confirmation du mot de passe" />
               <Honeypot />
