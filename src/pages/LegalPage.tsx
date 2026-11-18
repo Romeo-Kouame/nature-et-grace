@@ -236,6 +236,12 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
             (vérifiée par Google) et un identifiant de compte. Nous ne recevons ni votre mot de passe Google ni vos contacts.
             Votre numéro de téléphone vous est ensuite demandé pour la livraison.
           </p>
+          <h2>E-mails de la boutique</h2>
+          <p>
+            Si vous avez enregistré une adresse e-mail, la boutique vous écrit uniquement au sujet de votre compte et de vos
+            commandes : code pour changer de mot de passe, confirmation et suivi de commande. Ces e-mails sont envoyés depuis la
+            messagerie Gmail de la boutique (Google). Aucune publicité, aucune lettre d’information sans votre accord.
+          </p>
           <h2>Protection anti-robot</h2>
           <p>
             Les formulaires de connexion, d’inscription et d’avis peuvent utiliser Cloudflare Turnstile. Ce service analyse

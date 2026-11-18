@@ -85,7 +85,7 @@ L'API envoie ses propres en-têtes de sécurité, mais les pages du site sont se
 
 ## Messages (e-mail, SMS, WhatsApp)
 
-`api/src/notify.ts`, appels HTTP directs, sans dépendance : Resend (e-mail : `RESEND_API_KEY`, `MAIL_FROM`), Twilio (SMS : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM` ; WhatsApp : `TWILIO_WHATSAPP_FROM`). Sans fournisseur, en développement, les messages s'affichent dans le terminal de l'API ; en production, rien n'est journalisé.
-- Code « mot de passe oublié » (e-mail ou SMS).
+`api/src/notify.ts`. **Choix actuel : tout par e-mail, gratuitement, via Gmail** (`nodemailer`, SMTP : `SMTP_USER` = adresse Gmail, `SMTP_PASS` = mot de passe d'application Google, `MAIL_FROM` ; environ 500 e-mails par jour). Options pour plus tard : Resend (e-mail avec nom de domaine : `RESEND_API_KEY`), Twilio (SMS et WhatsApp, **payants** : chaque message à l'initiative de la boutique est facturé par Meta ou l'opérateur ; `TWILIO_*`). Priorité e-mail : Gmail, puis Resend. Sans fournisseur, en développement, les messages s'affichent dans le terminal de l'API ; en production, rien n'est journalisé.
+- Code « mot de passe oublié » : par e-mail (compte sans e-mail : rien n'est envoyé, la réponse invite à écrire sur WhatsApp ; SMS seulement si Twilio est configuré).
 - Alerte de chaque nouvelle commande au numéro WhatsApp de la boutique (WhatsApp ou SMS) et à l'e-mail d'alerte des réglages.
-- Suivi envoyé à la cliente à chaque changement de statut (confirmée, en préparation, expédiée, livrée, annulée).
+- Suivi envoyé à la cliente à chaque changement de statut (confirmée, en préparation, expédiée, livrée, annulée) : par e-mail si elle en a un, par SMS/WhatsApp seulement si Twilio est configuré.

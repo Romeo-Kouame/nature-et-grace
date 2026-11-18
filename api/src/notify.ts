@@ -1,10 +1,13 @@
 import { Logger } from '@nestjs/common'
+import nodemailer, { Transporter } from 'nodemailer'
 
 /**
- * Envoi de messages (e-mail, SMS, WhatsApp) sans dépendance : appels HTTP directs aux fournisseurs.
+ * Envoi de messages (e-mail, SMS, WhatsApp).
  *
  * Variables d'environnement (toutes facultatives) :
- * - E-mail (Resend) : RESEND_API_KEY, MAIL_FROM (ex. « Nature & Grâce <commandes@mondomaine.ci> », domaine vérifié chez Resend)
+ * - E-mail GRATUIT par Gmail (prioritaire) : SMTP_USER (adresse Gmail), SMTP_PASS (mot de passe d'application Google),
+ *   MAIL_FROM (ex. « Nature & Grâce <adresse@gmail.com> »), SMTP_HOST (défaut smtp.gmail.com), SMTP_PORT (défaut 465)
+ * - E-mail (Resend, plus tard avec un nom de domaine) : RESEND_API_KEY, MAIL_FROM
  * - SMS (Twilio) : TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_SMS_FROM (numéro Twilio ou nom d'expéditeur autorisé)
  * - WhatsApp (Twilio) : TWILIO_WHATSAPP_FROM (ex. « whatsapp:+14155238886 » pour le bac à sable Twilio)
  *
@@ -15,7 +18,28 @@ const logger = new Logger('Messages')
 const production = () => process.env.NODE_ENV === 'production'
 const TIMEOUT_MS = 10_000
 
-export const emailEnabled = () => Boolean(process.env.RESEND_API_KEY?.trim() && process.env.MAIL_FROM?.trim())
+export const smtpEnabled = () => Boolean(process.env.SMTP_USER?.trim() && process.env.SMTP_PASS?.trim())
+export const resendEnabled = () => Boolean(process.env.RESEND_API_KEY?.trim() && process.env.MAIL_FROM?.trim())
+export const emailEnabled = () => smtpEnabled() || resendEnabled()
+/** Fournisseur d'e-mail utilisé : Gmail (gratuit) en priorité, sinon Resend, sinon aucun */
+export const emailProvider = (): 'smtp' | 'resend' | null => (smtpEnabled() ? 'smtp' : resendEnabled() ? 'resend' : null)
+
+let smtp: Transporter | null = null
+function smtpTransport(): Transporter {
+  if (!smtp) {
+    const port = Number(process.env.SMTP_PORT ?? 465) || 465
+    smtp = nodemailer.createTransport({
+      host: process.env.SMTP_HOST?.trim() || 'smtp.gmail.com',
+      port,
+      secure: port === 465,
+      auth: { user: process.env.SMTP_USER!.trim(), pass: process.env.SMTP_PASS!.replace(/\s+/g, '') },
+      connectionTimeout: TIMEOUT_MS,
+      greetingTimeout: TIMEOUT_MS,
+      socketTimeout: TIMEOUT_MS,
+    })
+  }
+  return smtp
+}
 export const smsEnabled = () => Boolean(twilioAuth() && process.env.TWILIO_SMS_FROM?.trim())
 export const whatsappEnabled = () => Boolean(twilioAuth() && process.env.TWILIO_WHATSAPP_FROM?.trim())
 /** En développement sans fournisseur, les messages s'affichent dans le terminal : le parcours reste testable */
@@ -41,6 +65,11 @@ export async function sendEmail(to: string, subject: string, text: string): Prom
     return false
   }
   try {
+    if (emailProvider() === 'smtp') {
+      const from = process.env.MAIL_FROM?.trim() || `Nature & Grâce <${process.env.SMTP_USER!.trim()}>`
+      await smtpTransport().sendMail({ from, to, subject, text })
+      return true
+    }
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY!.trim()}`, 'Content-Type': 'application/json' },
@@ -132,10 +161,22 @@ const STATUS_MESSAGES: Record<string, string> = {
   cancelled: 'a été annulée. Une question ? Répondez-nous sur WhatsApp.',
 }
 
-/** Suivi de commande envoyé à la cliente quand la boutique change le statut (si un fournisseur est configuré) */
-export async function notifyOrderStatus(order: { reference: string; phone: string; customerName: string }, status: string): Promise<void> {
+/**
+ * Suivi de commande envoyé à la cliente quand la boutique change le statut :
+ * par e-mail si elle a une adresse (gratuit), et sur son téléphone si un service SMS/WhatsApp est configuré.
+ */
+export async function notifyOrderStatus(
+  order: { reference: string; phone: string; customerName: string; email?: string | null },
+  status: string,
+): Promise<void> {
   const message = STATUS_MESSAGES[status]
-  if (!message || !order.phone) return
+  if (!message) return
   const firstName = order.customerName.split(' ')[0]
-  await sendToPhone(order.phone, `Bonjour ${firstName}, votre commande Nature & Grâce ${order.reference} ${message}`)
+  const text = `Bonjour ${firstName}, votre commande Nature & Grâce ${order.reference} ${message}`
+  const phoneService = smsEnabled() || whatsappEnabled()
+  await Promise.allSettled([
+    order.email ? sendEmail(order.email, `Votre commande ${order.reference}`, `${text}\n\nVous recevez ce message car vous avez passé commande sur le site Nature & Grâce.`) : Promise.resolve(false),
+    // Sans service téléphone : en développement, le message s'affiche dans le terminal seulement s'il n'y a pas d'e-mail
+    order.phone && (phoneService || !order.email) ? sendToPhone(order.phone, text) : Promise.resolve(false),
+  ])
 }

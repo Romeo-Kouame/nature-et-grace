@@ -70,3 +70,20 @@ test('chat : hors sujet renvoyé vers la boutique', async () => {
   assert.match(r.reply, /WhatsApp au \+225 07 98 41 97 30/)
   assert.deepEqual(r.productIds, [])
 })
+
+test('e-mail : Gmail (gratuit) prioritaire, puis Resend, sinon aucun', async () => {
+  const { emailProvider } = await import('../src/notify')
+  const saved = { ...process.env }
+  try {
+    for (const k of ['SMTP_USER', 'SMTP_PASS', 'RESEND_API_KEY', 'MAIL_FROM']) delete process.env[k]
+    assert.equal(emailProvider(), null)
+    process.env.RESEND_API_KEY = 're_test'
+    process.env.MAIL_FROM = 'Nature & Grâce <test@exemple.ci>'
+    assert.equal(emailProvider(), 'resend')
+    process.env.SMTP_USER = 'boutique@gmail.com'
+    process.env.SMTP_PASS = 'abcd efgh ijkl mnop'
+    assert.equal(emailProvider(), 'smtp')
+  } finally {
+    process.env = saved
+  }
+})

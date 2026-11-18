@@ -101,6 +101,13 @@ export const AccountPage: React.FC = () => {
         <div className="ng-account-main">
           <form className="ng-form-card ng-form" onSubmit={saveProfile}>
             <h2 className="ng-h2">Vos informations</h2>
+            {!user.email && (
+              <p className="ng-auth-reason" role="note">
+                <span>
+                  <b>Ajoutez votre e-mail</b> : en cas d’oubli, vous pourrez recevoir un code et changer votre mot de passe sans nous écrire.
+                </span>
+              </p>
+            )}
             <div className="ng-form-row">
               <label>
                 Nom et prénom(s)

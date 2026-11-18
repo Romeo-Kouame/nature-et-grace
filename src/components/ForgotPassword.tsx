@@ -80,7 +80,7 @@ export const ForgotPassword: React.FC<{ onBack: () => void; helpLink: string }> 
         <ArrowLeft size={16} /> Retour à la connexion
       </button>
       <p className="ng-login-legal">
-        Pas d’accès à votre téléphone ni à votre e-mail ?{' '}
+        Pas d’e-mail enregistré sur votre compte, ou pas d’accès à votre e-mail ?{' '}
         <a href={helpLink} target="_blank" rel="noreferrer">Écrivez-nous sur WhatsApp</a>.
       </p>
     </form>
