@@ -35,8 +35,6 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
   const [activeTab, setActiveTab] = useState<TabKey>('benefits')
   const [photoIndex, setPhotoIndex] = useState(0)
   const mediaRef = useRef<HTMLDivElement>(null)
-  const buyRef = useRef<HTMLDivElement>(null)
-  // Téléphone : barre d'achat fixe dès que les boutons principaux sont sortis de l'écran par le haut
   const [showBuyBar, setShowBuyBar] = useState(false)
   const product = products.find((p) => p.id === productId)
   usePageMeta(
@@ -50,28 +48,10 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
     setPhotoIndex(0)
   }, [productId])
 
+  // Téléphone : la barre d'achat est visible dès l'arrivée sur la fiche (elle remplace la barre d'onglets)
   useEffect(() => {
-    // Écouteur de défilement plutôt qu'IntersectionObserver : un défilement rapide peut faire passer
-    // les boutons de « sous l'écran » à « au-dessus » sans jamais les rendre visibles, et l'observateur ne réagit pas.
-    let frame = 0
-    const update = () => {
-      frame = 0
-      const el = buyRef.current
-      setShowBuyBar(!!el && el.getBoundingClientRect().bottom < 0)
-    }
-    const onScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(update)
-    }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (frame) window.cancelAnimationFrame(frame)
-      setShowBuyBar(false)
-    }
-    // Le catalogue peut arriver après le premier rendu : on relance dès que la fiche est affichée
+    setShowBuyBar(product !== undefined)
+    return () => setShowBuyBar(false)
   }, [productId, product !== undefined])
 
   useEffect(() => {
@@ -150,17 +130,17 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
       <li>
         <Leaf size={18} />
         <span>
-          <b>Soin naturel</b> Cacao et végétaux de Côte d’Ivoire
+          <b>Soin naturel</b> Sélectionné auprès de productrices ivoiriennes
         </span>
       </li>
     </>
   )
 
   const add = () => {
-    // Client connecté : on montre le panier. Visiteur : il continue ses achats (le panier lui demandera de se connecter)
+    // Le panier s'ouvre pour tout le monde ; la connexion n'est demandée qu'au moment de valider
     if (!addToCart(product.id, quantity)) return
     flyToCart(mediaRef.current)
-    if (user) window.setTimeout(() => setCartOpen(true), 650)
+    window.setTimeout(() => setCartOpen(true), 650)
   }
 
   return (
@@ -215,8 +195,8 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
         </div>
 
         <div className="ng-pdp-info">
-          <span className="ng-eyebrow">{categoryAndSize(product.category, product.size)}</span>
           <h1>{product.name}</h1>
+          <p className="ng-pdp-cat">{categoryAndSize(product.category, product.size)}</p>
 
           <div className="ng-pdp-meta">
             {rating && (
@@ -240,7 +220,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
 
           <p className="ng-pdp-desc">{product.description}</p>
 
-          <div className="ng-pdp-cta" ref={buyRef}>
+          <div className="ng-pdp-cta">
           {priceKnown && inStock ? (
             <div className="ng-pdp-buy">
               <div className="ng-qty" role="group" aria-label="Quantité">
@@ -264,7 +244,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
             </p>
           )}
 
-          <a className="ng-btn ng-btn--wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer">
+          <a className={`ng-btn ${priceKnown && inStock ? 'ng-btn--wa-outline' : 'ng-btn--wa'}`} href={waLink(whatsappText)} target="_blank" rel="noreferrer">
             <MessageCircle size={18} /> {!priceKnown ? 'Demander le prix sur WhatsApp' : inStock ? 'Commander sur WhatsApp' : 'Me prévenir sur WhatsApp'}
           </a>
           </div>
@@ -272,7 +252,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
           <button type="button" className="ng-pdp-ai" onClick={() => setAdvisorOpen(true)}>
             <Sparkles size={16} />
             <span>
-              Ce soin convient-il à ma peau ? <b>Demander au conseiller IA</b>
+              Ce soin convient-il à ma peau ? <b>Demander à la conseillère</b>
             </span>
           </button>
 
@@ -373,7 +353,7 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
         <ProductRail title="Vous aimerez aussi" products={similarProducts} onSeeAll={() => navigate('/boutique')} />
       )}
 
-      {/* Téléphone : barre d'achat collante, au-dessus de la barre d'onglets.
+      {/* Téléphone : barre d'achat collante en bas de l'écran, à la place de la barre d'onglets.
           Rendue hors de <main> : l'animation de la page (transform) empêcherait sinon le position: fixed. */}
       {createPortal(
       <div className={`ng-buybar ${showBuyBar ? 'show' : ''}`} aria-hidden={!showBuyBar}>
@@ -383,9 +363,14 @@ export const ProductDetailPage: React.FC<{ productId: string }> = ({ productId }
           <span>{formatXof(product.price)}</span>
         </div>
         {priceKnown && inStock ? (
-          <button type="button" className="ng-btn ng-btn--primary" onClick={add}>
-            Ajouter
-          </button>
+          <>
+            <a className="ng-buybar-wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer" aria-label="Commander sur WhatsApp">
+              <MessageCircle size={19} />
+            </a>
+            <button type="button" className="ng-btn ng-btn--primary" onClick={add}>
+              Ajouter au panier
+            </button>
+          </>
         ) : (
           <a className="ng-btn ng-btn--wa" href={waLink(whatsappText)} target="_blank" rel="noreferrer">
             <MessageCircle size={17} /> {!priceKnown ? 'Prix' : 'Me prévenir'}

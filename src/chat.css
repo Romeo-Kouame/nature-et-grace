@@ -144,3 +144,8 @@ html.dark .ng-chat-form button { color: #06140e; }
 
 /* Icône de la conseillère dans l'en-tête (téléphone) */
 .ng-header .ng-ai-btn { color: var(--ng-gold-text); background: var(--ng-gold-50); }
+
+/* Bulle réduite pendant le défilement */
+.ng-chat-launcher { transition: transform 0.25s var(--ng-ease), box-shadow 0.25s, padding 0.25s var(--ng-ease), width 0.25s var(--ng-ease); }
+.ng-chat-launcher.is-compact { width: 52px; padding: 0; justify-content: center; }
+.ng-chat-launcher.is-compact span { display: none; }

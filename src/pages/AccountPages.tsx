@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, Heart, ImageUp, KeyRound, LogOut, MessageCircle, Package, Save, ShoppingBag, Trash2, User as UserIcon } from 'lucide-react'
+import { ArrowRight, Check, Heart, ImageUp, KeyRound, LogOut, MessageCircle, Package, Save, Trash2, User as UserIcon } from 'lucide-react'
+import CartIcon from '../components/CartIcon'
 import { useApp, formatPhone } from '../context/AppContext'
 import { api, ApiCustomer, CustomerOrder, imageFileToDataUrl, ORDER_STATUS_LABELS, OrderStatus } from '../api'
 import { formatXof } from '../format'
@@ -91,7 +92,6 @@ export const AccountPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Votre compte' }]} />
       <header className="ng-page-head ng-page-head--left">
-        <span className="ng-eyebrow">MON ESPACE</span>
         <h1>Bonjour, {user.name.split(' ')[0]}</h1>
       </header>
 
@@ -365,7 +365,6 @@ export const OrdersPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Vos commandes' }]} />
       <header className="ng-page-head ng-page-head--left">
-        <span className="ng-eyebrow">MON ESPACE</span>
         <h1>Vos commandes</h1>
       </header>
       <div className="ng-account-layout">
@@ -376,7 +375,7 @@ export const OrdersPage: React.FC = () => {
           {orders?.length === 0 && (
             <div className="ng-empty ng-empty--icon">
               <span className="ng-empty-ico">
-                <ShoppingBag size={28} />
+                <CartIcon size={28} />
               </span>
               <h3>Aucune commande pour le moment</h3>
               <p>Vos commandes passées sur le site apparaîtront ici, avec leur suivi.</p>

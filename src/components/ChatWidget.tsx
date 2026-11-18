@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowUp, MessageCircle, RotateCcw, ShoppingCart, Sparkles, X } from 'lucide-react'
+import { ArrowUp, MessageCircle, RotateCcw, Sparkles, X } from 'lucide-react'
+import CartIcon from './CartIcon'
 import { useApp } from '../context/AppContext'
 import { api } from '../api'
 import { formatXof } from '../format'
@@ -56,6 +57,14 @@ export const ChatWidget: React.FC = () => {
   const [draft, setDraft] = useState('')
   const [pending, setPending] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
+  // La bulle se réduit à une icône dès qu'on fait défiler : elle ne recouvre plus le texte de la page
+  const [compact, setCompact] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setCompact(window.scrollY > 160)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const productSlug = currentPath.startsWith('/produit/') ? decodeURIComponent(currentPath.slice('/produit/'.length).split('/')[0]) : undefined
@@ -138,7 +147,7 @@ export const ChatWidget: React.FC = () => {
   return (
     <>
       {!advisorOpen && (
-        <button type="button" className="ng-chat-launcher" onClick={() => setAdvisorOpen(true)} aria-label="Poser une question à la conseillère IA">
+        <button type="button" className={`ng-chat-launcher ${compact ? 'is-compact' : ''}`} onClick={() => setAdvisorOpen(true)} aria-label="Poser une question à la conseillère IA">
           <Sparkles size={20} />
           <span>Une question ?</span>
         </button>
@@ -199,7 +208,7 @@ export const ChatWidget: React.FC = () => {
                           </button>
                           {canAdd && (
                             <button type="button" className="ng-chat-add" onClick={() => addToCart(p.id, 1)} aria-label={`Ajouter ${p.name} au panier`} title="Ajouter au panier">
-                              <ShoppingCart size={16} />
+                              <CartIcon size={16} />
                             </button>
                           )}
                         </article>

@@ -69,7 +69,6 @@ export const TestimonialsPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Avis clients' }]} />
       <header className="ng-page-head">
-        <span className="ng-eyebrow">AVIS CLIENTS</span>
         <h1>Vos retours sur nos soins.</h1>
         <p>Chaque avis est lu par la boutique avant d’être publié.</p>
       </header>

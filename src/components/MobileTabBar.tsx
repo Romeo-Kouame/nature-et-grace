@@ -1,5 +1,6 @@
 import React from 'react'
-import { Heart, Home, LayoutGrid, ShoppingCart, User as UserIcon } from 'lucide-react'
+import { Heart, Home, LayoutGrid, User as UserIcon } from 'lucide-react'
+import CartIcon from './CartIcon'
 import { useApp } from '../context/AppContext'
 
 /** Barre d'onglets du bas, sur téléphone uniquement. */
@@ -17,7 +18,7 @@ export const MobileTabBar: React.FC = () => {
       onClick: () => navigate('/boutique'),
     },
     { key: 'fav', label: 'Favoris', icon: Heart, active: currentPath === '/favoris' && !cartOpen, badge: favorites.length, onClick: () => navigate('/favoris') },
-    { key: 'cart', label: 'Panier', icon: ShoppingCart, active: cartOpen, badge: cartCount, onClick: openCart },
+    { key: 'cart', label: 'Panier', icon: CartIcon, active: cartOpen, badge: cartCount, onClick: openCart },
     {
       key: 'account',
       label: user ? user.name.split(' ')[0] : 'Compte',

@@ -49,7 +49,6 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
     <div className="ng-container ng-subpage ng-legal">
       <Breadcrumb items={[{ label: TITLES[kind] }]} />
       <header className="ng-page-head ng-page-head--left">
-        <span className="ng-eyebrow">INFORMATIONS LÉGALES</span>
         <h1>{TITLES[kind]}</h1>
       </header>
 
@@ -128,7 +127,7 @@ export const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
           </p>
           <h2>7. Utilisation des produits</h2>
           <p>
-            Les conseils du site, y compris ceux du conseiller IA, sont indicatifs et ne remplacent pas un avis médical.
+            Les conseils du site, y compris ceux de la conseillère IA, sont indicatifs et ne remplacent pas un avis médical.
             Faites un essai sur une petite zone de peau avant la première utilisation.
           </p>
           <h2>8. Droit applicable</h2>

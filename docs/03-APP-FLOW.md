@@ -28,8 +28,8 @@ Chaque élément du menu ouvre sa propre page, avec sa propre adresse. Le fil d'
    - Produit « prix à confirmer » : le bouton ouvre WhatsApp avec une question sur le prix.
    - Produit en rupture : bouton désactivé.
 3. **Ouverture du panier** :
-   - Client connecté → le panier s'ouvre.
-   - Visiteur → page `/connexion`, puis le panier se rouvre automatiquement après connexion ou inscription.
+   - Le panier s'ouvre pour tout le monde (articles, quantités, sous-total, fourchette des frais de livraison).
+   - « Commander sur le site » : client connecté → étape Livraison ; visiteur → page `/connexion` (lien « Créer un compte » mis en avant), puis le panier se rouvre automatiquement après connexion ou inscription.
 4. **Validation** : formulaire (nom, téléphone, zone, commune, adresse, précision facultative, enregistrer l'adresse) + case CGV obligatoire.
    - Frais et délai de la zone affichés dans le total.
    - Bouton désactivé pendant l'envoi ; un double envoi renvoie la même commande.

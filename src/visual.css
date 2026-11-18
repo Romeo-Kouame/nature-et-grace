@@ -371,8 +371,6 @@ html.dark .ng-badge-tag--bestseller { color: #1b130c; }
   .ng-buybar .ng-btn { flex-shrink: 0; height: 44px; padding: 0 18px; }
   .has-buybar .app-shell { padding-bottom: calc(66px + 80px + env(safe-area-inset-bottom)); }
 
-  /* Accueil : les pastilles de rayons en haut suffisent, pas de seconde section « Nos rayons » */
-  .ng-home-rayons { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ng-buybar { transition: none; } }
 
@@ -401,3 +399,78 @@ html.dark .ng-badge-tag--bestseller { color: #1b130c; }
 .ng-cat-tile-text b { font-family: var(--ng-font-display, inherit); font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
 .ng-cat-tile-text em { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-style: normal; font-size: 13px; opacity: 0.9; transition: gap 0.3s var(--ng-ease); }
 .ng-cat-tile:hover .ng-cat-tile-text em { gap: 10px; }
+
+/* =====================================================================
+   Revue Impeccable : fiche produit mobile, panier, allègement
+   ===================================================================== */
+
+/* Fiche produit : rayon et contenance sous le nom (plus d'étiquette au-dessus du titre) */
+.ng-pdp-cat { margin: -6px 0 0; font-size: 14px; color: var(--ng-muted); }
+
+/* Un seul bouton plein (« Ajouter au panier ») ; WhatsApp passe en contour */
+.ng-btn--wa-outline { height: 50px; background: transparent; color: var(--ng-wa-text); border: 1.5px solid currentColor; }
+.ng-btn--wa-outline:hover { background: color-mix(in srgb, var(--ng-wa-text) 8%, transparent); }
+
+/* Panier : étape et rappel de compte */
+.ng-cart-step { margin: 2px 0 0; font-size: 13px; color: var(--ng-muted); }
+.ng-cart-account-hint { margin-top: -2px; text-align: center; }
+.ng-auth-reason-link { padding: 0; border: 0; background: none; color: var(--ng-emerald); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Lisibilité : libellés des cartes et textes indicatifs des champs */
+.ng-card-cat { font-size: 12.5px; }
+.app-shell input::placeholder, .app-shell textarea::placeholder { color: var(--ng-muted); opacity: 1; }
+.ng-cat-tile::after { background: linear-gradient(180deg, transparent 30%, rgba(10, 18, 14, 0.86)); }
+
+/* Mode sombre : une ombre est une profondeur, pas un halo coloré */
+html.dark .ng-btn--primary,
+html.dark .ng-chat-launcher,
+html.dark .ng-hero-badge { box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7); }
+
+/* « Commander, c'est simple » : une frise en trois temps plutôt que trois cartes identiques */
+.ng-how-steps { gap: 0; }
+.ng-how-steps li { position: relative; padding: 4px 28px 4px 0; border: 0; border-radius: 0; background: none; }
+.ng-how-steps li + li { padding-left: 28px; border-left: 1px solid var(--ng-line); }
+.ng-how-ico { margin-bottom: 14px; }
+
+/* Texte réservé aux lecteurs d'écran */
+.ng-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 860px) {
+  /* Fiche produit : photo moins haute, le prix et l'achat arrivent plus vite */
+  .ng-pdp-gallery .ng-pdp-media { aspect-ratio: 4 / 3; }
+
+  /* La barre d'achat remplace la barre d'onglets sur la fiche produit, dès l'arrivée */
+  .has-buybar .ng-tabbar { display: none; }
+  .ng-buybar { bottom: calc(10px + env(safe-area-inset-bottom)); transition: none; }
+  .has-buybar .app-shell { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .ng-buybar-wa { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border: 1.5px solid currentColor; border-radius: 12px; color: var(--ng-wa-text); }
+
+  /* Moins d'éléments en haut de l'écran : pas de bandeau, pas de second panier (la barre d'onglets l'a) */
+  .ng-promo { display: none; }
+  .ng-header .ng-cart-pill { display: none; }
+
+  /* Nos rayons : glissé horizontal */
+  .ng-cat-tiles { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 calc(-1 * var(--ng-gutter)); padding: 2px var(--ng-gutter) 8px; gap: 12px; }
+  .ng-cat-tiles::-webkit-scrollbar { display: none; }
+  .ng-cat-tile { flex: 0 0 72%; scroll-snap-align: start; }
+
+  /* Frise en colonne */
+  .ng-how-steps li, .ng-how-steps li + li { padding: 14px 0 14px 0; border-left: 0; border-top: 1px solid var(--ng-line); }
+  .ng-how-steps li:first-child { border-top: 0; }
+}
+
+/* Notre histoire : valeurs en frise (plus de cartes à icône identiques) */
+.ng-values { gap: 0; }
+.ng-value { padding: 4px 28px 4px 0; border: 0; border-radius: 0; background: none; }
+.ng-value + .ng-value { padding-left: 28px; border-left: 1px solid var(--ng-line); }
+.ng-value h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-family: var(--ng-font); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--ng-ink); }
+.ng-value h2 svg { color: var(--ng-emerald); flex-shrink: 0; }
+@media (max-width: 860px) {
+  .ng-value, .ng-value + .ng-value { padding: 14px 0; border-left: 0; border-top: 1px solid var(--ng-line); }
+  .ng-value:first-child { border-top: 0; }
+}
+
+/* Typographie : fins de paragraphes équilibrées, lignes de FAQ lisibles */
+.app-shell p, .app-shell li { text-wrap: pretty; }
+.app-shell h1, .app-shell h2, .app-shell h3 { text-wrap: balance; }
+.ng-faq-answer p { max-width: 60ch; }

@@ -16,3 +16,9 @@ api/prisma/dev.db
 api/backups/
 # Client Prisma généré (npm run build / npm install le recrée)
 api/src/generated/
+
+# Impeccable (design) : réglages propres à chaque machine
+.impeccable/config.local.json
+
+# Mémo personnel (identifiants de développement) : jamais sur GitHub
+MEMO-PRIVE.md

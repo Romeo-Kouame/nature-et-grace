@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { Check, Heart, MessageCircle, ShoppingCart, Star } from 'lucide-react'
+import { Check, Heart, MessageCircle, Star } from 'lucide-react'
+import CartIcon from './CartIcon'
 import { Product } from '../types'
 import { useApp } from '../context/AppContext'
 import { categoryAndSize, formatXof } from '../format'
@@ -110,7 +111,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'gr
             title={priceUnknown ? 'Demander le prix sur WhatsApp' : 'Ajouter au panier'}
             disabled={outOfStock}
           >
-            {added ? <Check size={18} /> : priceUnknown ? <MessageCircle size={18} /> : <ShoppingCart size={18} />}
+            {added ? <Check size={18} /> : priceUnknown ? <MessageCircle size={18} /> : <CartIcon size={18} />}
           </button>
         </div>
       </div>

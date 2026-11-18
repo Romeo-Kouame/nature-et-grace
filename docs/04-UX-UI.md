@@ -29,7 +29,10 @@ Tous les textes respectent un contraste d'au moins 4,5:1 (vérifié avec axe, no
 
 - **Bandeau** (au-dessus de l'en-tête, non collant) : commande site ou WhatsApp, paiement Wave.
 - **En-tête** (collant, une seule ligne, ombre légère au défilement) : logo · pages en pastilles (page active sur fond vert clair) · loupe, compte (avatar si connecté ; menu avec l'aide), thème, bouton « Panier » vert plein avec compteur doré. Recherche : panneau sous l'en-tête (loupe, touche `/` ou Ctrl+K, Échap pour fermer). Téléphone : menu, logo, conseillère IA, panier, recherche en dessous.
-- **Barre d'onglets mobile** (fixe en bas) : Accueil, Boutique, Favoris, Panier, Compte. Elle tient lieu d'appel à l'action collant sur mobile.
+- **Barre d'onglets mobile** (fixe en bas) : Accueil, Boutique, Favoris, Panier, Compte. Seul accès au panier sur téléphone (pas de second panier dans l'en-tête) ; remplacée par la barre d'achat sur les fiches produit.
+- **Icône panier** : panier tressé (`ShoppingBasket`, lucide) partout : en-tête, onglets, cartes, chat, tiroir.
+- **Pas d'étiquette au-dessus des titres** (règle Impeccable) ; sections en frise plutôt qu'en cartes à icône identiques ; un seul bouton plein par décision (WhatsApp en contour à côté d'« Ajouter au panier »).
+- **Nom de l'assistante** : « la conseillère » partout (« Demander à la conseillère »).
 - **Carte produit** : photo (2e photo au survol), pastille « Meilleure vente » ou « Nouveau », favori, rayon et contenance, nom, note, prix, bouton panier.
 - **Rangée de produits** : défilement horizontal, flèches rondes au survol (ordinateur), glissé (téléphone), défilement automatique qui s'arrête au survol ou au toucher. Moins de 5 produits : grille pleine largeur sur ordinateur (cartes jusqu'à 380 px), glissé horizontal sur téléphone.
 - **Carte produit (prix inconnu)** : « Prix sur demande », contenance masquée tant qu'elle vaut « À confirmer », bouton WhatsApp à la place du panier.
@@ -42,7 +45,7 @@ Tous les textes respectent un contraste d'au moins 4,5:1 (vérifié avec axe, no
 - **Chat de la conseillère IA** : bulle « Une question ? » en bas à droite (ordinateur) ; fenêtre de 400 × 640 px (plein écran sur téléphone), en-tête vert, bulles de la cliente en vert à droite, réponses en blanc à gauche, mini-cartes produits, questions suggérées, indicateur « écrit… ».
 - **Bouton Google** (connexion) : contour, logo « G » officiel, séparateur « ou avec votre numéro ». **Captcha** Turnstile sous les champs.
 - **Bandeau de promesses** (au-dessus du pied de page) : absent de l'accueil et des fiches produit, qui les affichent déjà.
-- **Barre d'achat collante** (téléphone, fiche produit) : apparaît quand les boutons d'achat sortent de l'écran ; photo, nom, prix, « Ajouter » (ou WhatsApp si prix inconnu ou rupture), au-dessus de la barre d'onglets.
+- **Barre d'achat collante** (téléphone, fiche produit) : visible dès l'arrivée, à la place de la barre d'onglets ; photo, nom, prix, icône WhatsApp en contour et « Ajouter au panier » (ou WhatsApp seul si prix inconnu ou rupture).
 - **Bandeau cookies** : seulement si la mesure d'audience est configurée ; « Refuser » et « Accepter » identiques.
 
 ## Écrans clés

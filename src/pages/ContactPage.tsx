@@ -49,7 +49,6 @@ export const ContactPage: React.FC = () => {
     <div className="ng-container ng-subpage">
       <Breadcrumb items={[{ label: 'Contact & livraison' }]} />
       <header className="ng-page-head">
-        <span className="ng-eyebrow">CONTACT & LIVRAISON</span>
         <h1>Une question ? On vous répond.</h1>
         <p>Sur un produit, votre commande ou la livraison : écrivez-nous, nous vous répondons sur WhatsApp.</p>
       </header>

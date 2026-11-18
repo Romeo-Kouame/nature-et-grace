@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
-  BookOpen, CircleHelp, FileText, Heart, Home, LayoutGrid, LogOut, Menu, MessageCircle, Moon, Package,
-  Search, ShoppingBag, Sparkles, Star, Sun, Truck, User as UserIcon, X,
-} from 'lucide-react'
+import { BookOpen, CircleHelp, FileText, Heart, Home, LayoutGrid, LogOut, Menu, MessageCircle, Moon, Package, Search, Sparkles, Star, Sun, Truck, User as UserIcon, X } from 'lucide-react'
+import CartIcon from './CartIcon'
 import { useApp, formatPhone } from '../context/AppContext'
 import SearchBox from './SearchBox'
 
@@ -262,9 +260,9 @@ export const Navbar: React.FC = () => {
                 className="ng-cart-pill"
                 data-cart-target
                 onClick={openCart}
-                aria-label={`Panier, ${cartCount} article${cartCount > 1 ? 's' : ''}${user ? '' : ' (connexion requise)'}`}
+                aria-label={`Panier, ${cartCount} article${cartCount > 1 ? 's' : ''}`}
               >
-                <ShoppingBag size={19} />
+                <CartIcon size={19} />
                 <span className="ng-hide-sm">Panier</span>
                 {cartCount > 0 && <span className="ng-cart-pill-count">{cartCount > 99 ? '99+' : cartCount}</span>}
               </button>
@@ -352,7 +350,7 @@ export const Navbar: React.FC = () => {
                 setAdvisorOpen(true)
               }}
             >
-              <Sparkles size={19} color="var(--ng-gold-600)" /> Conseiller beauté IA
+              <Sparkles size={19} color="var(--ng-gold-600)" /> Conseillère beauté
             </button>
             <a className="ng-drawer-link" href={waLink()} target="_blank" rel="noreferrer" onClick={() => setDrawerOpen(false)}>
               <MessageCircle size={19} color="var(--ng-wa-text)" /> Écrire sur WhatsApp

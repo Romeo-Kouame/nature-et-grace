@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Eye, EyeOff, Heart, Leaf, ShoppingCart, Sparkles, Truck } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Heart, Leaf, Sparkles, Truck } from 'lucide-react'
+import CartIcon from '../components/CartIcon'
 import { useApp, formatPhone } from '../context/AppContext'
 import Honeypot from '../components/Honeypot'
 import { usePageMeta } from '../hooks/usePageMeta'
@@ -210,13 +211,13 @@ export const LoginPage: React.FC = () => {
           </h1>
 
           <div className="ng-login-collage" aria-hidden="true">
-            <img className="ng-lc ng-lc--main" src={PHOTOS.kariteFemmes} alt="" />
+            <img className="ng-lc ng-lc--main" src={PHOTOS.plantation} alt="" />
             <img className="ng-lc ng-lc--back" src={PHOTOS.beurreCacao} alt="" />
             <img className="ng-lc ng-lc--card" src={PHOTOS.kariteFouette} alt="" />
             <img className="ng-lc ng-lc--round" src={PHOTOS.cabosseOuverte} alt="" />
             <span className="ng-lc-chip ng-lc-chip--leaf"><Leaf size={22} /></span>
             <span className="ng-lc-chip ng-lc-chip--heart"><Heart size={22} fill="currentColor" /></span>
-            <span className="ng-lc-pill"><Sparkles size={14} /> Cacao &amp; karité ivoiriens</span>
+            <span className="ng-lc-pill"><Sparkles size={14} /> Cacao de Côte d’Ivoire</span>
           </div>
         </div>
       </section>
@@ -235,10 +236,18 @@ export const LoginPage: React.FC = () => {
 
           {pending.openCart && (
             <p className="ng-auth-reason">
-              <ShoppingCart size={17} />
+              <CartIcon size={17} />
               <span>
-                Connectez-vous pour accéder à votre panier
-                {cartCount > 0 ? ` (${cartCount} article${cartCount > 1 ? 's' : ''} gardé${cartCount > 1 ? 's' : ''})` : ''}.
+                Connectez-vous ou créez votre compte pour valider votre commande
+                {cartCount > 0 ? ` : ${cartCount} article${cartCount > 1 ? 's' : ''} gardé${cartCount > 1 ? 's' : ''} dans votre panier` : ''}.
+                {mode === 'login' && (
+                  <>
+                    {' '}
+                    <button type="button" className="ng-auth-reason-link" onClick={() => switchMode('register')}>
+                      Nouvelle cliente ? Créer un compte
+                    </button>
+                  </>
+                )}
               </span>
             </p>
           )}

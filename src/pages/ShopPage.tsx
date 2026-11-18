@@ -52,10 +52,10 @@ export const ShopPage: React.FC = () => {
           <h1>
             Boutique <span>{filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}</span>
           </h1>
-          <p>Soins artisanaux ivoiriens au cacao et aux végétaux, pour la peau et les cheveux.</p>
+          <p>Soins naturels sélectionnés auprès de productrices ivoiriennes, pour la peau et les cheveux.</p>
         </div>
         <button type="button" className="ng-btn ng-btn--ghost ng-btn--sm" onClick={() => setAdvisorOpen(true)}>
-          <Sparkles size={15} color="var(--ng-gold-600)" /> Rituel sur-mesure IA
+          <Sparkles size={15} color="var(--ng-gold-600)" /> Demander à la conseillère
         </button>
       </div>
 
@@ -119,11 +119,14 @@ export const ShopPage: React.FC = () => {
           ))}
         </div>
       ) : (
+        <>
+        <h2 className="ng-sr-only">Produits</h2>
         <div className="ng-grid ng-grid--shop">
           {filteredProducts.map((p, i) => (
             <ProductCard product={p} key={p.id} index={i} />
           ))}
         </div>
+        </>
       )}
     </div>
   )

@@ -376,10 +376,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     navigate('/')
   }
 
-  const openCart = () => {
-    if (user) setCartOpen(true)
-    else goToLogin({ openCart: true })
-  }
+  /** Le panier s'ouvre pour tout le monde ; la connexion n'est demandée qu'au moment de valider la commande */
+  const openCart = () => setCartOpen(true)
 
   const [advisorOpen, setAdvisorOpen] = useState(false)
 
